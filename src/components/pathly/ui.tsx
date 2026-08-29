@@ -142,7 +142,7 @@ export function Reveal({
     if (!el) return;
     const io = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) {
+        if (entry?.isIntersecting) {
           setShown(true);
           io.disconnect();
         }
@@ -189,7 +189,7 @@ export function AnimatedNumber({
     const el = ref.current;
     if (!el) return;
     const io = new IntersectionObserver(([entry]) => {
-      if (!entry.isIntersecting || started.current) return;
+      if (!entry?.isIntersecting || started.current) return;
       started.current = true;
       const start = performance.now();
       const tick = (now: number) => {
