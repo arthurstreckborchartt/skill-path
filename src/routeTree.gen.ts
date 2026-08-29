@@ -16,6 +16,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as AppIndexRouteImport } from './routes/app.index'
 import { Route as AppHabilidadesRouteImport } from './routes/app.habilidades'
+import { Route as AppProjetosRouteImport } from './routes/app.projetos'
 import { Route as AppRotaRouteImport } from './routes/app.rota'
 
 const IndexRoute = IndexRouteImport.update({
@@ -53,6 +54,11 @@ const AppHabilidadesRoute = AppHabilidadesRouteImport.update({
   path: '/habilidades',
   getParentRoute: () => AppRoute,
 } as any)
+const AppProjetosRoute = AppProjetosRouteImport.update({
+  id: '/projetos',
+  path: '/projetos',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppRotaRoute = AppRotaRouteImport.update({
   id: '/rota',
   path: '/rota',
@@ -66,6 +72,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
   '/app/habilidades': typeof AppHabilidadesRoute
+  '/app/projetos': typeof AppProjetosRoute
   '/app/rota': typeof AppRotaRoute
   '/app/': typeof AppIndexRoute
 }
@@ -75,6 +82,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
   '/app/habilidades': typeof AppHabilidadesRoute
+  '/app/projetos': typeof AppProjetosRoute
   '/app/rota': typeof AppRotaRoute
   '/app': typeof AppIndexRoute
 }
@@ -86,6 +94,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
   '/app/habilidades': typeof AppHabilidadesRoute
+  '/app/projetos': typeof AppProjetosRoute
   '/app/rota': typeof AppRotaRoute
   '/app/': typeof AppIndexRoute
 }
@@ -98,6 +107,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/onboarding'
     | '/app/habilidades'
+    | '/app/projetos'
     | '/app/rota'
     | '/app/'
   fileRoutesByTo: FileRoutesByTo
@@ -107,6 +117,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/onboarding'
     | '/app/habilidades'
+    | '/app/projetos'
     | '/app/rota'
     | '/app'
   id:
@@ -117,6 +128,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/onboarding'
     | '/app/habilidades'
+    | '/app/projetos'
     | '/app/rota'
     | '/app/'
   fileRoutesById: FileRoutesById
@@ -180,6 +192,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppHabilidadesRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/projetos': {
+      id: '/app/projetos'
+      path: '/projetos'
+      fullPath: '/app/projetos'
+      preLoaderRoute: typeof AppProjetosRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/rota': {
       id: '/app/rota'
       path: '/rota'
@@ -192,12 +211,14 @@ declare module '@tanstack/react-router' {
 
 interface AppRouteChildren {
   AppHabilidadesRoute: typeof AppHabilidadesRoute
+  AppProjetosRoute: typeof AppProjetosRoute
   AppRotaRoute: typeof AppRotaRoute
   AppIndexRoute: typeof AppIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
   AppHabilidadesRoute: AppHabilidadesRoute,
+  AppProjetosRoute: AppProjetosRoute,
   AppRotaRoute: AppRotaRoute,
   AppIndexRoute: AppIndexRoute,
 }
