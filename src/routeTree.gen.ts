@@ -15,6 +15,7 @@ import { Route as CadastroRouteImport } from './routes/cadastro'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as AppIndexRouteImport } from './routes/app.index'
+import { Route as AppHabilidadesRouteImport } from './routes/app.habilidades'
 import { Route as AppRotaRouteImport } from './routes/app.rota'
 
 const IndexRoute = IndexRouteImport.update({
@@ -47,6 +48,11 @@ const AppIndexRoute = AppIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppRoute,
 } as any)
+const AppHabilidadesRoute = AppHabilidadesRouteImport.update({
+  id: '/habilidades',
+  path: '/habilidades',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppRotaRoute = AppRotaRouteImport.update({
   id: '/rota',
   path: '/rota',
@@ -59,6 +65,7 @@ export interface FileRoutesByFullPath {
   '/cadastro': typeof CadastroRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
+  '/app/habilidades': typeof AppHabilidadesRoute
   '/app/rota': typeof AppRotaRoute
   '/app/': typeof AppIndexRoute
 }
@@ -67,6 +74,7 @@ export interface FileRoutesByTo {
   '/cadastro': typeof CadastroRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
+  '/app/habilidades': typeof AppHabilidadesRoute
   '/app/rota': typeof AppRotaRoute
   '/app': typeof AppIndexRoute
 }
@@ -77,6 +85,7 @@ export interface FileRoutesById {
   '/cadastro': typeof CadastroRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
+  '/app/habilidades': typeof AppHabilidadesRoute
   '/app/rota': typeof AppRotaRoute
   '/app/': typeof AppIndexRoute
 }
@@ -88,10 +97,18 @@ export interface FileRouteTypes {
     | '/cadastro'
     | '/login'
     | '/onboarding'
+    | '/app/habilidades'
     | '/app/rota'
     | '/app/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/cadastro' | '/login' | '/onboarding' | '/app/rota' | '/app'
+  to:
+    | '/'
+    | '/cadastro'
+    | '/login'
+    | '/onboarding'
+    | '/app/habilidades'
+    | '/app/rota'
+    | '/app'
   id:
     | '__root__'
     | '/'
@@ -99,6 +116,7 @@ export interface FileRouteTypes {
     | '/cadastro'
     | '/login'
     | '/onboarding'
+    | '/app/habilidades'
     | '/app/rota'
     | '/app/'
   fileRoutesById: FileRoutesById
@@ -155,6 +173,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppIndexRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/habilidades': {
+      id: '/app/habilidades'
+      path: '/habilidades'
+      fullPath: '/app/habilidades'
+      preLoaderRoute: typeof AppHabilidadesRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/rota': {
       id: '/app/rota'
       path: '/rota'
@@ -166,11 +191,13 @@ declare module '@tanstack/react-router' {
 }
 
 interface AppRouteChildren {
+  AppHabilidadesRoute: typeof AppHabilidadesRoute
   AppRotaRoute: typeof AppRotaRoute
   AppIndexRoute: typeof AppIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppHabilidadesRoute: AppHabilidadesRoute,
   AppRotaRoute: AppRotaRoute,
   AppIndexRoute: AppIndexRoute,
 }
