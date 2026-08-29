@@ -96,7 +96,7 @@ function Dashboard() {
         <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 sm:flex sm:justify-between">
           <div className="min-w-0">
             <p className="text-sm text-muted-foreground">Olá, {user.firstName}</p>
-            <h1 className="mt-1 truncate font-display text-2xl font-semibold sm:text-3xl">
+            <h1 className="mt-1 font-display text-2xl leading-tight font-semibold text-balance sm:text-3xl">
               Você está a {steps.length - steps.filter((s) => s.status === "concluído").length}{" "}
               etapas da meta
             </h1>
