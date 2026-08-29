@@ -243,7 +243,7 @@ export function StepDetail({
     <div className="relative space-y-5">
       {justCompleted && (
         <div className="pointer-events-none absolute inset-0 z-10 grid place-items-center">
-          <div className="animate-[scale-in_0.4s_cubic-bezier(0.16,1,0.3,1)_both] rounded-3xl border border-primary/40 bg-surface-1/95 px-6 py-5 text-center backdrop-blur">
+          <div className="animate-[pop_0.4s_cubic-bezier(0.34,1.56,0.64,1)_both] rounded-3xl border border-primary/40 bg-surface-1/95 px-6 py-5 text-center backdrop-blur">
             <div className="mx-auto grid size-12 place-items-center rounded-2xl bg-primary text-primary-foreground">
               <Check className="size-6" />
             </div>
