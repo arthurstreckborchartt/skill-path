@@ -17,6 +17,7 @@ import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as AppIndexRouteImport } from './routes/app.index'
 import { Route as AppHabilidadesRouteImport } from './routes/app.habilidades'
 import { Route as AppOportunidadesRouteImport } from './routes/app.oportunidades'
+import { Route as AppPerfilRouteImport } from './routes/app.perfil'
 import { Route as AppProjetosRouteImport } from './routes/app.projetos'
 import { Route as AppRotaRouteImport } from './routes/app.rota'
 
@@ -60,6 +61,11 @@ const AppOportunidadesRoute = AppOportunidadesRouteImport.update({
   path: '/oportunidades',
   getParentRoute: () => AppRoute,
 } as any)
+const AppPerfilRoute = AppPerfilRouteImport.update({
+  id: '/perfil',
+  path: '/perfil',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppProjetosRoute = AppProjetosRouteImport.update({
   id: '/projetos',
   path: '/projetos',
@@ -79,6 +85,7 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof OnboardingRoute
   '/app/habilidades': typeof AppHabilidadesRoute
   '/app/oportunidades': typeof AppOportunidadesRoute
+  '/app/perfil': typeof AppPerfilRoute
   '/app/projetos': typeof AppProjetosRoute
   '/app/rota': typeof AppRotaRoute
   '/app/': typeof AppIndexRoute
@@ -90,6 +97,7 @@ export interface FileRoutesByTo {
   '/onboarding': typeof OnboardingRoute
   '/app/habilidades': typeof AppHabilidadesRoute
   '/app/oportunidades': typeof AppOportunidadesRoute
+  '/app/perfil': typeof AppPerfilRoute
   '/app/projetos': typeof AppProjetosRoute
   '/app/rota': typeof AppRotaRoute
   '/app': typeof AppIndexRoute
@@ -103,6 +111,7 @@ export interface FileRoutesById {
   '/onboarding': typeof OnboardingRoute
   '/app/habilidades': typeof AppHabilidadesRoute
   '/app/oportunidades': typeof AppOportunidadesRoute
+  '/app/perfil': typeof AppPerfilRoute
   '/app/projetos': typeof AppProjetosRoute
   '/app/rota': typeof AppRotaRoute
   '/app/': typeof AppIndexRoute
@@ -117,6 +126,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/app/habilidades'
     | '/app/oportunidades'
+    | '/app/perfil'
     | '/app/projetos'
     | '/app/rota'
     | '/app/'
@@ -128,6 +138,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/app/habilidades'
     | '/app/oportunidades'
+    | '/app/perfil'
     | '/app/projetos'
     | '/app/rota'
     | '/app'
@@ -140,6 +151,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/app/habilidades'
     | '/app/oportunidades'
+    | '/app/perfil'
     | '/app/projetos'
     | '/app/rota'
     | '/app/'
@@ -211,6 +223,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppOportunidadesRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/perfil': {
+      id: '/app/perfil'
+      path: '/perfil'
+      fullPath: '/app/perfil'
+      preLoaderRoute: typeof AppPerfilRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/projetos': {
       id: '/app/projetos'
       path: '/projetos'
@@ -231,6 +250,7 @@ declare module '@tanstack/react-router' {
 interface AppRouteChildren {
   AppHabilidadesRoute: typeof AppHabilidadesRoute
   AppOportunidadesRoute: typeof AppOportunidadesRoute
+  AppPerfilRoute: typeof AppPerfilRoute
   AppProjetosRoute: typeof AppProjetosRoute
   AppRotaRoute: typeof AppRotaRoute
   AppIndexRoute: typeof AppIndexRoute
@@ -239,6 +259,7 @@ interface AppRouteChildren {
 const AppRouteChildren: AppRouteChildren = {
   AppHabilidadesRoute: AppHabilidadesRoute,
   AppOportunidadesRoute: AppOportunidadesRoute,
+  AppPerfilRoute: AppPerfilRoute,
   AppProjetosRoute: AppProjetosRoute,
   AppRotaRoute: AppRotaRoute,
   AppIndexRoute: AppIndexRoute,
