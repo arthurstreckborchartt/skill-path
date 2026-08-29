@@ -1,8 +1,38 @@
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, ArrowRight, Check, Loader2, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Cloud, Sparkles, TrendingUp } from "lucide-react";
 import { Btn, Logo, ProgressBar } from "@/components/pathly/ui";
-import { onboardingQuestions } from "@/lib/mock";
+import {
+  CardSelect,
+  FieldGroup,
+  HoursSlider,
+  MoneyField,
+  SearchField,
+  SkillLevelList,
+  SkillPicker,
+  ToggleRow,
+} from "@/components/pathly/onboarding-fields";
+import {
+  areas,
+  brl,
+  budgets,
+  emptyProfile,
+  experiences,
+  goals,
+  horizons,
+  learningStyles,
+  loadProfile,
+  opportunityTypes,
+  professionSuggestions,
+  routePreview,
+  saveProfile,
+  situations,
+  skillCatalog,
+  studyPresets,
+  workModels,
+  type OnboardingProfile,
+  type SkillLevel,
+} from "@/lib/onboarding";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/onboarding")({
@@ -11,176 +41,615 @@ export const Route = createFileRoute("/onboarding")({
       { title: "Monte sua rota — Pathly" },
       {
         name: "description",
-        content: "Responda 10 perguntas rápidas e receba sua rota personalizada de habilidades.",
+        content:
+          "Uma conversa rápida sobre onde você está e onde quer chegar. A Pathly monta a rota de habilidades, projetos e oportunidades.",
       },
       { property: "og:title", content: "Monte sua rota na Pathly" },
       {
         property: "og:description",
-        content: "Renda atual, meta, tempo livre e interesses. O resto a Pathly organiza.",
+        content: "Renda atual, meta, tempo livre e habilidades. O resto a Pathly organiza.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: Onboarding,
 });
 
+type ScreenId =
+  | "goal"
+  | "income_current"
+  | "income_target"
+  | "situation"
+  | "profession"
+  | "areas"
+  | "experience"
+  | "skills"
+  | "skill_levels"
+  | "study_time"
+  | "learning"
+  | "budget"
+  | "work_model"
+  | "opportunities";
+
+type Screen = {
+  id: ScreenId;
+  chapter: string;
+  title: string;
+  hint: string;
+  valid: (p: OnboardingProfile) => boolean;
+  skip?: (p: OnboardingProfile) => boolean;
+};
+
+const screens: Screen[] = [
+  {
+    id: "goal",
+    chapter: "Onde você quer chegar",
+    title: "Pra começar: qual é o seu objetivo principal?",
+    hint: "Escolha o que mais importa agora. Você pode mudar depois.",
+    valid: (p) => !!p.goal,
+  },
+  {
+    id: "income_current",
+    chapter: "Onde você está hoje",
+    title: "Quanto você ganha atualmente?",
+    hint: "Sem julgamento — é só o ponto de partida da sua rota.",
+    valid: (p) => p.income.noIncome || (p.income.current ?? 0) > 0,
+  },
+  {
+    id: "income_target",
+    chapter: "Onde você quer chegar",
+    title: "E quanto você gostaria de ganhar?",
+    hint: "Pense num número que mudaria a sua vida, e em quanto tempo.",
+    valid: (p) => (p.income.target ?? 0) > 0 && !!p.income.horizon,
+  },
+  {
+    id: "situation",
+    chapter: "Onde você está hoje",
+    title: "Qual é a sua situação atual?",
+    hint: "Isso muda o ritmo e o tipo de etapa que vamos sugerir.",
+    valid: (p) => !!p.situation,
+  },
+  {
+    id: "profession",
+    chapter: "Onde você está hoje",
+    title: "Qual é a sua profissão atual?",
+    hint: "Digite e escolha uma sugestão, ou escreva do seu jeito.",
+    valid: (p) => p.currentProfession.trim().length > 1,
+  },
+  {
+    id: "areas",
+    chapter: "Onde você quer chegar",
+    title: "Em qual área você gostaria de trabalhar?",
+    hint: "Pode escolher mais de uma. Vamos cruzar com o seu perfil.",
+    valid: (p) => p.desiredAreas.length > 0,
+  },
+  {
+    id: "experience",
+    chapter: "Onde você está hoje",
+    title: "Quanta experiência profissional você tem?",
+    hint: "Conte qualquer experiência, inclusive informal.",
+    valid: (p) => !!p.experience,
+  },
+  {
+    id: "skills",
+    chapter: "O que você já sabe",
+    title: "Quais habilidades você já possui?",
+    hint: "Marque tudo que se aplica e adicione as que faltarem.",
+    valid: () => true,
+  },
+  {
+    id: "skill_levels",
+    chapter: "O que você já sabe",
+    title: "Qual seu nível em cada uma?",
+    hint: "Seja honesto — a rota começa exatamente onde você está.",
+    valid: () => true,
+    skip: (p) => p.skills.length === 0,
+  },
+  {
+    id: "study_time",
+    chapter: "Como você aprende",
+    title: "Quanto tempo você tem para estudar?",
+    hint: "Escolha um ritmo ou ajuste no detalhe.",
+    valid: (p) => p.study.hoursPerWeek > 0,
+  },
+  {
+    id: "learning",
+    chapter: "Como você aprende",
+    title: "Como você prefere aprender?",
+    hint: "Pode marcar mais de um formato.",
+    valid: (p) => p.learningStyles.length > 0,
+  },
+  {
+    id: "budget",
+    chapter: "Como você aprende",
+    title: "Está disposto a investir dinheiro em cursos?",
+    hint: "Existe rota boa 100% gratuita — só precisamos saber.",
+    valid: (p) => !!p.budget,
+  },
+  {
+    id: "work_model",
+    chapter: "Onde você quer chegar",
+    title: "Qual modelo de trabalho você prefere?",
+    hint: "Usamos isso para filtrar oportunidades reais.",
+    valid: (p) => !!p.workModel,
+  },
+  {
+    id: "opportunities",
+    chapter: "Onde você quer chegar",
+    title: "Que tipo de oportunidade você busca?",
+    hint: "Última pergunta. Depois montamos sua rota.",
+    valid: (p) => p.opportunities.length > 0,
+  },
+];
+
+const analysisSteps = [
+  "Lendo seu objetivo",
+  "Mapeando suas habilidades",
+  "Pesando sua experiência",
+  "Encaixando no seu tempo disponível",
+  "Cruzando com o mercado",
+  "Desenhando caminhos possíveis",
+];
+
+type Phase = "questions" | "building" | "ready";
+
 function Onboarding() {
   const navigate = useNavigate();
+  const [profile, setProfile] = useState<OnboardingProfile>(emptyProfile());
   const [index, setIndex] = useState(0);
-  const [answers, setAnswers] = useState<Record<string, string | string[]>>({});
-  const [building, setBuilding] = useState(false);
+  const [phase, setPhase] = useState<Phase>("questions");
+  const [saved, setSaved] = useState(false);
+  const hydrated = useRef(false);
 
-  const q = onboardingQuestions[index]!;
-  const total = onboardingQuestions.length;
-  const progress = ((index + (building ? 1 : 0)) / total) * 100;
-  const current = answers[q.key];
+  // restore autosaved answers
+  useEffect(() => {
+    const stored = loadProfile();
+    if (stored) {
+      setProfile(stored);
+      setIndex(Math.min(stored.lastScreenIndex, screens.length - 1));
+    }
+    hydrated.current = true;
+  }, []);
 
-  function setAnswer(value: string | string[]) {
-    setAnswers((prev) => ({ ...prev, [q.key]: value }));
+  // autosave (debounced)
+  useEffect(() => {
+    if (!hydrated.current) return;
+    const t = setTimeout(() => {
+      saveProfile({ ...profile, lastScreenIndex: index });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 1400);
+    }, 500);
+    return () => clearTimeout(t);
+  }, [profile, index]);
+
+  const visible = useMemo(() => screens.filter((s) => !s.skip?.(profile)), [profile]);
+  const screen = visible[Math.min(index, visible.length - 1)]!;
+  const position = visible.findIndex((s) => s.id === screen.id);
+  const total = visible.length;
+  const canAdvance = screen.valid(profile);
+
+  function patch(next: Partial<OnboardingProfile>) {
+    setProfile((prev) => ({ ...prev, ...next }));
   }
 
-  function toggleMulti(option: string) {
-    const list = Array.isArray(current) ? current : [];
-    setAnswer(list.includes(option) ? list.filter((o) => o !== option) : [...list, option]);
+  function toggleList<T>(list: T[], item: T): T[] {
+    return list.includes(item) ? list.filter((i) => i !== item) : [...list, item];
   }
 
   function next() {
-    if (index + 1 < total) {
-      setIndex(index + 1);
+    if (position + 1 < total) {
+      setIndex(position + 1);
       return;
     }
-    setBuilding(true);
-    setTimeout(() => navigate({ to: "/app" }), 2200);
+    const completed = { ...profile, completedAt: new Date().toISOString() };
+    setProfile(completed);
+    saveProfile({ ...completed, lastScreenIndex: total - 1 });
+    setPhase("building");
   }
 
-  if (building) {
-    return (
-      <div className="halo grid min-h-screen place-items-center px-6">
-        <div className="animate-[pop_0.4s_cubic-bezier(0.34,1.56,0.64,1)_both] w-full max-w-md text-center">
-          <span className="mx-auto grid size-14 place-items-center rounded-3xl bg-signal shadow-[var(--shadow-glow)]">
-            <Sparkles className="size-6 text-primary-foreground" />
-          </span>
-          <h1 className="mt-7 font-display text-2xl font-semibold">Montando sua rota</h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Cruzando sua meta de renda com habilidades, projetos e oportunidades.
-          </p>
-          <div className="mt-8 space-y-3 text-left">
-            {["Analisando ponto de partida", "Definindo etapas", "Selecionando projetos"].map(
-              (label, i) => (
-                <div key={label} className="flex items-center gap-3 rounded-2xl bg-surface p-4">
-                  <Loader2
-                    className="size-4 animate-spin text-primary"
-                    style={{ animationDelay: `${i * 150}ms` }}
-                  />
-                  <span className="text-sm text-muted-foreground">{label}</span>
-                </div>
-              ),
-            )}
-          </div>
-        </div>
-      </div>
-    );
+  if (phase === "building") {
+    return <BuildingScreen onDone={() => setPhase("ready")} />;
   }
+
+  if (phase === "ready") {
+    return <ReadyScreen profile={profile} onGo={() => navigate({ to: "/app/rota" })} />;
+  }
+
+  const progress = ((position + (canAdvance ? 1 : 0.35)) / total) * 100;
 
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="flex items-center justify-between px-5 py-5 sm:px-8">
-        <Link to="/" className="tap">
+      <header className="flex items-center justify-between gap-3 px-5 py-4 sm:px-8 sm:py-5">
+        <Link to="/" className="tap min-w-0">
           <Logo />
         </Link>
-        <span className="text-xs text-muted-foreground">
-          {index + 1} de {total}
-        </span>
+        <div className="flex shrink-0 items-center gap-3">
+          <span
+            className={cn(
+              "inline-flex items-center gap-1.5 text-xs text-muted-foreground transition-opacity duration-500",
+              saved ? "opacity-100" : "opacity-0",
+            )}
+          >
+            <Cloud className="size-3.5" /> salvo
+          </span>
+          <span className="text-xs text-muted-foreground">
+            {position + 1}/{total}
+          </span>
+        </div>
       </header>
 
       <div className="px-5 sm:px-8">
-        <ProgressBar value={progress} delay={80} className="h-1" />
+        <ProgressBar value={progress} delay={60} className="h-1" />
       </div>
 
-      <main className="flex flex-1 items-center px-5 py-10 sm:px-8">
-        <div key={q.key} className="animate-[fade-up_0.45s_cubic-bezier(0.16,1,0.3,1)_both] mx-auto w-full max-w-lg">
-          <h1 className="font-display text-3xl font-semibold sm:text-4xl">{q.title}</h1>
-          <p className="mt-3 text-sm text-muted-foreground">{q.hint}</p>
+      <main className="flex flex-1 flex-col px-5 pt-8 pb-28 sm:px-8 sm:pt-12 sm:pb-12">
+        <div
+          key={screen.id}
+          className="animate-[fade-up_0.5s_cubic-bezier(0.16,1,0.3,1)_both] mx-auto w-full max-w-lg"
+        >
+          <p className="text-xs font-semibold tracking-[0.18em] text-primary uppercase">
+            {screen.chapter}
+          </p>
+          <h1 className="mt-3 font-display text-2xl leading-tight font-semibold text-balance sm:text-3xl">
+            {screen.title}
+          </h1>
+          <p className="mt-2.5 text-sm text-muted-foreground">{screen.hint}</p>
 
-          <div className="mt-9">
-            {(q.kind === "money" || q.kind === "text") && (
-              <input
-                autoFocus
-                inputMode={q.kind === "money" ? "numeric" : "text"}
-                value={typeof current === "string" ? current : ""}
-                onChange={(e) => setAnswer(e.target.value)}
-                placeholder={q.placeholder}
-                className="h-16 w-full rounded-2xl border border-input bg-surface/60 px-5 font-display text-2xl outline-none transition-all placeholder:text-muted-foreground/50 focus:border-primary/50 focus:ring-4 focus:ring-primary/10"
+          <div className="mt-8">
+            {screen.id === "goal" && (
+              <CardSelect
+                options={goals}
+                value={profile.goal}
+                onChange={(goal) => patch({ goal })}
               />
             )}
 
-            {q.kind === "options" && (
-              <div className="grid gap-2.5">
-                {q.options?.map((option) => {
-                  const active = current === option;
-                  return (
-                    <button
-                      key={option}
-                      type="button"
-                      onClick={() => setAnswer(option)}
-                      className={cn(
-                        "tap flex items-center justify-between rounded-2xl border px-5 py-4 text-left text-sm transition-all",
-                        active
-                          ? "border-primary/50 bg-primary/10 text-foreground"
-                          : "border-border bg-surface/50 text-muted-foreground hover:border-primary/30 hover:text-foreground",
-                      )}
-                    >
-                      {option}
-                      <span
-                        className={cn(
-                          "grid size-5 place-items-center rounded-full transition-colors",
-                          active ? "bg-primary text-primary-foreground" : "bg-muted",
-                        )}
-                      >
-                        {active && <Check className="size-3" />}
-                      </span>
-                    </button>
-                  );
-                })}
+            {screen.id === "income_current" && (
+              <div className="space-y-3">
+                <MoneyField
+                  value={profile.income.current}
+                  disabled={profile.income.noIncome}
+                  placeholder="2.600"
+                  quick={[1518, 2500, 4000, 6000]}
+                  onChange={(current) => patch({ income: { ...profile.income, current } })}
+                />
+                <ToggleRow
+                  label="Não tenho renda atualmente"
+                  active={profile.income.noIncome}
+                  onClick={() =>
+                    patch({
+                      income: {
+                        ...profile.income,
+                        noIncome: !profile.income.noIncome,
+                        current: profile.income.noIncome ? profile.income.current : null,
+                      },
+                    })
+                  }
+                />
               </div>
             )}
 
-            {q.kind === "multi" && (
-              <div className="flex flex-wrap gap-2.5">
-                {q.options?.map((option) => {
-                  const active = Array.isArray(current) && current.includes(option);
-                  return (
+            {screen.id === "income_target" && (
+              <div className="space-y-7">
+                <FieldGroup label="Meta de renda">
+                  <MoneyField
+                    value={profile.income.target}
+                    placeholder="8.000"
+                    quick={[3000, 5000, 8000, 12000]}
+                    onChange={(target) => patch({ income: { ...profile.income, target } })}
+                  />
+                </FieldGroup>
+                <FieldGroup label="Em quanto tempo">
+                  <CardSelect
+                    options={horizons}
+                    value={profile.income.horizon}
+                    onChange={(horizon) => patch({ income: { ...profile.income, horizon } })}
+                  />
+                </FieldGroup>
+              </div>
+            )}
+
+            {screen.id === "situation" && (
+              <CardSelect
+                options={situations}
+                value={profile.situation}
+                onChange={(situation) => patch({ situation })}
+              />
+            )}
+
+            {screen.id === "profession" && (
+              <SearchField
+                value={profile.currentProfession}
+                suggestions={professionSuggestions}
+                placeholder="Buscar profissão"
+                onChange={(currentProfession) => patch({ currentProfession })}
+              />
+            )}
+
+            {screen.id === "areas" && (
+              <CardSelect
+                multi
+                options={areas}
+                value={profile.desiredAreas}
+                onChange={(area) => patch({ desiredAreas: toggleList(profile.desiredAreas, area) })}
+              />
+            )}
+
+            {screen.id === "experience" && (
+              <CardSelect
+                columns={1}
+                options={experiences}
+                value={profile.experience}
+                onChange={(experience) => patch({ experience })}
+              />
+            )}
+
+            {screen.id === "skills" && (
+              <SkillPicker
+                catalog={skillCatalog}
+                selected={profile.skills}
+                onToggle={(name) => {
+                  const exists = profile.skills.some(
+                    (s) => s.name.toLowerCase() === name.toLowerCase(),
+                  );
+                  patch({
+                    skills: exists
+                      ? profile.skills.filter((s) => s.name.toLowerCase() !== name.toLowerCase())
+                      : [...profile.skills, { name, level: "iniciante", custom: false }],
+                  });
+                }}
+                onAdd={(name) =>
+                  patch({ skills: [...profile.skills, { name, level: "iniciante", custom: true }] })
+                }
+              />
+            )}
+
+            {screen.id === "skill_levels" && (
+              <SkillLevelList
+                skills={profile.skills}
+                onLevel={(name, level: SkillLevel) =>
+                  patch({
+                    skills: profile.skills.map((s) => (s.name === name ? { ...s, level } : s)),
+                  })
+                }
+              />
+            )}
+
+            {screen.id === "study_time" && (
+              <div className="space-y-4">
+                <div className="flex flex-wrap gap-2">
+                  {studyPresets.map((preset) => (
                     <button
-                      key={option}
+                      key={preset.id}
                       type="button"
-                      onClick={() => toggleMulti(option)}
+                      onClick={() =>
+                        patch({
+                          study: { hoursPerWeek: preset.hoursPerWeek, presetId: preset.id },
+                        })
+                      }
                       className={cn(
                         "tap rounded-full border px-4 py-2.5 text-sm transition-all",
-                        active
+                        profile.study.presetId === preset.id
                           ? "border-primary/50 bg-primary/12 text-primary"
-                          : "border-border bg-surface/50 text-muted-foreground hover:border-primary/30 hover:text-foreground",
+                          : "border-border bg-surface/40 text-muted-foreground hover:text-foreground",
                       )}
                     >
-                      {option}
+                      {preset.label}
                     </button>
-                  );
-                })}
+                  ))}
+                </div>
+                <HoursSlider
+                  value={profile.study.hoursPerWeek}
+                  onChange={(hoursPerWeek) => patch({ study: { hoursPerWeek, presetId: null } })}
+                />
               </div>
             )}
-          </div>
 
-          <div className="mt-10 flex items-center gap-3">
-            {index > 0 && (
-              <Btn variant="ghost" size="lg" onClick={() => setIndex(index - 1)}>
-                <ArrowLeft className="size-4" /> Voltar
-              </Btn>
+            {screen.id === "learning" && (
+              <CardSelect
+                multi
+                options={learningStyles}
+                value={profile.learningStyles}
+                onChange={(style) =>
+                  patch({ learningStyles: toggleList(profile.learningStyles, style) })
+                }
+              />
             )}
-            <Btn size="lg" className="flex-1 sm:flex-none" onClick={next}>
-              {index + 1 === total ? "Gerar minha rota" : "Continuar"}
-              <ArrowRight className="size-4" />
-            </Btn>
+
+            {screen.id === "budget" && (
+              <CardSelect
+                columns={1}
+                options={budgets}
+                value={profile.budget}
+                onChange={(budget) => patch({ budget })}
+              />
+            )}
+
+            {screen.id === "work_model" && (
+              <CardSelect
+                options={workModels}
+                value={profile.workModel}
+                onChange={(workModel) => patch({ workModel })}
+              />
+            )}
+
+            {screen.id === "opportunities" && (
+              <CardSelect
+                multi
+                options={opportunityTypes}
+                value={profile.opportunities}
+                onChange={(opportunity) =>
+                  patch({ opportunities: toggleList(profile.opportunities, opportunity) })
+                }
+              />
+            )}
           </div>
         </div>
       </main>
+
+      <footer className="fixed inset-x-0 bottom-0 border-t border-border bg-background/85 px-5 py-4 backdrop-blur-xl sm:static sm:border-0 sm:bg-transparent sm:px-8 sm:pb-10 sm:backdrop-blur-none">
+        <div className="mx-auto flex w-full max-w-lg items-center gap-3">
+          {position > 0 && (
+            <Btn variant="outline" size="lg" onClick={() => setIndex(position - 1)}>
+              <ArrowLeft className="size-4" />
+              <span className="hidden sm:inline">Voltar</span>
+            </Btn>
+          )}
+          <Btn size="lg" className="flex-1" disabled={!canAdvance} onClick={next}>
+            {position + 1 === total ? "Gerar minha rota" : "Continuar"}
+            <ArrowRight className="size-4" />
+          </Btn>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+/* ---------- building ---------- */
+
+function BuildingScreen({ onDone }: { onDone: () => void }) {
+  const [done, setDone] = useState(0);
+
+  useEffect(() => {
+    const timers = analysisSteps.map((_, i) =>
+      setTimeout(() => setDone(i + 1), 500 + i * 620),
+    );
+    const finish = setTimeout(onDone, 500 + analysisSteps.length * 620 + 700);
+    return () => {
+      timers.forEach(clearTimeout);
+      clearTimeout(finish);
+    };
+  }, [onDone]);
+
+  return (
+    <div className="halo grid min-h-screen place-items-center px-5 py-12">
+      <div className="w-full max-w-md">
+        <div className="text-center">
+          <span className="relative mx-auto grid size-16 place-items-center rounded-3xl bg-signal shadow-[var(--shadow-glow)]">
+            <span className="absolute inset-0 animate-ping rounded-3xl bg-primary/30" />
+            <Sparkles className="relative size-7 text-primary-foreground" />
+          </span>
+          <h1 className="mt-7 font-display text-2xl font-semibold text-balance sm:text-3xl">
+            Estamos montando sua rota…
+          </h1>
+          <p className="mt-2.5 text-sm text-muted-foreground">
+            Cruzando o seu ponto de partida com habilidades, projetos e oportunidades.
+          </p>
+        </div>
+
+        <div className="mt-9 space-y-2.5">
+          {analysisSteps.map((label, i) => {
+            const state = done > i ? "done" : done === i ? "active" : "idle";
+            return (
+              <div
+                key={label}
+                className={cn(
+                  "flex items-center gap-3 rounded-2xl border px-4 py-3.5 transition-all duration-500",
+                  state === "done"
+                    ? "border-primary/40 bg-primary/8"
+                    : state === "active"
+                      ? "border-border bg-surface"
+                      : "border-transparent bg-surface/30 opacity-45",
+                )}
+              >
+                <span
+                  className={cn(
+                    "grid size-6 shrink-0 place-items-center rounded-full transition-all",
+                    state === "done" ? "bg-primary text-primary-foreground" : "bg-muted",
+                  )}
+                >
+                  {state === "done" ? (
+                    <Check className="size-3.5" strokeWidth={3} />
+                  ) : state === "active" ? (
+                    <span className="size-2 animate-pulse rounded-full bg-primary" />
+                  ) : null}
+                </span>
+                <span
+                  className={cn(
+                    "text-sm",
+                    state === "idle" ? "text-muted-foreground" : "text-foreground",
+                  )}
+                >
+                  {label}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="mt-7">
+          <ProgressBar value={(done / analysisSteps.length) * 100} delay={0} className="h-1" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ---------- ready ---------- */
+
+function ReadyScreen({
+  profile,
+  onGo,
+}: {
+  profile: OnboardingProfile;
+  onGo: () => void;
+}) {
+  const milestones = routePreview(profile);
+
+  return (
+    <div className="halo grid min-h-screen place-items-center px-5 py-12">
+      <div className="animate-[pop_0.5s_cubic-bezier(0.34,1.56,0.64,1)_both] w-full max-w-md">
+        <div className="text-center">
+          <span className="mx-auto grid size-14 place-items-center rounded-3xl bg-signal shadow-[var(--shadow-glow)]">
+            <TrendingUp className="size-6 text-primary-foreground" />
+          </span>
+          <h1 className="mt-6 font-display text-3xl font-semibold">Sua rota está pronta.</h1>
+          <p className="mt-2.5 text-sm text-muted-foreground">
+            {milestones.length} marcos entre onde você está hoje e o seu objetivo.
+          </p>
+        </div>
+
+        <div className="mt-9 space-y-1">
+          {milestones.map((m, i) => (
+            <div key={m.id}>
+              <div
+                style={{ animationDelay: `${i * 130}ms` }}
+                className={cn(
+                  "animate-[fade-up_0.55s_cubic-bezier(0.16,1,0.3,1)_both] flex items-center justify-between gap-3 rounded-2xl border px-4 py-4",
+                  i === milestones.length - 1
+                    ? "border-primary/45 bg-primary/10"
+                    : "border-border bg-surface/50",
+                )}
+              >
+                <div className="min-w-0">
+                  <p className="text-sm font-medium">{m.label}</p>
+                  <p className="mt-0.5 truncate text-xs text-muted-foreground">{m.caption}</p>
+                </div>
+                <span
+                  className={cn(
+                    "shrink-0 font-display text-lg font-semibold",
+                    i === milestones.length - 1 && "text-primary",
+                  )}
+                >
+                  {brl(m.income)}
+                </span>
+              </div>
+              {i < milestones.length - 1 && (
+                <div className="ml-7 h-4 w-px bg-gradient-to-b from-primary/60 to-primary/10" />
+              )}
+            </div>
+          ))}
+        </div>
+
+        <Btn size="lg" className="mt-8 w-full" onClick={onGo}>
+          Ver minha rota
+          <ArrowRight className="size-4" />
+        </Btn>
+        <p className="mt-3 text-center text-xs text-muted-foreground">
+          Suas respostas ficaram salvas no seu perfil.
+        </p>
+      </div>
     </div>
   );
 }
