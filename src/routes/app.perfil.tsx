@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Flame, Pencil, Sparkles, Trophy, Zap } from "lucide-react";
+import { Flame, Pencil, Sparkles, Trophy, User, Zap } from "lucide-react";
 import {
   AnimatedNumber,
   Btn,
@@ -12,6 +12,7 @@ import {
 import { skills, user } from "@/lib/mock";
 import { levelFromXp, type StepView } from "@/lib/route-map";
 import { useRouteProgressContext } from "@/lib/route-progress-context";
+import type { SkillLevel } from "@/lib/onboarding";
 
 export const Route = createFileRoute("/app/perfil")({
   head: () => ({
@@ -33,23 +34,49 @@ export const Route = createFileRoute("/app/perfil")({
  * "Portfólio pronto" apontam para a etapa que representa esse marco na rota (s5 e s3) — mesma
  * lógica que já usávamos para "milestone" em route-map.ts, só reaproveitada aqui.
  */
-function buildBadges(views: StepView[], stats: { doneCount: number; streak: number; projects: unknown[]; }, incomeNow: number) {
-  const stepDone = (id: string) => views.find((s) => s.id === id)?.state === "concluído";
+function buildBadges(
+  views: StepView[],
+  stats: { doneCount: number; streak: number; projects: unknown[] },
+  incomeNow: number,
+  goalIncome: number,
+) {
+  // Etapas de "primeiro freela" e "portfólio" ficam em posições diferentes conforme a área
+  // (rota gerada tem outros ids) — aqui a condição vira "existe alguma etapa concluída com
+  // esse tipo de projeto/marco", não mais um id fixo do template de tecnologia.
+  const hasMilestone = (keyword: string) =>
+    views.some((s) => s.state === "concluído" && s.milestone.toLowerCase().includes(keyword));
   return [
     { label: "Primeira etapa", icon: Trophy, earned: stats.doneCount >= 1 },
     { label: "10 dias seguidos", icon: Flame, earned: stats.streak >= 10 },
     { label: "Primeiro projeto", icon: Sparkles, earned: stats.projects.length >= 1 },
-    { label: "Primeiro freela", icon: Zap, earned: stepDone("s5") },
-    { label: "Portfólio pronto", icon: Trophy, earned: stepDone("s3") },
-    { label: "Meta de renda", icon: Sparkles, earned: incomeNow >= user.goalIncome },
+    { label: "Primeira renda extra", icon: Zap, earned: hasMilestone("renda extra") },
+    { label: "Portfólio pronto", icon: Trophy, earned: hasMilestone("portfólio") },
+    { label: "Meta de renda", icon: Sparkles, earned: goalIncome > 0 && incomeNow >= goalIncome },
   ];
 }
 
+const SKILL_LEVEL_PCT: Record<SkillLevel, number> = {
+  iniciante: 35,
+  intermediário: 65,
+  avançado: 90,
+};
+
 function ProfilePage() {
-  const { views, stats } = useRouteProgressContext();
+  const { views, stats, profile } = useRouteProgressContext();
   const level = levelFromXp(stats.totalXp);
-  const badges = buildBadges(views, stats, stats.incomeNow);
-  const topSkills = [...skills].sort((a, b) => b.level - a.level).slice(0, 4);
+  const badges = buildBadges(views, stats, stats.incomeNow, profile.goalIncome);
+
+  // Rota personalizada: mistura o que a pessoa já sabia (onboarding) com o que já dominou
+  // completando etapas. Rota demo: mantém os níveis fixos do mock, que existem só pra ilustrar
+  // a tela antes de qualquer onboarding real.
+  const topSkills = profile.isPersonalized
+    ? [
+        ...stats.skills.map((name) => ({ name, level: 90 })),
+        ...profile.declaredSkills
+          .filter((s) => !stats.skills.includes(s.name))
+          .map((s) => ({ name: s.name, level: SKILL_LEVEL_PCT[s.level] })),
+      ].slice(0, 4)
+    : [...skills].sort((a, b) => b.level - a.level).slice(0, 4);
 
   return (
     <div className="space-y-6">
@@ -67,12 +94,15 @@ function ProfilePage() {
         <Panel>
           <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
             <span className="grid size-16 shrink-0 place-items-center rounded-3xl bg-signal font-display text-xl font-semibold text-primary-foreground shadow-[var(--shadow-glow)]">
-              {user.initials}
+              {profile.firstName ? user.initials : <User className="size-6" />}
             </span>
             <div className="min-w-0 flex-1">
-              <h2 className="truncate font-display text-xl font-semibold">{user.name}</h2>
+              <h2 className="truncate font-display text-xl font-semibold">
+                {profile.firstName ? user.name : profile.role}
+              </h2>
               <p className="truncate text-sm text-muted-foreground">
-                {user.role} → {user.target}
+                {profile.firstName ? `${profile.role} → ` : "→ "}
+                {profile.target}
               </p>
               <div className="mt-3 flex flex-wrap gap-2">
                 <Chip tone="primary">
@@ -94,7 +124,7 @@ function ProfilePage() {
       <div className="grid gap-4 sm:grid-cols-3">
         {[
           { k: "Renda atual", v: stats.incomeNow, prefix: "R$ " },
-          { k: "Meta de renda", v: user.goalIncome, prefix: "R$ " },
+          { k: "Meta de renda", v: profile.goalIncome, prefix: "R$ " },
           { k: "XP acumulado", v: stats.totalXp, prefix: "" },
         ].map((m, i) => (
           <Reveal key={m.k} delay={i * 70}>
@@ -114,11 +144,11 @@ function ProfilePage() {
             <h3 className="font-display text-lg font-semibold">Seu cenário</h3>
             <dl className="mt-4 divide-y divide-border text-sm">
               {[
-                ["Escolaridade", "Cursando superior"],
-                ["Experiência", "Iniciante"],
-                ["Horas por semana", `${user.hoursPerWeek}h`],
-                ["Objetivo", user.goalType],
-                ["Prazo", `${user.deadlineMonths} meses`],
+                ...(profile.situationLabel ? [["Situação", profile.situationLabel]] : []),
+                ["Experiência", profile.experienceLabel ?? "Iniciante"],
+                ["Horas por semana", `${profile.hoursPerWeek}h`],
+                ["Objetivo", profile.goalType],
+                ["Prazo", `${profile.deadlineMonths} meses`],
               ].map(([k, v]) => (
                 <div key={k} className="flex items-center justify-between gap-4 py-3">
                   <dt className="text-muted-foreground">{k}</dt>
@@ -132,17 +162,23 @@ function ProfilePage() {
         <Reveal delay={160}>
           <Panel className="h-full">
             <h3 className="font-display text-lg font-semibold">Principais habilidades</h3>
-            <div className="mt-4 space-y-4">
-              {topSkills.map((s, i) => (
-                <div key={s.name}>
-                  <div className="mb-2 flex justify-between text-xs">
-                    <span className="text-muted-foreground">{s.name}</span>
-                    <span className="font-medium">{s.level}%</span>
+            {topSkills.length === 0 ? (
+              <p className="mt-3 text-sm text-muted-foreground">
+                Suas habilidades aparecem aqui conforme você avança na rota.
+              </p>
+            ) : (
+              <div className="mt-4 space-y-4">
+                {topSkills.map((s, i) => (
+                  <div key={s.name}>
+                    <div className="mb-2 flex justify-between text-xs">
+                      <span className="text-muted-foreground">{s.name}</span>
+                      <span className="font-medium">{s.level}%</span>
+                    </div>
+                    <ProgressBar value={s.level} delay={250 + i * 90} />
                   </div>
-                  <ProgressBar value={s.level} delay={250 + i * 90} />
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </Panel>
         </Reveal>
       </div>

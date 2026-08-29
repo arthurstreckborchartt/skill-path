@@ -21,7 +21,6 @@ import {
   type WeekPlanState,
 } from "@/lib/route-map";
 import { useRouteProgressContext } from "@/lib/route-progress-context";
-import { user } from "@/lib/mock";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/app/")({
@@ -54,11 +53,11 @@ const weekStateTone: Record<WeekPlanState, "primary" | "accent" | "muted" | "neu
 };
 
 function Dashboard() {
-  const { views, currentIndex, stats } = useRouteProgressContext();
+  const { views, currentIndex, stats, profile } = useRouteProgressContext();
   const level = levelFromXp(stats.totalXp);
   const nextAction = getNextAction(views, currentIndex);
   const weekPlan = getWeekPlan(views);
-  const insights = getInsights(views, stats);
+  const insights = getInsights(views, stats, profile.hoursPerWeek);
   const completed = views.filter((s) => s.state === "concluído");
   const routeDone = stats.percent >= 100;
 
@@ -67,7 +66,9 @@ function Dashboard() {
       <Reveal>
         <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 sm:flex sm:justify-between">
           <div className="min-w-0">
-            <p className="text-sm text-muted-foreground">Olá, {user.firstName}</p>
+            <p className="text-sm text-muted-foreground">
+              {profile.firstName ? `Olá, ${profile.firstName}` : "Olá!"}
+            </p>
             <h1 className="mt-1 font-display text-2xl leading-tight font-semibold text-balance sm:text-3xl">
               {routeDone
                 ? "Você concluiu sua rota"
@@ -94,9 +95,9 @@ function Dashboard() {
             <div className="flex items-center gap-6">
               <Ring value={stats.percent} label={`${stats.percent}%`} sub="da rota" />
               <div>
-                <p className="text-xs text-muted-foreground">{user.target}</p>
+                <p className="text-xs text-muted-foreground">{profile.target}</p>
                 <p className="font-display text-3xl font-semibold text-primary">
-                  <AnimatedNumber value={user.goalIncome} prefix="R$ " />
+                  <AnimatedNumber value={profile.goalIncome} prefix="R$ " />
                 </p>
                 <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
                   <TrendingUp className="size-3.5 text-primary" />
@@ -125,7 +126,7 @@ function Dashboard() {
             </p>
             <h2 className="mt-4 font-display text-xl font-semibold">Rota concluída</h2>
             <p className="mt-1.5 text-sm text-muted-foreground">
-              Você percorreu todas as etapas até {user.target.toLowerCase()}. Habilidades,
+              Você percorreu todas as etapas até {profile.target.toLowerCase()}. Habilidades,
               projetos e oportunidades ficam disponíveis para revisão a qualquer momento.
             </p>
           </Panel>
@@ -237,7 +238,7 @@ function Dashboard() {
             <div className="mt-6 grid grid-cols-3 gap-2 text-center">
               {[
                 { k: "Sequência", v: `${stats.streak}d` },
-                { k: "Horas/semana", v: `${user.hoursPerWeek}h` },
+                { k: "Horas/semana", v: `${profile.hoursPerWeek}h` },
                 { k: "Etapas", v: `${stats.doneCount}/${stats.total}` },
               ].map((m) => (
                 <div key={m.k} className="rounded-2xl bg-surface-2/50 py-3">

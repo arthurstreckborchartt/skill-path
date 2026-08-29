@@ -100,7 +100,10 @@ function AppShellInner() {
             Nível {level.level} · {level.name}
           </div>
           <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-muted">
-            <div className="h-full rounded-full bg-signal" style={{ width: `${level.progressPct}%` }} />
+            <div
+              className="h-full rounded-full bg-signal"
+              style={{ width: `${level.progressPct}%` }}
+            />
           </div>
           <p className="mt-2 text-xs text-muted-foreground">
             {level.maxed ? `${level.xp} XP` : `${level.xp} / ${level.xpToNext} XP`}

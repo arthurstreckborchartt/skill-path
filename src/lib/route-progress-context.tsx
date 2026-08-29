@@ -17,6 +17,7 @@ export function RouteProgressProvider({ children }: { children: ReactNode }) {
 
 export function useRouteProgressContext(): RouteProgressValue {
   const ctx = useContext(RouteProgressContext);
-  if (!ctx) throw new Error("useRouteProgressContext precisa de <RouteProgressProvider> acima na árvore.");
+  if (!ctx)
+    throw new Error("useRouteProgressContext precisa de <RouteProgressProvider> acima na árvore.");
   return ctx;
 }

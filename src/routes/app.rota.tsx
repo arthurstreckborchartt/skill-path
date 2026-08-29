@@ -5,7 +5,6 @@ import { Chip, PageHeader, Panel, ProgressBar, Reveal } from "@/components/pathl
 import { DetailSheet, RouteTrack, StepDetail } from "@/components/pathly/route-map";
 import type { StepView } from "@/lib/route-map";
 import { useRouteProgressContext } from "@/lib/route-progress-context";
-import { user } from "@/lib/mock";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/app/rota")({
@@ -61,8 +60,15 @@ function Stat({
 }
 
 function RoutePage() {
-  const { views: steps, stats, celebrating, toggleCheck, completeStep, reopenStep } =
-    useRouteProgressContext();
+  const {
+    views: steps,
+    stats,
+    profile,
+    celebrating,
+    toggleCheck,
+    completeStep,
+    reopenStep,
+  } = useRouteProgressContext();
   const [view, setView] = useState<View>("geral");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -86,7 +92,7 @@ function RoutePage() {
     <div className="space-y-6">
       <PageHeader
         title="Minha rota"
-        subtitle={`${user.firstName}, ${stats.percent}% da rota concluída — de R$ ${user.currentIncome.toLocaleString("pt-BR")} até R$ ${user.goalIncome.toLocaleString("pt-BR")}`}
+        subtitle={`${profile.firstName ? `${profile.firstName}, ` : ""}${stats.percent}% da rota concluída — de R$ ${profile.currentIncome.toLocaleString("pt-BR")} até R$ ${profile.goalIncome.toLocaleString("pt-BR")}`}
         action={
           <Chip tone="primary">
             <Sparkles className="size-3.5" /> {stats.doneCount}/{stats.total} etapas
@@ -101,9 +107,11 @@ function RoutePage() {
             <div>
               <p className="text-xs text-muted-foreground">Meta atual</p>
               <p className="font-display text-2xl font-semibold">
-                R$ {user.currentIncome.toLocaleString("pt-BR")}{" "}
+                R$ {profile.currentIncome.toLocaleString("pt-BR")}{" "}
                 <span className="text-muted-foreground">→</span>{" "}
-                <span className="text-primary">R$ {user.goalIncome.toLocaleString("pt-BR")}</span>
+                <span className="text-primary">
+                  R$ {profile.goalIncome.toLocaleString("pt-BR")}
+                </span>
               </p>
               <p className="mt-1 text-xs text-muted-foreground">
                 Renda projetada hoje: R$ {stats.incomeNow.toLocaleString("pt-BR")}/mês
@@ -121,7 +129,7 @@ function RoutePage() {
               icon={<Calendar className="size-3" />}
               label="Tempo previsto"
               value={`${stats.monthsLeft} meses`}
-              hint={`${user.hoursPerWeek}h por semana`}
+              hint={`${profile.hoursPerWeek}h por semana`}
             />
             <Stat
               icon={<Clock className="size-3" />}
@@ -168,8 +176,7 @@ function RoutePage() {
                 </p>
               </div>
               <Chip tone="primary">
-                <TrendingUp className="size-3" /> R${" "}
-                {current.incomeAfter.toLocaleString("pt-BR")}
+                <TrendingUp className="size-3" /> R$ {current.incomeAfter.toLocaleString("pt-BR")}
               </Chip>
             </div>
             <ProgressBar value={current.checkPct} className="mt-4" />
@@ -202,10 +209,10 @@ function RoutePage() {
             <div>
               <p className="text-[11px] text-muted-foreground">Hoje</p>
               <p className="font-display text-sm font-semibold">
-                R$ {user.currentIncome.toLocaleString("pt-BR")}/mês
+                R$ {profile.currentIncome.toLocaleString("pt-BR")}/mês
               </p>
             </div>
-            <span className="text-xs text-muted-foreground">{user.role}</span>
+            <span className="text-xs text-muted-foreground">{profile.role}</span>
           </div>
 
           <RouteTrack steps={visible} selectedId={selected?.id ?? null} onSelect={select} />
@@ -214,10 +221,10 @@ function RoutePage() {
             <div>
               <p className="text-[11px] text-muted-foreground">Objetivo</p>
               <p className="font-display text-sm font-semibold text-primary">
-                R$ {user.goalIncome.toLocaleString("pt-BR")}/mês
+                R$ {profile.goalIncome.toLocaleString("pt-BR")}/mês
               </p>
             </div>
-            <span className="text-xs text-muted-foreground">{user.target}</span>
+            <span className="text-xs text-muted-foreground">{profile.target}</span>
           </div>
         </div>
 

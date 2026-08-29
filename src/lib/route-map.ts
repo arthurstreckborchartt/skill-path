@@ -1,5 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { steps as baseSteps, user, type Difficulty, type Step } from "@/lib/mock";
+import { generateRoute, roleLabelForArea } from "@/lib/route-templates";
+import {
+  experiences,
+  goals,
+  horizons,
+  loadProfile,
+  situations,
+  type SkillLevel,
+} from "@/lib/onboarding";
 
 export type NodeState = "concluído" | "atual" | "futuro" | "bloqueado";
 
@@ -106,7 +115,8 @@ const extras: Record<string, Extra> = {
   },
 };
 
-export const routeSteps: RouteStep[] = baseSteps.map((s) => ({
+/** A rota fixa de demonstração — usada como exemplo público e como fallback antes da hidratação. */
+const DEMO_STEPS: RouteStep[] = baseSteps.map((s) => ({
   ...s,
   ...(extras[s.id] ?? {
     why: "Etapa complementar da sua rota.",
@@ -125,6 +135,71 @@ export const difficultyTone: Record<Difficulty, "primary" | "accent" | "xp"> = {
   difícil: "xp",
 };
 
+/* ---------------- perfil ativo: demo ou gerado do onboarding real ---------------- */
+
+export type ActiveProfile = {
+  /** Nulo para rota personalizada — o onboarding não coleta nome, e não inventamos um. */
+  firstName: string | null;
+  role: string;
+  target: string;
+  currentIncome: number;
+  goalIncome: number;
+  hoursPerWeek: number;
+  deadlineMonths: number;
+  goalType: string;
+  /** Só preenchidos para rota personalizada — respostas reais do onboarding, não fabricadas. */
+  situationLabel: string | null;
+  experienceLabel: string | null;
+  /** Habilidades que a pessoa declarou já ter no onboarding — vazio na rota demo. */
+  declaredSkills: { name: string; level: SkillLevel }[];
+  isPersonalized: boolean;
+};
+
+const DEMO_PROFILE: ActiveProfile = {
+  firstName: user.firstName,
+  role: user.role,
+  target: user.target,
+  currentIncome: user.currentIncome,
+  goalIncome: user.goalIncome,
+  hoursPerWeek: user.hoursPerWeek,
+  deadlineMonths: user.deadlineMonths,
+  goalType: user.goalType,
+  situationLabel: null,
+  experienceLabel: null,
+  declaredSkills: [],
+  isPersonalized: false,
+};
+
+/**
+ * Lê o perfil salvo do onboarding e gera a rota real. Só roda no cliente — no HTML do servidor
+ * e no primeiro paint do cliente sempre voltamos pro exemplo demo (idêntico dos dois lados,
+ * sem risco de mismatch de hidratação), e só depois de montado trocamos pra rota real, dentro
+ * de um efeito — mesmo padrão que já protege o progresso.
+ */
+function resolveActiveRoute(): { steps: RouteStep[]; profile: ActiveProfile } {
+  if (typeof window === "undefined") return { steps: DEMO_STEPS, profile: DEMO_PROFILE };
+  const onboarding = loadProfile();
+  if (!onboarding?.completedAt) return { steps: DEMO_STEPS, profile: DEMO_PROFILE };
+
+  const steps = generateRoute(onboarding);
+  const horizonMonths = horizons.find((h) => h.id === onboarding.income.horizon)?.months ?? 10;
+  const profile: ActiveProfile = {
+    firstName: null,
+    role: onboarding.currentProfession.trim() || "sua profissão atual",
+    target: roleLabelForArea(onboarding.desiredAreas[0]),
+    currentIncome: onboarding.income.noIncome ? 0 : (onboarding.income.current ?? 0),
+    goalIncome: Math.max(onboarding.income.target ?? 0, 500),
+    hoursPerWeek: Math.max(2, onboarding.study.hoursPerWeek || 7),
+    deadlineMonths: horizonMonths,
+    goalType: goals.find((g) => g.id === onboarding.goal)?.label ?? "Crescer na carreira",
+    situationLabel: situations.find((s) => s.id === onboarding.situation)?.label ?? null,
+    experienceLabel: experiences.find((e) => e.id === onboarding.experience)?.label ?? null,
+    declaredSkills: onboarding.skills.map((s) => ({ name: s.name, level: s.level })),
+    isPersonalized: true,
+  };
+  return { steps, profile };
+}
+
 /* ---------------- progresso persistente ---------------- */
 
 const KEY = "pathly.route.v1";
@@ -140,29 +215,33 @@ export type RouteProgress = {
   streak: number;
 };
 
-const initialProgress: RouteProgress = {
-  done: routeSteps.filter((s) => s.status === "concluído").map((s) => s.id),
-  checks: routeSteps.flatMap((s) =>
-    s.checklist.filter((c) => c.done).map((c) => `${s.id}:${c.id}`),
-  ),
-  lastActiveDate: null,
-  streak: 0,
-};
+/** Rota demo já vem com progresso de exemplo pré-preenchido; rota real gerada começa sempre zerada. */
+function seedProgress(steps: RouteStep[], isPersonalized: boolean): RouteProgress {
+  if (isPersonalized) {
+    return { done: [], checks: [], lastActiveDate: null, streak: 0 };
+  }
+  return {
+    done: steps.filter((s) => s.status === "concluído").map((s) => s.id),
+    checks: steps.flatMap((s) => s.checklist.filter((c) => c.done).map((c) => `${s.id}:${c.id}`)),
+    lastActiveDate: null,
+    streak: 0,
+  };
+}
 
-function read(): RouteProgress {
-  if (typeof window === "undefined") return initialProgress;
+function readProgress(fallback: RouteProgress): RouteProgress {
+  if (typeof window === "undefined") return fallback;
   try {
     const raw = window.localStorage.getItem(KEY);
-    if (!raw) return initialProgress;
+    if (!raw) return fallback;
     const parsed = JSON.parse(raw) as Partial<RouteProgress>;
     return {
-      done: parsed.done ?? initialProgress.done,
-      checks: parsed.checks ?? initialProgress.checks,
-      lastActiveDate: parsed.lastActiveDate ?? initialProgress.lastActiveDate,
-      streak: parsed.streak ?? initialProgress.streak,
+      done: parsed.done ?? fallback.done,
+      checks: parsed.checks ?? fallback.checks,
+      lastActiveDate: parsed.lastActiveDate ?? fallback.lastActiveDate,
+      streak: parsed.streak ?? fallback.streak,
     };
   } catch {
-    return initialProgress;
+    return fallback;
   }
 }
 
@@ -193,12 +272,19 @@ export type StepView = RouteStep & {
 };
 
 export function useRouteProgress() {
-  const [progress, setProgress] = useState<RouteProgress>(initialProgress);
+  const [active, setActive] = useState<{ steps: RouteStep[]; profile: ActiveProfile }>({
+    steps: DEMO_STEPS,
+    profile: DEMO_PROFILE,
+  });
+  const [progress, setProgress] = useState<RouteProgress>(() => seedProgress(DEMO_STEPS, false));
   const [hydrated, setHydrated] = useState(false);
   const [celebrating, setCelebrating] = useState<{ id: string; xp: number } | null>(null);
 
   useEffect(() => {
-    setProgress(read());
+    const resolved = resolveActiveRoute();
+    setActive(resolved);
+    const fallback = seedProgress(resolved.steps, resolved.profile.isPersonalized);
+    setProgress(readProgress(fallback));
     setHydrated(true);
   }, []);
 
@@ -211,14 +297,17 @@ export function useRouteProgress() {
     }
   }, [progress, hydrated]);
 
+  const steps = active.steps;
+  const profile = active.profile;
+
   const currentIndex = useMemo(() => {
-    const i = routeSteps.findIndex((s) => !progress.done.includes(s.id));
-    return i === -1 ? routeSteps.length - 1 : i;
-  }, [progress.done]);
+    const i = steps.findIndex((s) => !progress.done.includes(s.id));
+    return i === -1 ? steps.length - 1 : i;
+  }, [progress.done, steps]);
 
   const views: StepView[] = useMemo(
     () =>
-      routeSteps.map((s, i) => {
+      steps.map((s, i) => {
         const checkedIds = s.checklist
           .filter((c) => progress.checks.includes(`${s.id}:${c.id}`))
           .map((c) => c.id);
@@ -238,7 +327,7 @@ export function useRouteProgress() {
           checkPct: Math.round((checkedIds.length / Math.max(1, s.checklist.length)) * 100),
         };
       }),
-    [progress, currentIndex],
+    [progress, currentIndex, steps],
   );
 
   const toggleCheck = useCallback((stepId: string, checkId: string) => {
@@ -253,29 +342,35 @@ export function useRouteProgress() {
     });
   }, []);
 
-  const completeStep = useCallback((stepId: string) => {
-    const step = routeSteps.find((s) => s.id === stepId);
-    if (!step) return;
-    setProgress((p) => {
-      if (p.done.includes(stepId)) return p;
-      const next = {
-        ...p,
-        done: [...p.done, stepId],
-        checks: Array.from(
-          new Set([...p.checks, ...step.checklist.map((c) => `${stepId}:${c.id}`)]),
-        ),
-      };
-      return bumpStreak(next);
-    });
-    setCelebrating({ id: stepId, xp: step.xp });
-    window.setTimeout(() => setCelebrating(null), 2200);
-  }, []);
+  const completeStep = useCallback(
+    (stepId: string) => {
+      const step = steps.find((s) => s.id === stepId);
+      if (!step) return;
+      setProgress((p) => {
+        if (p.done.includes(stepId)) return p;
+        const next = {
+          ...p,
+          done: [...p.done, stepId],
+          checks: Array.from(
+            new Set([...p.checks, ...step.checklist.map((c) => `${stepId}:${c.id}`)]),
+          ),
+        };
+        return bumpStreak(next);
+      });
+      setCelebrating({ id: stepId, xp: step.xp });
+      window.setTimeout(() => setCelebrating(null), 2200);
+    },
+    [steps],
+  );
 
   const reopenStep = useCallback((stepId: string) => {
     setProgress((p) => ({ ...p, done: p.done.filter((id) => id !== stepId) }));
   }, []);
 
-  const reset = useCallback(() => setProgress(initialProgress), []);
+  const reset = useCallback(
+    () => setProgress(seedProgress(steps, profile.isPersonalized)),
+    [steps, profile.isPersonalized],
+  );
 
   const stats = useMemo(() => {
     const done = views.filter((s) => s.state === "concluído");
@@ -286,25 +381,28 @@ export function useRouteProgress() {
     const skills = Array.from(new Set(done.flatMap((s) => s.skills)));
     const projects = done.flatMap((s) => s.projects);
     const totalXp = done.reduce((a, s) => a + s.xp, 0);
-    const percent = Math.round((done.length / routeSteps.length) * 100);
+    const percent = Math.round((done.length / steps.length) * 100);
     const current = views[currentIndex];
     const remainingWeeks = views
       .filter((s) => s.state !== "concluído")
-      .reduce((a, s) => a + Math.max(1, Math.round(s.hours / Math.max(4, user.hoursPerWeek))), 0);
+      .reduce(
+        (a, s) => a + Math.max(1, Math.round(s.hours / Math.max(4, profile.hoursPerWeek))),
+        0,
+      );
     return {
       percent,
       doneCount: done.length,
-      total: routeSteps.length,
+      total: steps.length,
       hours,
       skills,
       projects,
       totalXp,
       current,
-      incomeNow: done.at(-1)?.incomeAfter ?? user.currentIncome,
+      incomeNow: done.at(-1)?.incomeAfter ?? profile.currentIncome,
       monthsLeft: Math.max(1, Math.round(remainingWeeks / 4.3)),
       streak: progress.streak,
     };
-  }, [views, currentIndex, progress.streak]);
+  }, [views, currentIndex, progress.streak, steps, profile]);
 
   return {
     views,
@@ -316,6 +414,7 @@ export function useRouteProgress() {
     reopenStep,
     reset,
     hydrated,
+    profile,
   };
 }
 
@@ -457,13 +556,17 @@ export function getWeekPlan(views: StepView[]): WeekPlanItem[] {
 /* ---------------- insights ---------------- */
 
 /** Só entra aqui o que dá para provar com os dados reais — sem "esta semana" (não guardamos data por conclusão). */
-export function getInsights(views: StepView[], stats: RouteProgressValue["stats"]): string[] {
+export function getInsights(
+  views: StepView[],
+  stats: RouteProgressValue["stats"],
+  hoursPerWeek: number,
+): string[] {
   const insights: string[] = [`Você já percorreu ${stats.percent}% da sua rota.`];
 
   const current = stats.current;
   if (current && current.state === "atual") {
     const remainingHours = (current.hours * (100 - current.checkPct)) / 100;
-    const weeks = Math.max(1, Math.round(remainingHours / Math.max(4, user.hoursPerWeek)));
+    const weeks = Math.max(1, Math.round(remainingHours / Math.max(4, hoursPerWeek)));
     insights.push(
       `Faltam aproximadamente ${weeks} semana${weeks === 1 ? "" : "s"} para o marco "${current.milestone}".`,
     );
