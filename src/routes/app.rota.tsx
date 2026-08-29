@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Check, ChevronDown, Lock, Sparkles, Target, Zap } from "lucide-react";
+import { Calendar, Clock, Layers, Sparkles, Target, TrendingUp, Zap } from "lucide-react";
 import { Chip, PageHeader, Panel, ProgressBar, Reveal } from "@/components/pathly/ui";
-import { steps, user, type Step } from "@/lib/mock";
+import { DetailSheet, RouteTrack, StepDetail } from "@/components/pathly/route-map";
+import { useRouteProgress, type StepView } from "@/lib/route-map";
+import { user } from "@/lib/mock";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/app/rota")({
@@ -11,209 +13,241 @@ export const Route = createFileRoute("/app/rota")({
       { title: "Minha rota — Pathly" },
       {
         name: "description",
-        content: "Todas as etapas entre a sua renda atual e a sua meta, com prazo e impacto.",
+        content:
+          "O mapa visual entre a sua renda atual e a sua meta: etapas, projetos, XP e impacto de cada habilidade.",
       },
       { property: "og:title", content: "Minha rota na Pathly" },
       {
         property: "og:description",
         content: "Etapas, projetos e habilidades ordenados pelo impacto na sua renda.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: RoutePage,
 });
 
-const difficultyTone = {
-  fácil: "primary" as const,
-  médio: "accent" as const,
-  difícil: "xp" as const,
-};
+type View = "geral" | "semana" | "proximas";
 
-function StepCard({ step, open, onToggle }: { step: Step; open: boolean; onToggle: () => void }) {
-  const done = step.checklist.filter((c) => c.done).length;
-  const progress = Math.round((done / step.checklist.length) * 100);
-  const locked = step.status === "bloqueado";
+const views: { id: View; label: string }[] = [
+  { id: "geral", label: "Visão geral" },
+  { id: "semana", label: "Semana atual" },
+  { id: "proximas", label: "Próximas etapas" },
+];
 
+function Stat({
+  icon,
+  label,
+  value,
+  hint,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  hint?: string;
+}) {
   return (
-    <Panel className={cn("p-0 overflow-hidden", locked && "opacity-75")}>
-      <button
-        onClick={onToggle}
-        className="tap grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-4 p-5 text-left"
-      >
-        <span
-          className={cn(
-            "grid size-10 shrink-0 place-items-center rounded-2xl font-display text-sm font-semibold",
-            step.status === "concluído"
-              ? "bg-primary text-primary-foreground"
-              : step.status === "em andamento"
-                ? "bg-primary/15 text-primary"
-                : "bg-surface-2 text-muted-foreground",
-          )}
-        >
-          {step.status === "concluído" ? (
-            <Check className="size-4" />
-          ) : locked ? (
-            <Lock className="size-3.5" />
-          ) : (
-            step.order
-          )}
-        </span>
-        <span className="min-w-0">
-          <span className="block truncate font-medium">{step.title}</span>
-          <span className="mt-0.5 block truncate text-xs text-muted-foreground">
-            {step.eta} · {step.difficulty} · R$ {step.incomeAfter.toLocaleString("pt-BR")}
-          </span>
-        </span>
-        <ChevronDown
-          className={cn(
-            "size-4 shrink-0 text-muted-foreground transition-transform duration-300",
-            open && "rotate-180",
-          )}
-        />
-      </button>
-
-      <div
-        className={cn(
-          "grid transition-all duration-500 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)]",
-          open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0",
-        )}
-      >
-        <div className="overflow-hidden">
-          <div className="space-y-5 border-t border-border px-5 py-5">
-            <p className="text-sm text-muted-foreground">{step.goal}</p>
-
-            <div className="flex flex-wrap gap-2">
-              <Chip tone={difficultyTone[step.difficulty]}>{step.difficulty}</Chip>
-              <Chip>{step.eta}</Chip>
-              <Chip tone="xp">
-                <Zap className="size-3" /> {step.xp} XP
-              </Chip>
-            </div>
-
-            <div className="rounded-2xl bg-surface-2/50 p-4">
-              <p className="text-xs font-medium text-muted-foreground">Impacto esperado</p>
-              <p className="mt-1 text-sm">{step.impact}</p>
-            </div>
-
-            <div className="grid gap-5 sm:grid-cols-2">
-              <div>
-                <p className="text-xs font-medium text-muted-foreground">Habilidades adquiridas</p>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {step.skills.map((s) => (
-                    <Chip key={s} tone="primary">
-                      {s}
-                    </Chip>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <p className="text-xs font-medium text-muted-foreground">Projetos recomendados</p>
-                <ul className="mt-2 space-y-1.5 text-sm text-muted-foreground">
-                  {step.projects.map((p) => (
-                    <li key={p} className="flex gap-2">
-                      <Target className="mt-0.5 size-3.5 shrink-0 text-accent" />
-                      {p}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-
-            <div>
-              <p className="text-xs font-medium text-muted-foreground">Recursos para estudar</p>
-              <div className="mt-2 space-y-2">
-                {step.resources.map((r) => (
-                  <div
-                    key={r.label}
-                    className="flex items-center justify-between rounded-xl bg-surface-2/40 px-4 py-3 text-sm transition-colors hover:bg-surface-2"
-                  >
-                    <span className="min-w-0 truncate">{r.label}</span>
-                    <span className="ml-3 shrink-0 text-xs text-muted-foreground">{r.type}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <div className="mb-2 flex justify-between text-xs">
-                <span className="text-muted-foreground">Checklist</span>
-                <span className="font-medium">
-                  {done}/{step.checklist.length}
-                </span>
-              </div>
-              <ProgressBar value={progress} delay={100} />
-              <ul className="mt-3 space-y-1.5">
-                {step.checklist.map((c) => (
-                  <li key={c.id} className="flex items-center gap-3 text-sm">
-                    <span
-                      className={cn(
-                        "grid size-4.5 shrink-0 place-items-center rounded-full",
-                        c.done ? "bg-primary text-primary-foreground" : "bg-muted",
-                      )}
-                    >
-                      {c.done && <Check className="size-2.5" />}
-                    </span>
-                    <span className={cn(c.done && "text-muted-foreground line-through")}>
-                      {c.label}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </div>
+    <div className="rounded-2xl border border-border bg-surface-1/60 p-4">
+      <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+        {icon}
+        {label}
       </div>
-    </Panel>
+      <p className="mt-1.5 font-display text-lg font-semibold">{value}</p>
+      {hint && <p className="text-[11px] text-muted-foreground">{hint}</p>}
+    </div>
   );
 }
 
 function RoutePage() {
-  const [openId, setOpenId] = useState<string | null>("s2");
-  const completed = steps.filter((s) => s.status === "concluído").length;
+  const { views: steps, stats, celebrating, toggleCheck, completeStep, reopenStep } =
+    useRouteProgress();
+  const [view, setView] = useState<View>("geral");
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
+
+  const current = stats.current;
+  const selected: StepView | undefined =
+    steps.find((s) => s.id === selectedId) ?? current ?? steps[0];
+
+  const visible = useMemo(() => {
+    if (view === "semana") return current ? [current] : steps.slice(0, 1);
+    if (view === "proximas") return steps.filter((s) => s.state !== "concluído");
+    return steps;
+  }, [view, steps, current]);
+
+  function select(id: string) {
+    setSelectedId(id);
+    setSheetOpen(true);
+  }
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="Minha rota"
-        subtitle={`De R$ ${user.currentIncome.toLocaleString("pt-BR")} até R$ ${user.goalIncome.toLocaleString("pt-BR")} em ${user.deadlineMonths} meses`}
+        subtitle={`${user.firstName}, ${stats.percent}% da rota concluída — de R$ ${user.currentIncome.toLocaleString("pt-BR")} até R$ ${user.goalIncome.toLocaleString("pt-BR")}`}
         action={
           <Chip tone="primary">
-            <Sparkles className="size-3.5" /> {completed}/{steps.length} etapas
+            <Sparkles className="size-3.5" /> {stats.doneCount}/{stats.total} etapas
           </Chip>
         }
       />
 
+      {/* painel de progresso */}
       <Reveal>
         <Panel>
-          <div className="flex items-end justify-between gap-4">
+          <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
-              <p className="text-xs text-muted-foreground">Hoje</p>
-              <p className="font-display text-xl font-semibold">
-                R$ {user.currentIncome.toLocaleString("pt-BR")}
+              <p className="text-xs text-muted-foreground">Meta atual</p>
+              <p className="font-display text-2xl font-semibold">
+                R$ {user.currentIncome.toLocaleString("pt-BR")}{" "}
+                <span className="text-muted-foreground">→</span>{" "}
+                <span className="text-primary">R$ {user.goalIncome.toLocaleString("pt-BR")}</span>
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Renda projetada hoje: R$ {stats.incomeNow.toLocaleString("pt-BR")}/mês
               </p>
             </div>
             <div className="text-right">
-              <p className="text-xs text-muted-foreground">Meta</p>
-              <p className="font-display text-xl font-semibold text-primary">
-                R$ {user.goalIncome.toLocaleString("pt-BR")}
-              </p>
+              <p className="font-display text-3xl font-semibold text-primary">{stats.percent}%</p>
+              <p className="text-xs text-muted-foreground">da rota concluída</p>
             </div>
           </div>
-          <ProgressBar value={(completed / steps.length) * 100} className="mt-4" />
+          <ProgressBar value={stats.percent} className="mt-4" />
+
+          <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-5">
+            <Stat
+              icon={<Calendar className="size-3" />}
+              label="Tempo previsto"
+              value={`${stats.monthsLeft} meses`}
+              hint={`${user.hoursPerWeek}h por semana`}
+            />
+            <Stat
+              icon={<Clock className="size-3" />}
+              label="Horas estudadas"
+              value={`${stats.hours}h`}
+            />
+            <Stat
+              icon={<Target className="size-3" />}
+              label="Projetos concluídos"
+              value={String(stats.projects.length)}
+            />
+            <Stat
+              icon={<Layers className="size-3" />}
+              label="Habilidades"
+              value={String(stats.skills.length)}
+            />
+            <Stat
+              icon={<Zap className="size-3" />}
+              label="XP da rota"
+              value={stats.totalXp.toLocaleString("pt-BR")}
+            />
+          </div>
         </Panel>
       </Reveal>
 
-      <div className="space-y-3">
-        {steps.map((step, i) => (
-          <Reveal key={step.id} delay={i * 50}>
-            <StepCard
-              step={step}
-              open={openId === step.id}
-              onToggle={() => setOpenId(openId === step.id ? null : step.id)}
-            />
-          </Reveal>
+      {/* etapa atual em destaque */}
+      {current && (
+        <Reveal delay={60}>
+          <button
+            onClick={() => select(current.id)}
+            className="tap panel panel-hover w-full p-5 text-left"
+          >
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="min-w-0">
+                <span className="flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.14em] text-primary uppercase">
+                  <Sparkles className="size-3" /> Você está aqui
+                </span>
+                <p className="mt-1.5 font-display text-lg font-semibold text-balance">
+                  {current.title}
+                </p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {current.eta} · {current.checksDone}/{current.checksTotal} tarefas ·{" "}
+                  {current.impactLevel} impacto
+                </p>
+              </div>
+              <Chip tone="primary">
+                <TrendingUp className="size-3" /> R${" "}
+                {current.incomeAfter.toLocaleString("pt-BR")}
+              </Chip>
+            </div>
+            <ProgressBar value={current.checkPct} className="mt-4" />
+          </button>
+        </Reveal>
+      )}
+
+      {/* seletor de visualização */}
+      <div className="inline-flex gap-1 rounded-full border border-border bg-surface-1/60 p-1">
+        {views.map((v) => (
+          <button
+            key={v.id}
+            onClick={() => setView(v.id)}
+            className={cn(
+              "tap rounded-full px-3.5 py-2 text-xs font-medium transition-all duration-300 sm:text-sm",
+              view === v.id
+                ? "bg-primary/15 text-primary"
+                : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            {v.label}
+          </button>
         ))}
       </div>
+
+      {/* mapa + detalhe */}
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] lg:items-start">
+        <div>
+          <div className="mb-4 flex items-center justify-between rounded-2xl border border-border bg-surface-1/50 px-4 py-3">
+            <div>
+              <p className="text-[11px] text-muted-foreground">Hoje</p>
+              <p className="font-display text-sm font-semibold">
+                R$ {user.currentIncome.toLocaleString("pt-BR")}/mês
+              </p>
+            </div>
+            <span className="text-xs text-muted-foreground">{user.role}</span>
+          </div>
+
+          <RouteTrack steps={visible} selectedId={selected?.id ?? null} onSelect={select} />
+
+          <div className="mt-4 flex items-center justify-between rounded-2xl border border-primary/30 bg-primary/[0.06] px-4 py-3">
+            <div>
+              <p className="text-[11px] text-muted-foreground">Objetivo</p>
+              <p className="font-display text-sm font-semibold text-primary">
+                R$ {user.goalIncome.toLocaleString("pt-BR")}/mês
+              </p>
+            </div>
+            <span className="text-xs text-muted-foreground">{user.target}</span>
+          </div>
+        </div>
+
+        {/* detalhe fixo no desktop */}
+        {selected && (
+          <Panel className="hidden lg:sticky lg:top-6 lg:block">
+            <StepDetail
+              step={selected}
+              allSteps={steps}
+              onToggleCheck={(checkId) => toggleCheck(selected.id, checkId)}
+              onComplete={() => completeStep(selected.id)}
+              onReopen={() => reopenStep(selected.id)}
+              justCompleted={celebrating?.id === selected.id}
+            />
+          </Panel>
+        )}
+      </div>
+
+      {/* bottom sheet no mobile */}
+      {sheetOpen && selected && (
+        <DetailSheet step={selected} onClose={() => setSheetOpen(false)}>
+          <StepDetail
+            step={selected}
+            allSteps={steps}
+            onToggleCheck={(checkId) => toggleCheck(selected.id, checkId)}
+            onComplete={() => completeStep(selected.id)}
+            onReopen={() => reopenStep(selected.id)}
+            justCompleted={celebrating?.id === selected.id}
+          />
+        </DetailSheet>
+      )}
     </div>
   );
 }
