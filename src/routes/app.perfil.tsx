@@ -9,7 +9,9 @@ import {
   ProgressBar,
   Reveal,
 } from "@/components/pathly/ui";
-import { skills, steps, user } from "@/lib/mock";
+import { skills, user } from "@/lib/mock";
+import { levelFromXp, type StepView } from "@/lib/route-map";
+import { useRouteProgressContext } from "@/lib/route-progress-context";
 
 export const Route = createFileRoute("/app/perfil")({
   head: () => ({
@@ -26,16 +28,27 @@ export const Route = createFileRoute("/app/perfil")({
   component: ProfilePage,
 });
 
-const badges = [
-  { label: "Primeira etapa", icon: Trophy, earned: true },
-  { label: "10 dias seguidos", icon: Flame, earned: true },
-  { label: "Primeiro projeto", icon: Sparkles, earned: true },
-  { label: "Primeiro freela", icon: Zap, earned: false },
-  { label: "Portfólio pronto", icon: Trophy, earned: false },
-  { label: "Meta de renda", icon: Sparkles, earned: false },
-];
+/**
+ * Cada conquista é uma condição real, nunca um `earned: true` fixo. "Primeiro freela" e
+ * "Portfólio pronto" apontam para a etapa que representa esse marco na rota (s5 e s3) — mesma
+ * lógica que já usávamos para "milestone" em route-map.ts, só reaproveitada aqui.
+ */
+function buildBadges(views: StepView[], stats: { doneCount: number; streak: number; projects: unknown[]; }, incomeNow: number) {
+  const stepDone = (id: string) => views.find((s) => s.id === id)?.state === "concluído";
+  return [
+    { label: "Primeira etapa", icon: Trophy, earned: stats.doneCount >= 1 },
+    { label: "10 dias seguidos", icon: Flame, earned: stats.streak >= 10 },
+    { label: "Primeiro projeto", icon: Sparkles, earned: stats.projects.length >= 1 },
+    { label: "Primeiro freela", icon: Zap, earned: stepDone("s5") },
+    { label: "Portfólio pronto", icon: Trophy, earned: stepDone("s3") },
+    { label: "Meta de renda", icon: Sparkles, earned: incomeNow >= user.goalIncome },
+  ];
+}
 
 function ProfilePage() {
+  const { views, stats } = useRouteProgressContext();
+  const level = levelFromXp(stats.totalXp);
+  const badges = buildBadges(views, stats, stats.incomeNow);
   const topSkills = [...skills].sort((a, b) => b.level - a.level).slice(0, 4);
 
   return (
@@ -63,26 +76,26 @@ function ProfilePage() {
               </p>
               <div className="mt-3 flex flex-wrap gap-2">
                 <Chip tone="primary">
-                  <Sparkles className="size-3" /> Nível {user.level} · {user.levelName}
+                  <Sparkles className="size-3" /> Nível {level.level} · {level.name}
                 </Chip>
                 <Chip tone="xp">
-                  <Flame className="size-3" /> {user.streak} dias
+                  <Flame className="size-3" /> {stats.streak} dia{stats.streak === 1 ? "" : "s"}
                 </Chip>
               </div>
             </div>
           </div>
-          <ProgressBar value={(user.xp / user.xpToNext) * 100} tone="xp" className="mt-6" />
+          <ProgressBar value={level.progressPct} tone="xp" className="mt-6" />
           <p className="mt-2 text-xs text-muted-foreground">
-            {user.xp} / {user.xpToNext} XP
+            {level.maxed ? `${level.xp} XP · nível máximo` : `${level.xp} / ${level.xpToNext} XP`}
           </p>
         </Panel>
       </Reveal>
 
       <div className="grid gap-4 sm:grid-cols-3">
         {[
-          { k: "Renda atual", v: user.currentIncome, prefix: "R$ " },
+          { k: "Renda atual", v: stats.incomeNow, prefix: "R$ " },
           { k: "Meta de renda", v: user.goalIncome, prefix: "R$ " },
-          { k: "XP acumulado", v: user.xp, prefix: "" },
+          { k: "XP acumulado", v: stats.totalXp, prefix: "" },
         ].map((m, i) => (
           <Reveal key={m.k} delay={i * 70}>
             <Panel className="p-5">
@@ -139,7 +152,7 @@ function ProfilePage() {
           <h3 className="font-display text-lg font-semibold">Conquistas</h3>
           <p className="mt-1 text-sm text-muted-foreground">
             {badges.filter((b) => b.earned).length} de {badges.length} desbloqueadas ·{" "}
-            {steps.filter((s) => s.status === "concluído").length} etapas concluídas
+            {stats.doneCount} etapas concluídas
           </p>
           <div className="mt-5 grid grid-cols-3 gap-3 sm:grid-cols-6">
             {badges.map((b) => (
