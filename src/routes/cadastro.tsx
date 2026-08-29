@@ -42,7 +42,15 @@ function SignupPage() {
           </Btn>
         </Link>
         <p className="text-center text-[11px] leading-relaxed text-muted-foreground">
-          Ao continuar você concorda com os termos de uso e a política de privacidade.
+          Ao continuar você concorda com os{" "}
+          <Link to="/termos" className="text-primary underline underline-offset-2">
+            Termos de Uso
+          </Link>{" "}
+          e a{" "}
+          <Link to="/privacidade" className="text-primary underline underline-offset-2">
+            Política de Privacidade
+          </Link>
+          .
         </p>
       </form>
 

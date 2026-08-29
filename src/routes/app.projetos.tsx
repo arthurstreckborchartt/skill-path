@@ -68,7 +68,11 @@ function ProjectsPage() {
                 <h3 className="min-w-0 font-display text-lg font-semibold">{p.title}</h3>
                 <Chip
                   tone={
-                    p.status === "Concluído" ? "primary" : p.status === "Em andamento" ? "accent" : "muted"
+                    p.status === "Concluído"
+                      ? "primary"
+                      : p.status === "Em andamento"
+                        ? "accent"
+                        : "muted"
                   }
                 >
                   {p.status}
@@ -85,7 +89,8 @@ function ProjectsPage() {
               <div className="mt-5">
                 <div className="mb-2 flex justify-between text-xs text-muted-foreground">
                   <span className="flex items-center gap-1.5">
-                    <Clock className="size-3.5" /> {p.weeks} semanas · impacto {p.impact.toLowerCase()}
+                    <Clock className="size-3.5" /> {p.weeks} semana{p.weeks === 1 ? "" : "s"} ·
+                    impacto {p.impact.toLowerCase()}
                   </span>
                   <span>{p.progress}%</span>
                 </div>

@@ -1,7 +1,13 @@
 import { useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
-import { Bell, LogOut, RefreshCcw, Shield, Sliders } from "lucide-react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { Bell, ChevronRight, FileText, LogOut, RefreshCcw, Shield, Sliders } from "lucide-react";
 import { Btn, PageHeader, Panel, Reveal } from "@/components/pathly/ui";
+import {
+  LEGAL_DOCUMENT_LABEL,
+  LEGAL_DOCUMENTS,
+  LEGAL_ROUTE,
+  type LegalDocumentType,
+} from "@/lib/legal";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/app/configuracoes")({
@@ -113,14 +119,22 @@ function SettingsPage() {
       <Reveal delay={80}>
         <Section icon={Bell} title="Notificações">
           <Toggle label="Lembrete diário" hint="Um empurrão no horário que você escolher" initial />
-          <Toggle label="Novas oportunidades" hint="Quando surgir vaga acima de 70% de match" initial />
+          <Toggle
+            label="Novas oportunidades"
+            hint="Quando surgir vaga acima de 70% de match"
+            initial
+          />
           <Toggle label="Resumo semanal" hint="Seu progresso e XP da semana" initial={false} />
         </Section>
       </Reveal>
 
       <Reveal delay={140}>
         <Section icon={Shield} title="Conta e privacidade">
-          <Toggle label="Perfil visível para empresas" hint="Recrutadores podem ver seu portfólio" initial={false} />
+          <Toggle
+            label="Perfil visível para empresas"
+            hint="Recrutadores podem ver seu portfólio"
+            initial={false}
+          />
           <div className="flex flex-wrap gap-3 pt-4">
             <Btn variant="outline" size="sm">
               <RefreshCcw className="size-4" /> Recalcular rota
@@ -128,6 +142,25 @@ function SettingsPage() {
             <Btn variant="ghost" size="sm">
               <LogOut className="size-4" /> Sair da conta
             </Btn>
+          </div>
+        </Section>
+      </Reveal>
+
+      <Reveal delay={180}>
+        <Section icon={FileText} title="Documentos">
+          <div className="divide-y divide-border">
+            {(["terms", "privacy"] as LegalDocumentType[]).map((type) => (
+              <Link
+                key={type}
+                to={LEGAL_ROUTE[type]}
+                className="tap flex min-h-14 items-center justify-between gap-3 py-1 text-sm"
+              >
+                <span>{LEGAL_DOCUMENT_LABEL[type]}</span>
+                <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  v{LEGAL_DOCUMENTS[type].version} <ChevronRight className="size-4" />
+                </span>
+              </Link>
+            ))}
           </div>
         </Section>
       </Reveal>

@@ -447,6 +447,14 @@ function Landing() {
         <div className="mx-auto flex w-full max-w-6xl flex-col items-center justify-between gap-4 text-xs text-muted-foreground sm:flex-row">
           <Logo />
           <span>Pathly · Aprenda o que realmente importa para ganhar mais.</span>
+          <div className="flex items-center gap-4">
+            <Link to="/termos" className="transition-colors hover:text-foreground">
+              Termos de Uso
+            </Link>
+            <Link to="/privacidade" className="transition-colors hover:text-foreground">
+              Política de Privacidade
+            </Link>
+          </div>
         </div>
       </footer>
     </div>

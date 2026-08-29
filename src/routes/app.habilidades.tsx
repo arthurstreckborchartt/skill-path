@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Zap } from "lucide-react";
-import { Chip, PageHeader, Panel, ProgressBar, Reveal, Skeleton } from "@/components/pathly/ui";
+import { Chip, PageHeader, Panel, ProgressBar, Reveal } from "@/components/pathly/ui";
 import { skills } from "@/lib/mock";
+import { useRouteProgressContext } from "@/lib/route-progress-context";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/app/habilidades")({
@@ -29,6 +30,17 @@ function SkillsPage() {
   const [filter, setFilter] = useState("Todas");
   const list = skills.filter((s) => filter === "Todas" || s.category === filter);
   const avg = Math.round(skills.reduce((a, s) => a + s.level, 0) / skills.length);
+
+  const { views } = useRouteProgressContext();
+  const knownSkills = new Set(
+    views.filter((s) => s.state === "concluído").flatMap((s) => s.skills),
+  );
+  const upcoming = views
+    .filter((s) => s.state === "atual" || s.state === "futuro")
+    .flatMap((s) => s.skills.map((skillName) => ({ skillName, step: s })))
+    .filter(({ skillName }) => !knownSkills.has(skillName))
+    .filter((item, i, arr) => arr.findIndex((o) => o.skillName === item.skillName) === i)
+    .slice(0, 3);
 
   return (
     <div className="space-y-6">
@@ -88,19 +100,32 @@ function SkillsPage() {
         <Panel>
           <h3 className="font-display text-lg font-semibold">Sugeridas pela sua rota</h3>
           <p className="mt-1 text-sm text-muted-foreground">
-            Recalculando com base nas vagas que você acompanha
+            Habilidades que a sua etapa atual e a próxima vão destravar
           </p>
-          <div className="mt-5 space-y-3">
-            {[0, 1, 2].map((i) => (
-              <div key={i} className="flex items-center gap-4">
-                <Skeleton className="size-10 rounded-2xl" />
-                <div className="flex-1 space-y-2">
-                  <Skeleton className="h-3 w-2/5" />
-                  <Skeleton className="h-2 w-full" />
+          {upcoming.length === 0 ? (
+            <p className="mt-5 text-sm text-muted-foreground">
+              Você já domina todas as habilidades das próximas etapas.
+            </p>
+          ) : (
+            <div className="mt-5 space-y-3">
+              {upcoming.map(({ skillName, step }) => (
+                <div
+                  key={skillName}
+                  className="flex items-center gap-4 rounded-2xl bg-surface-2/40 px-4 py-3"
+                >
+                  <span className="grid size-10 shrink-0 place-items-center rounded-2xl bg-primary/12 text-primary">
+                    <Zap className="size-4" />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium">{skillName}</p>
+                    <p className="truncate text-xs text-muted-foreground">
+                      Etapa "{step.title}" · {step.demandPct}% de demanda
+                    </p>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </Panel>
       </Reveal>
     </div>
