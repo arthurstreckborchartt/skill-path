@@ -11,7 +11,8 @@ import {
   Zap,
 } from "lucide-react";
 import { Logo } from "./ui";
-import { user } from "@/lib/mock";
+import { levelFromXp } from "@/lib/route-map";
+import { RouteProgressProvider, useRouteProgressContext } from "@/lib/route-progress-context";
 import { cn } from "@/lib/utils";
 
 const primaryNav = [
@@ -59,7 +60,17 @@ function SideItem({
 }
 
 export function AppShell() {
+  return (
+    <RouteProgressProvider>
+      <AppShellInner />
+    </RouteProgressProvider>
+  );
+}
+
+function AppShellInner() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { stats } = useRouteProgressContext();
+  const level = levelFromXp(stats.totalXp);
 
   return (
     <div className="min-h-screen bg-background">
@@ -86,16 +97,13 @@ export function AppShell() {
         <div className="mt-auto rounded-2xl bg-surface p-4">
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <Sparkles className="size-3.5 text-primary" />
-            Nível {user.level} · {user.levelName}
+            Nível {level.level} · {level.name}
           </div>
           <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-muted">
-            <div
-              className="h-full rounded-full bg-signal"
-              style={{ width: `${(user.xp / user.xpToNext) * 100}%` }}
-            />
+            <div className="h-full rounded-full bg-signal" style={{ width: `${level.progressPct}%` }} />
           </div>
           <p className="mt-2 text-xs text-muted-foreground">
-            {user.xp} / {user.xpToNext} XP
+            {level.maxed ? `${level.xp} XP` : `${level.xp} / ${level.xpToNext} XP`}
           </p>
         </div>
       </aside>
@@ -108,7 +116,7 @@ export function AppShell() {
         <div className="flex items-center gap-2">
           <span className="flex items-center gap-1.5 rounded-full bg-xp/15 px-2.5 py-1 text-xs font-semibold text-xp">
             <Zap className="size-3.5" />
-            {user.xp}
+            {stats.totalXp}
           </span>
           <button
             aria-label="Notificações"

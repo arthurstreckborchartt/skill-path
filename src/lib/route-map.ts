@@ -134,6 +134,10 @@ export type RouteProgress = {
   done: string[];
   /** "stepId:checkId" marcados */
   checks: string[];
+  /** última data (YYYY-MM-DD, horário local) em que algo foi marcado como concluído */
+  lastActiveDate: string | null;
+  /** dias consecutivos com pelo menos uma conclusão real — nunca inventado */
+  streak: number;
 };
 
 const initialProgress: RouteProgress = {
@@ -141,6 +145,8 @@ const initialProgress: RouteProgress = {
   checks: routeSteps.flatMap((s) =>
     s.checklist.filter((c) => c.done).map((c) => `${s.id}:${c.id}`),
   ),
+  lastActiveDate: null,
+  streak: 0,
 };
 
 function read(): RouteProgress {
@@ -152,10 +158,30 @@ function read(): RouteProgress {
     return {
       done: parsed.done ?? initialProgress.done,
       checks: parsed.checks ?? initialProgress.checks,
+      lastActiveDate: parsed.lastActiveDate ?? initialProgress.lastActiveDate,
+      streak: parsed.streak ?? initialProgress.streak,
     };
   } catch {
     return initialProgress;
   }
+}
+
+function todayIso(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function isYesterday(dateIso: string, today: string): boolean {
+  const d = new Date(`${dateIso}T00:00:00`);
+  d.setDate(d.getDate() + 1);
+  return d.toISOString().slice(0, 10) === today;
+}
+
+/** Marca hoje como dia ativo, incrementando a sequência só quando há um dia real de intervalo. */
+function bumpStreak(p: RouteProgress): RouteProgress {
+  const today = todayIso();
+  if (p.lastActiveDate === today) return p;
+  const streak = p.lastActiveDate && isYesterday(p.lastActiveDate, today) ? p.streak + 1 : 1;
+  return { ...p, lastActiveDate: today, streak };
 }
 
 export type StepView = RouteStep & {
@@ -217,25 +243,30 @@ export function useRouteProgress() {
 
   const toggleCheck = useCallback((stepId: string, checkId: string) => {
     const key = `${stepId}:${checkId}`;
-    setProgress((p) => ({
-      ...p,
-      checks: p.checks.includes(key) ? p.checks.filter((k) => k !== key) : [...p.checks, key],
-    }));
+    setProgress((p) => {
+      const turningOn = !p.checks.includes(key);
+      const next = {
+        ...p,
+        checks: turningOn ? [...p.checks, key] : p.checks.filter((k) => k !== key),
+      };
+      return turningOn ? bumpStreak(next) : next;
+    });
   }, []);
 
   const completeStep = useCallback((stepId: string) => {
     const step = routeSteps.find((s) => s.id === stepId);
     if (!step) return;
-    setProgress((p) =>
-      p.done.includes(stepId)
-        ? p
-        : {
-            done: [...p.done, stepId],
-            checks: Array.from(
-              new Set([...p.checks, ...step.checklist.map((c) => `${stepId}:${c.id}`)]),
-            ),
-          },
-    );
+    setProgress((p) => {
+      if (p.done.includes(stepId)) return p;
+      const next = {
+        ...p,
+        done: [...p.done, stepId],
+        checks: Array.from(
+          new Set([...p.checks, ...step.checklist.map((c) => `${stepId}:${c.id}`)]),
+        ),
+      };
+      return bumpStreak(next);
+    });
     setCelebrating({ id: stepId, xp: step.xp });
     window.setTimeout(() => setCelebrating(null), 2200);
   }, []);
@@ -271,8 +302,9 @@ export function useRouteProgress() {
       current,
       incomeNow: done.at(-1)?.incomeAfter ?? user.currentIncome,
       monthsLeft: Math.max(1, Math.round(remainingWeeks / 4.3)),
+      streak: progress.streak,
     };
-  }, [views, currentIndex]);
+  }, [views, currentIndex, progress.streak]);
 
   return {
     views,
@@ -285,4 +317,172 @@ export function useRouteProgress() {
     reset,
     hydrated,
   };
+}
+
+export type RouteProgressValue = ReturnType<typeof useRouteProgress>;
+
+/* ---------------- nível a partir do XP real ---------------- */
+
+const XP_LEVELS = [
+  { level: 1, name: "Iniciante", xp: 0 },
+  { level: 2, name: "Aprendiz", xp: 500 },
+  { level: 3, name: "Praticante", xp: 1200 },
+  { level: 4, name: "Construtor", xp: 2200 },
+  { level: 5, name: "Especialista", xp: 3600 },
+  { level: 6, name: "Avançado", xp: 5400 },
+  { level: 7, name: "Mestre", xp: 7600 },
+] as const;
+
+export type LevelInfo = {
+  level: number;
+  name: string;
+  xp: number;
+  xpBase: number;
+  xpToNext: number;
+  progressPct: number;
+  maxed: boolean;
+};
+
+export function levelFromXp(xp: number): LevelInfo {
+  let current: (typeof XP_LEVELS)[number] = XP_LEVELS[0];
+  let next: (typeof XP_LEVELS)[number] | undefined;
+  for (const tier of XP_LEVELS) {
+    if (xp >= tier.xp) current = tier;
+    else {
+      next = tier;
+      break;
+    }
+  }
+  const span = (next?.xp ?? current.xp) - current.xp || 1;
+  return {
+    level: current.level,
+    name: current.name,
+    xp,
+    xpBase: current.xp,
+    xpToNext: next?.xp ?? current.xp,
+    progressPct: next ? Math.min(100, Math.round(((xp - current.xp) / span) * 100)) : 100,
+    maxed: !next,
+  };
+}
+
+/* ---------------- próxima ação ---------------- */
+
+export type NextAction = {
+  stepId: string;
+  stepTitle: string;
+  label: string;
+  /** Sempre um valor real: minutos derivados do orçamento de horas da etapa, ou o eta autoral. */
+  timeLabel: string;
+  xp: number;
+  isStepLevel: boolean;
+};
+
+/** `step.hours` cobre semanas de estudo — dividido por item de checklist já não é mais "uma sessão". */
+function formatTime(minutes: number): string {
+  if (minutes < 60) return `${minutes} min`;
+  const hours = Math.round(minutes / 60);
+  return `~${hours}h`;
+}
+
+/** A ação mais útil agora: o próximo item do checklist da etapa atual, ou concluir a etapa. */
+export function getNextAction(views: StepView[], currentIndex: number): NextAction | null {
+  const current = views[currentIndex];
+  if (!current || current.state !== "atual") return null;
+
+  const pendingCheck = current.checklist.find((c) => !current.checkedIds.includes(c.id));
+  if (pendingCheck) {
+    const perItem = Math.max(1, current.checksTotal);
+    return {
+      stepId: current.id,
+      stepTitle: current.title,
+      label: pendingCheck.label,
+      timeLabel: formatTime(Math.max(10, Math.round((current.hours * 60) / perItem))),
+      xp: Math.max(10, Math.round(current.xp / perItem)),
+      isStepLevel: false,
+    };
+  }
+
+  return {
+    stepId: current.id,
+    stepTitle: current.title,
+    label: `Concluir etapa: ${current.title}`,
+    timeLabel: current.eta,
+    xp: current.xp,
+    isStepLevel: true,
+  };
+}
+
+/* ---------------- plano da semana ---------------- */
+
+export type WeekPlanState = "concluído" | "hoje" | "próximo" | "bloqueado";
+
+export type WeekPlanItem = {
+  day: string;
+  label: string;
+  stepTitle: string;
+  state: WeekPlanState;
+};
+
+const WEEK_DAYS = ["SEG", "TER", "QUA", "QUI", "SEX"];
+
+/**
+ * Achata o checklist de todas as etapas, na ordem da rota, reaproveitando o `NodeState` que já
+ * existe por etapa (nunca inventa uma dependência nova entre itens de checklist). Mostra uma
+ * janela de até 5 itens ao redor do primeiro item pendente ("hoje").
+ */
+type FlatCheckItem = { label: string; stepTitle: string; state: WeekPlanState; done: boolean };
+
+export function getWeekPlan(views: StepView[]): WeekPlanItem[] {
+  const flat: FlatCheckItem[] = views.flatMap((step) =>
+    step.checklist.map((c): FlatCheckItem => {
+      const done = step.checkedIds.includes(c.id);
+      const state: WeekPlanState = done
+        ? "concluído"
+        : step.state === "bloqueado"
+          ? "bloqueado"
+          : "próximo";
+      return { label: c.label, stepTitle: step.title, state, done };
+    }),
+  );
+
+  const todayIndex = flat.findIndex((item) => !item.done && item.state !== "bloqueado");
+  if (todayIndex >= 0) flat[todayIndex]!.state = "hoje";
+
+  const start = Math.max(0, todayIndex === -1 ? flat.length - 5 : todayIndex - 2);
+  return flat
+    .slice(start, start + 5)
+    .map((item, i) => ({ day: WEEK_DAYS[i] ?? `Dia ${i + 1}`, ...item }));
+}
+
+/* ---------------- insights ---------------- */
+
+/** Só entra aqui o que dá para provar com os dados reais — sem "esta semana" (não guardamos data por conclusão). */
+export function getInsights(views: StepView[], stats: RouteProgressValue["stats"]): string[] {
+  const insights: string[] = [`Você já percorreu ${stats.percent}% da sua rota.`];
+
+  const current = stats.current;
+  if (current && current.state === "atual") {
+    const remainingHours = (current.hours * (100 - current.checkPct)) / 100;
+    const weeks = Math.max(1, Math.round(remainingHours / Math.max(4, user.hoursPerWeek)));
+    insights.push(
+      `Faltam aproximadamente ${weeks} semana${weeks === 1 ? "" : "s"} para o marco "${current.milestone}".`,
+    );
+
+    const currentPos = views.findIndex((s) => s.id === current.id);
+    const nextProjectIndex = views.findIndex((s, i) => i > currentPos && s.projects.length > 0);
+    if (nextProjectIndex >= 0) {
+      const distance = nextProjectIndex - currentPos;
+      insights.push(
+        `Seu próximo projeto está a ${distance} etapa${distance === 1 ? "" : "s"} de distância.`,
+      );
+    }
+  }
+
+  if (stats.skills.length > 0) {
+    insights.push(
+      `Você já domina ${stats.skills.length} habilidade${stats.skills.length === 1 ? "" : "s"} da sua rota.`,
+    );
+  }
+
+  return insights;
 }

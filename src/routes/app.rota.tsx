@@ -3,7 +3,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Calendar, Clock, Layers, Sparkles, Target, TrendingUp, Zap } from "lucide-react";
 import { Chip, PageHeader, Panel, ProgressBar, Reveal } from "@/components/pathly/ui";
 import { DetailSheet, RouteTrack, StepDetail } from "@/components/pathly/route-map";
-import { useRouteProgress, type StepView } from "@/lib/route-map";
+import type { StepView } from "@/lib/route-map";
+import { useRouteProgressContext } from "@/lib/route-progress-context";
 import { user } from "@/lib/mock";
 import { cn } from "@/lib/utils";
 
@@ -61,7 +62,7 @@ function Stat({
 
 function RoutePage() {
   const { views: steps, stats, celebrating, toggleCheck, completeStep, reopenStep } =
-    useRouteProgress();
+    useRouteProgressContext();
   const [view, setView] = useState<View>("geral");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
