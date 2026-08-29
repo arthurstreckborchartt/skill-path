@@ -49,7 +49,7 @@ function SideItem({
   return (
     <Link
       to={to}
-      activeOptions={{ exact }}
+      activeOptions={{ exact: exact === true }}
       className="tap group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground data-[status=active]:bg-sidebar-accent data-[status=active]:text-foreground"
     >
       <Icon className="size-4.5 shrink-0 transition-transform group-hover:scale-110 group-data-[status=active]:text-primary" />
@@ -135,7 +135,7 @@ export function AppShell() {
             <li key={to}>
               <Link
                 to={to}
-                activeOptions={{ exact }}
+                activeOptions={{ exact: exact === true }}
                 className={cn(
                   "tap group flex min-h-14 flex-col items-center justify-center gap-1 text-[11px] text-muted-foreground",
                   "data-[status=active]:text-primary",
