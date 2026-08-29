@@ -269,7 +269,7 @@ export function useRouteProgress() {
       projects,
       totalXp,
       current,
-      incomeNow: done.length ? done[done.length - 1].incomeAfter : user.currentIncome,
+      incomeNow: done.at(-1)?.incomeAfter ?? user.currentIncome,
       monthsLeft: Math.max(1, Math.round(remainingWeeks / 4.3)),
     };
   }, [views, currentIndex]);
