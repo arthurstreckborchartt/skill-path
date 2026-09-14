@@ -238,6 +238,7 @@ export function StepDetail({
   const prereqs = step.prereqs
     .map((id) => allSteps.find((s) => s.id === id))
     .filter((s): s is StepView => Boolean(s));
+  const prereqsDone = prereqs.every((p) => p.state === "concluído");
 
   return (
     <div className="relative space-y-5">
@@ -415,7 +416,7 @@ export function StepDetail({
             <Lock className="size-3" /> Conclua os pré-requisitos para liberar
           </Chip>
         ) : (
-          <Btn onClick={onComplete}>
+          <Btn onClick={onComplete} disabled={locked || !prereqsDone}>
             <Check className="size-4" /> Concluir etapa
           </Btn>
         )}

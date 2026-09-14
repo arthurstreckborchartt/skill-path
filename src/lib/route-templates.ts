@@ -12,10 +12,11 @@ import type { RouteStep } from "@/lib/route-map";
  * área escolhida decide o conteúdo, a renda projetada escala entre a renda atual e a meta reais
  * do usuário, e o ritmo (semana de início de cada etapa) escala com as horas/semana informadas.
  *
- * Cobertura: tech, data, design e marketing têm conteúdo dedicado. As demais áreas (sales,
- * finance, engineering, admin, audiovisual, ai, other) caem no template "generic" — habilidades
- * digitais amplamente aplicáveis. Não é personalização completa, mas nenhuma área fica com
- * conteúdo de outra que não faz sentido (ex.: alguém de Vendas nunca vê "Aprenda FastAPI").
+ * Cobertura: tech, data, design e marketing têm conteúdo dedicado, e "ai" reaproveita o template
+ * de tech (a base — lógica, Python, APIs, dados — é a mesma). As demais áreas (sales, finance,
+ * engineering, admin, audiovisual, other) caem no template "generic" — habilidades digitais
+ * amplamente aplicáveis. Não é personalização completa, mas nenhuma área fica com conteúdo de
+ * outra que não faz sentido (ex.: alguém de Vendas nunca vê "Aprenda FastAPI").
  */
 
 type TemplateStep = {
@@ -813,7 +814,7 @@ export function generateRoute(profile: OnboardingProfile): RouteStep[] {
 
   let cumulativeWeek = 1;
   return active.map((s, i) => {
-    const incomeAfter = roundToTen(current + (target - current) * s.incomeWeight) || target;
+    const incomeAfter = roundToTen(current + (target - current) * s.incomeWeight);
     const week = cumulativeWeek;
     cumulativeWeek += Math.max(1, Math.round(s.hours / hoursPerWeek));
     const etaWeeks = Math.max(1, Math.round(s.hours / hoursPerWeek));

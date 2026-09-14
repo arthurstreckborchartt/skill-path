@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, ArrowRight, Check, Cloud, Sparkles, TrendingUp } from "lucide-react";
 import { Btn, Logo, ProgressBar } from "@/components/pathly/ui";
@@ -121,7 +121,7 @@ const screens: Screen[] = [
     id: "areas",
     chapter: "Onde você quer chegar",
     title: "Em qual área você gostaria de trabalhar?",
-    hint: "Pode escolher mais de uma. Vamos cruzar com o seu perfil.",
+    hint: "Escolha uma. É ela que define o conteúdo da sua rota.",
     valid: (p) => p.desiredAreas.length > 0,
   },
   {
@@ -212,16 +212,17 @@ function Onboarding() {
     hydrated.current = true;
   }, []);
 
-  // autosave (debounced)
+  // autosave (debounced). Depois que o onboarding é concluído o `next()` já salvou tudo, e um
+  // save extra aqui remontaria os timers da tela de "montando sua rota" via re-render.
   useEffect(() => {
-    if (!hydrated.current) return;
+    if (!hydrated.current || phase !== "questions") return;
     const t = setTimeout(() => {
       saveProfile({ ...profile, lastScreenIndex: index });
       setSaved(true);
       setTimeout(() => setSaved(false), 1400);
     }, 500);
     return () => clearTimeout(t);
-  }, [profile, index]);
+  }, [profile, index, phase]);
 
   const visible = useMemo(() => screens.filter((s) => !s.skip?.(profile)), [profile]);
   const screen = visible[Math.min(index, visible.length - 1)]!;
@@ -248,8 +249,11 @@ function Onboarding() {
     setPhase("building");
   }
 
+  // Estável: BuildingScreen agenda os timers da animação num efeito que depende dessa referência.
+  const goToReady = useCallback(() => setPhase("ready"), []);
+
   if (phase === "building") {
-    return <BuildingScreen onDone={() => setPhase("ready")} />;
+    return <BuildingScreen onDone={goToReady} />;
   }
 
   if (phase === "ready") {
@@ -369,10 +373,9 @@ function Onboarding() {
 
             {screen.id === "areas" && (
               <CardSelect
-                multi
                 options={areas}
                 value={profile.desiredAreas}
-                onChange={(area) => patch({ desiredAreas: toggleList(profile.desiredAreas, area) })}
+                onChange={(area) => patch({ desiredAreas: [area] })}
               />
             )}
 

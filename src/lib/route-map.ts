@@ -261,14 +261,19 @@ function readProgress(fallback: RouteProgress, signature: string): RouteProgress
   }
 }
 
+/** Dia do calendário do usuário, não UTC: às 21h no Brasil o dia UTC já virou e a sequência erraria. */
+function localIso(date: Date): string {
+  return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+}
+
 function todayIso(): string {
-  return new Date().toISOString().slice(0, 10);
+  return localIso(new Date());
 }
 
 function isYesterday(dateIso: string, today: string): boolean {
   const d = new Date(`${dateIso}T00:00:00`);
   d.setDate(d.getDate() + 1);
-  return d.toISOString().slice(0, 10) === today;
+  return localIso(d) === today;
 }
 
 /** Marca hoje como dia ativo, incrementando a sequência só quando há um dia real de intervalo. */
@@ -369,6 +374,8 @@ export function useRouteProgress() {
       if (!step) return;
       setProgress((p) => {
         if (p.done.includes(stepId)) return p;
+        // Rota é linear: concluir uma etapa com pré-requisito pendente quebraria XP, % e "etapa atual".
+        if (!step.prereqs.every((id) => p.done.includes(id))) return p;
         const next = {
           ...p,
           done: [...p.done, stepId],
