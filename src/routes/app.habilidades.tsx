@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Zap } from "lucide-react";
 import { Chip, PageHeader, Panel, ProgressBar, Reveal } from "@/components/pathly/ui";
@@ -55,7 +55,7 @@ function SkillsPage() {
       />
 
       <Reveal>
-        <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:px-0">
+        <div className="-mx-4 no-scrollbar flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0">
           {filters.map((f) => (
             <button
               key={f}

@@ -52,7 +52,7 @@ const transformation = [
 
 function Nav() {
   return (
-    <header className="sticky top-0 z-40 border-b border-border/60 bg-background/70 backdrop-blur-xl">
+    <header className="sticky top-0 z-40 border-b border-border/60 bg-background/70 pt-[env(safe-area-inset-top)] backdrop-blur-xl">
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-5 py-3.5 sm:px-8">
         <Logo />
         <nav className="hidden items-center gap-7 text-sm text-muted-foreground md:flex">
@@ -208,11 +208,74 @@ const benefits = [
   },
 ];
 
+/**
+ * No celular a landing longa dá lugar a uma entrada de app: logo, promessa em uma linha e as
+ * duas ações. A landing continua inteira no desktop — as duas convivem por CSS, sem redirecionar
+ * nem detectar aparelho no servidor, o que evitaria cache errado e piscada na hidratação.
+ */
+function MobileHome() {
+  return (
+    <div className="halo flex min-h-svh flex-col px-6 pt-[calc(2.5rem+env(safe-area-inset-top))] pb-[calc(2rem+env(safe-area-inset-bottom))] lg:hidden">
+      <Logo />
+
+      <div className="flex flex-1 flex-col justify-center py-10">
+        <h1 className="font-display text-4xl leading-[1.08] font-semibold text-balance">
+          Descubra exatamente o que aprender para{" "}
+          <span className="text-gradient">chegar na renda que você quer.</span>
+        </h1>
+        <p className="mt-4 text-base text-foreground/85">
+          Responda onde você está e onde quer chegar. A Pathly monta a sequência de habilidades e os
+          projetos de portfólio que levam até lá.
+        </p>
+
+        <ul className="mt-8 space-y-3">
+          {transformation.map((item) => (
+            <li key={item.label} className="flex items-start gap-3">
+              <span className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-primary/15 text-primary">
+                <Check className="size-3" strokeWidth={3} />
+              </span>
+              <span className="min-w-0">
+                <span className="block text-sm font-medium">{item.label}</span>
+                <span className="block text-xs text-muted-foreground">{item.note}</span>
+              </span>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div className="space-y-3">
+        <Link to="/onboarding" className="block">
+          <Btn size="lg" className="w-full">
+            Criar minha rota <ArrowRight className="size-4" />
+          </Btn>
+        </Link>
+        <Link to="/login" className="block">
+          <Btn variant="outline" size="lg" className="w-full">
+            Já tenho conta
+          </Btn>
+        </Link>
+        <p className="pt-1 text-center text-xs text-muted-foreground">
+          Até 14 perguntas · 2 minutos · sem cartão de crédito
+        </p>
+      </div>
+    </div>
+  );
+}
+
 function Landing() {
+  return (
+    <>
+      <MobileHome />
+      <DesktopLanding />
+    </>
+  );
+}
+
+function DesktopLanding() {
   const sample = steps.slice(0, 5);
 
   return (
-    <div className="min-h-screen">
+    <div className="hidden min-h-screen lg:block">
       <Nav />
       <Hero />
 

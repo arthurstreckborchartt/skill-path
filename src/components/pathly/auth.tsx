@@ -20,7 +20,7 @@ export function AuthLayout({
       />
 
       {/* Form side */}
-      <div className="flex flex-col px-5 py-8 sm:px-10">
+      <div className="flex flex-col px-5 pt-[calc(2rem+env(safe-area-inset-top))] pb-[calc(2rem+env(safe-area-inset-bottom))] sm:px-10">
         <Link to="/" className="tap">
           <Logo />
         </Link>
@@ -99,7 +99,8 @@ export function AuthField({
         autoComplete={autoComplete}
         required={required}
         disabled={disabled}
-        className="h-12 w-full rounded-xl border border-input bg-surface/60 px-4 text-sm outline-none transition-all placeholder:text-muted-foreground focus:border-primary/50 focus:ring-4 focus:ring-primary/10 disabled:opacity-60"
+        // text-base no celular: abaixo de 16px o Safari do iPhone dá zoom ao focar o campo.
+        className="h-12 w-full rounded-xl border border-input bg-surface/60 px-4 text-base outline-none transition-all placeholder:text-muted-foreground focus:border-primary/50 focus:ring-4 focus:ring-primary/10 disabled:opacity-60 sm:text-sm"
       />
     </label>
   );

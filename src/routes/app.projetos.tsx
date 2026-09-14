@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+﻿import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowUpRight, Clock, FolderKanban } from "lucide-react";
 import { Chip, PageHeader, Panel, ProgressBar, Reveal } from "@/components/pathly/ui";
@@ -71,7 +71,7 @@ function ProjectsPage() {
       />
 
       <Reveal>
-        <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0">
+        <div className="-mx-4 no-scrollbar flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0">
           {tabs.map((t) => (
             <button
               key={t}

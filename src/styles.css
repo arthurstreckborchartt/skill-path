@@ -220,6 +220,14 @@
   html {
     -webkit-font-smoothing: antialiased;
     scroll-behavior: smooth;
+    /* Barra de rolagem fora do caminho: a rolagem continua igual, só não aparece. */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  html::-webkit-scrollbar,
+  body::-webkit-scrollbar {
+    display: none;
   }
 
   body {
@@ -352,6 +360,15 @@
 
 @utility mb-safe {
   margin-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Esconde a barra de rolagem sem tirar a rolagem (tiras horizontais de abas, e a página). */
+@utility no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 @utility tap {

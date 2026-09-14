@@ -91,7 +91,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "color-scheme", content: "light dark" },
       { name: "mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
-      { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
+      // "default" mantém o conteúdo abaixo da barra de status. Com "black-translucent" a web view
+      // sobe por baixo do notch e qualquer tela sem recuo perde o topo — foi o que aconteceu no
+      // iPhone 13. Só voltar a translucent depois de conferir tela por tela no aparelho.
+      { name: "apple-mobile-web-app-status-bar-style", content: "default" },
       { name: "apple-mobile-web-app-title", content: "Pathly" },
       { title: "Pathly — Aprenda o que realmente importa para ganhar mais" },
       {

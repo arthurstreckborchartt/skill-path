@@ -310,7 +310,7 @@ export function SkillPicker({
               }
             }}
             placeholder="Ex: AutoCAD"
-            className="h-12 min-w-0 flex-1 rounded-2xl border border-input bg-surface/60 px-4 text-sm outline-none transition-all placeholder:text-muted-foreground focus:border-primary/50 focus:ring-4 focus:ring-primary/10"
+            className="h-12 min-w-0 flex-1 rounded-2xl border border-input bg-surface/60 px-4 text-base outline-none transition-all placeholder:text-muted-foreground focus:border-primary/50 focus:ring-4 focus:ring-primary/10 sm:text-sm"
           />
           <button
             type="button"
