@@ -300,14 +300,19 @@ export function useRouteProgress() {
     const resolved = resolveActiveRoute();
     setActive(resolved);
     const fallback = seedProgress(resolved.steps, resolved.profile.isPersonalized);
-    setProgress(readProgress(fallback));
+    setProgress(readProgress(fallback, routeSignature(resolved.steps, resolved.profile)));
     setHydrated(true);
   }, []);
+
+  const signature = useMemo(
+    () => routeSignature(active.steps, active.profile),
+    [active.steps, active.profile],
+  );
 
   useEffect(() => {
     if (!hydrated) return;
     try {
-      window.localStorage.setItem(KEY, JSON.stringify(progress));
+      window.localStorage.setItem(KEY, JSON.stringify({ ...progress, signature }));
     } catch {
       /* ignora quota */
     }
