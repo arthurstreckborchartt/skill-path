@@ -14,7 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      pathly_profiles: {
+        Row: {
+          user_id: string
+          onboarding: Json
+          updated_at: string
+        }
+        Insert: {
+          user_id: string
+          onboarding: Json
+          updated_at?: string
+        }
+        Update: {
+          user_id?: string
+          onboarding?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      pathly_route_progress: {
+        Row: {
+          user_id: string
+          route_signature: string
+          progress: Json
+          updated_at: string
+        }
+        Insert: {
+          user_id: string
+          route_signature: string
+          progress: Json
+          updated_at?: string
+        }
+        Update: {
+          user_id?: string
+          route_signature?: string
+          progress?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
