@@ -3,19 +3,22 @@ import type { LegalDocument } from "./types";
 /**
  * MINUTA — PENDENTE DE REVISÃO JURÍDICA.
  *
- * As categorias de dados abaixo foram levantadas diretamente do código (src/lib/onboarding.ts
- * e src/lib/route-map.ts) e do que essas telas realmente gravam, para não declarar coleta que
- * não existe nem omitir coleta que existe. Nesta versão, TUDO fica no armazenamento local do
- * navegador (localStorage) — não existe conta, servidor de dados pessoais nem cadastro real
- * ainda. Quando isso mudar, esta Política precisa ser atualizada e a versão, incrementada.
+ * As categorias de dados abaixo foram levantadas diretamente do código (src/lib/onboarding.ts,
+ * src/lib/route-map.ts, src/lib/auth.ts, src/lib/telemetry.ts e src/components/pathly/feedback-form.tsx)
+ * e do que essas telas realmente gravam, para não declarar coleta que não existe nem omitir
+ * coleta que existe.
+ *
+ * Divisão atual: conta (e-mail, senha, nome) e feedback ficam em servidor, no Supabase; as
+ * respostas do questionário e o progresso na rota continuam SÓ no navegador. Ao mexer em
+ * qualquer um dos arquivos acima, revise esta Política e incremente a versão.
  */
 export const PRIVACY_POLICY: LegalDocument = {
   type: "privacy",
-  version: "1.0.0-minuta",
-  effectiveDate: "2026-08-29",
+  version: "1.1.0-minuta",
+  effectiveDate: "2026-09-14",
   title: "Política de Privacidade",
   summary:
-    "Esta Política explica quais dados a Pathly trata, por quê, com quem compartilha e como você exerce seus direitos — incluindo o fato de que, nesta versão, seus dados ficam apenas no seu navegador.",
+    "Esta Política explica quais dados a Pathly trata, por quê, com quem compartilha e como você exerce seus direitos — incluindo o que fica na sua conta, em servidor, e o que continua apenas no seu navegador.",
   sections: [
     {
       id: "quem-somos",
@@ -33,19 +36,23 @@ export const PRIVACY_POLICY: LegalDocument = {
     },
     {
       id: "onde-ficam-seus-dados",
-      title: "2. Nesta versão, seus dados ficam no seu navegador",
+      title: "2. O que fica em servidor e o que fica no seu navegador",
       blocks: [
         {
           kind: "callout",
-          text: "A Pathly ainda não tem servidor de contas nem banco de dados de usuários. Tudo que você responde no questionário inicial e todo o seu progresso na rota são salvos exclusivamente no armazenamento local (localStorage) do navegador que você está usando — não enviamos, não recebemos nem guardamos essas respostas em nenhum servidor nosso.",
+          text: "Em servidor fica só o necessário para existir uma conta: seu e-mail, sua senha (guardada apenas como hash, nunca em texto legível), o nome que você informa no cadastro e, se você enviar, o texto do seu feedback. As suas respostas do questionário inicial e todo o seu progresso na rota continuam exclusivamente no armazenamento local (localStorage) do navegador que você está usando.",
         },
         {
           kind: "p",
-          text: "Na prática, isso significa: seus dados não saem do seu aparelho; nós não temos acesso a eles; eles não sincronizam entre navegadores ou dispositivos diferentes; e são apagados se você limpar os dados do site, usar navegação privada ou desinstalar o navegador.",
+          text: "Na prática: o conteúdo mais sensível do produto — a sua renda atual, a renda que você quer, sua profissão e suas habilidades — nunca é enviado para nenhum servidor nosso. Ele não sincroniza entre navegadores ou aparelhos, e é apagado se você limpar os dados do site, usar navegação privada ou trocar de navegador.",
         },
         {
           kind: "p",
-          text: "Quando contas reais e sincronização em nuvem forem lançadas, esta seção será substituída por uma descrição completa de onde e como os dados passam a ser armazenados em servidor, com a versão desta Política incrementada.",
+          text: "A conta é hospedada no Supabase, que atua como operador dos dados em nosso nome (ver seção 6). Se você optar por entrar com o Google, o Google confirma sua identidade e nos informa o e-mail associado — nós não recebemos a sua senha do Google.",
+        },
+        {
+          kind: "p",
+          text: "Quando a sincronização da rota em nuvem for implementada, esta seção será atualizada para descrever o que passa a sair do navegador, com a versão desta Política incrementada.",
         },
       ],
     },
@@ -77,11 +84,29 @@ export const PRIVACY_POLICY: LegalDocument = {
             "sua sequência de dias ativos (streak), calculada a partir das datas reais de conclusão.",
           ],
         },
+        { kind: "p", text: "Dados de conta (estes ficam em servidor):" },
+        {
+          kind: "list",
+          items: [
+            "e-mail e senha — a senha é guardada apenas como hash, e nunca temos acesso ao texto dela;",
+            "o nome que você digita no cadastro;",
+            "um identificador interno da sua conta e as datas de criação e de último acesso;",
+            "se você entrar com o Google: o e-mail e o identificador que o Google devolve.",
+          ],
+        },
+        { kind: "p", text: "Feedback que você envia (este fica em servidor):" },
+        {
+          kind: "list",
+          items: [
+            "o texto que você escreve, o tipo escolhido (erro, ideia ou outro), a tela em que você estava e a data — vinculados à sua conta para que possamos responder.",
+          ],
+        },
         { kind: "p", text: "Dados técnicos:" },
         {
           kind: "list",
           items: [
-            "registros de erro (mensagem, rota da página, pilha de execução), sem nenhum dado pessoal, enviados apenas quando você acessa a Pathly a partir do ambiente de edição da Lovable — não ocorre em uso normal fora desse ambiente.",
+            "registros de erro (mensagem, rota da página, pilha de execução e dados do navegador), enviados ao serviço de monitoramento Sentry quando ocorre uma falha. A ferramenta é configurada para não anexar dados pessoais, e as respostas do seu questionário não são enviadas junto;",
+            "registros de erro, sem dado pessoal, enviados também quando você acessa a Pathly a partir do ambiente de edição da Lovable — não ocorre em uso normal fora desse ambiente.",
           ],
         },
       ],
@@ -94,12 +119,12 @@ export const PRIVACY_POLICY: LegalDocument = {
         {
           kind: "list",
           items: [
-            "usa ferramentas de analytics, pixels de rastreamento ou cookies de publicidade;",
+            "usa ferramentas de analytics comportamental, pixels de rastreamento, gravação de sessão ou cookies de publicidade — o monitoramento descrito na seção 3 registra falhas técnicas, não o que você faz no app;",
+            "envia para servidor as suas respostas do questionário (renda, profissão, habilidades) nem o seu progresso na rota — ver seção 2;",
             "coleta sua localização geográfica;",
             "acessa sua câmera, microfone, agenda, contatos ou galeria de fotos;",
             "coleta dados de saúde, biometria, dados de pagamento ou documentos de identidade;",
-            "vende ou compartilha seus dados com terceiros para fins de marketing;",
-            "cria ou mantém uma conta de usuário em servidor — ver seção 2.",
+            "vende ou compartilha seus dados com terceiros para fins de marketing.",
           ],
         },
       ],
@@ -115,8 +140,10 @@ export const PRIVACY_POLICY: LegalDocument = {
         {
           kind: "list",
           items: [
+            "Execução de contrato (art. 7º, V, LGPD): manter sua conta, autenticar seu acesso e permitir que você entre de volta no produto.",
             "Execução pré-contratual e execução de funcionalidade (art. 7º, V, LGPD): gerar sua rota e exibir seu progresso.",
-            "Consentimento (art. 7º, I, LGPD): você opta por preencher o questionário; pode fechar a aba ou limpar os dados do navegador a qualquer momento para remover essas informações.",
+            "Consentimento (art. 7º, I, LGPD): você opta por preencher o questionário e por enviar feedback; pode limpar os dados do navegador a qualquer momento para remover as respostas.",
+            "Legítimo interesse (art. 7º, IX, LGPD): registrar falhas técnicas para corrigir defeitos e manter o produto seguro e funcionando, tratando o mínimo necessário para isso.",
           ],
         },
       ],
@@ -127,15 +154,21 @@ export const PRIVACY_POLICY: LegalDocument = {
       blocks: [
         {
           kind: "p",
-          text: "Como os dados do questionário e do progresso não saem do seu navegador (seção 2), não os compartilhamos com ninguém — não há servidor nosso para compartilhar a partir dele.",
+          text: "Os dados do questionário e do progresso não saem do seu navegador (seção 2), então não há como compartilhá-los. Os dados de conta e de feedback são tratados pelos operadores abaixo, que agem sob nossas instruções e não podem usar seus dados para finalidade própria:",
         },
         {
-          kind: "p",
-          text: "A aplicação em si é hospedada por um provedor de nuvem (Cloudflare, via Lovable), que processa o tráfego necessário para entregar as páginas ao seu navegador, sem acesso às respostas que você digita.",
+          kind: "list",
+          items: [
+            "Supabase — banco de dados e autenticação: guarda seu e-mail, o hash da sua senha, seu nome e o feedback que você envia.",
+            "Sentry — monitoramento de erros: recebe os registros de falha descritos na seção 3.",
+            "Cloudflare (via Lovable) — hospedagem: processa o tráfego necessário para entregar as páginas ao seu navegador, sem acesso às respostas que você digita.",
+            "Google — apenas se você escolher entrar com a conta Google, para confirmar sua identidade.",
+            "Google Fonts — recebe o endereço IP do seu dispositivo ao carregar as fontes da página.",
+          ],
         },
         {
-          kind: "p",
-          text: "Fontes tipográficas são carregadas do Google Fonts, que recebe o endereço IP do seu dispositivo ao carregar as fontes da página.",
+          kind: "callout",
+          text: "Transferência internacional: esses provedores podem processar e armazenar dados em servidores fora do Brasil, inclusive nos Estados Unidos. A transferência é feita com base no art. 33 da LGPD, para viabilizar a execução do contrato com você e o funcionamento do produto.",
         },
       ],
     },
@@ -147,6 +180,10 @@ export const PRIVACY_POLICY: LegalDocument = {
           kind: "p",
           text: "O acesso ao armazenamento local do navegador é, por padrão, restrito ao próprio site que gravou os dados (política de mesma origem dos navegadores) — outro site não consegue ler os dados que a Pathly salva. Ainda assim, qualquer pessoa com acesso físico ou remoto ao seu navegador pode ver esses dados; trate seu aparelho e sua sessão de navegador com o mesmo cuidado que trataria qualquer outro dado pessoal salvo localmente.",
         },
+        {
+          kind: "p",
+          text: "Do lado do servidor: o tráfego entre o seu navegador e a Pathly é criptografado (HTTPS), a senha é guardada apenas como hash, e o banco usa regras de acesso por linha, de modo que o feedback enviado por uma pessoa não fica acessível a outra.",
+        },
       ],
     },
     {
@@ -155,7 +192,7 @@ export const PRIVACY_POLICY: LegalDocument = {
       blocks: [
         {
           kind: "p",
-          text: "Os dados ficam salvos no seu navegador até que você os apague. Para excluir tudo o que a Pathly salvou:",
+          text: "As respostas do questionário e o progresso ficam salvos no seu navegador até que você os apague. Para excluir:",
         },
         {
           kind: "list",
@@ -165,8 +202,12 @@ export const PRIVACY_POLICY: LegalDocument = {
           ],
         },
         {
+          kind: "p",
+          text: "Os dados de conta ficam guardados enquanto a sua conta existir. Os registros de erro são mantidos pelo prazo de retenção do serviço de monitoramento e descartados depois disso.",
+        },
+        {
           kind: "callout",
-          text: "Uma opção de exclusão diretamente pela interface, sem depender do navegador, ainda não está disponível — é uma pendência técnica reconhecida, a ser resolvida junto com a implementação de contas reais.",
+          text: "A exclusão da conta pela própria interface ainda não está disponível — é uma pendência técnica reconhecida. Enquanto isso, peça a exclusão pelo e-mail de contato da seção 12 e apagaremos sua conta e o feedback vinculado a ela.",
         },
       ],
     },

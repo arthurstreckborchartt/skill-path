@@ -1,7 +1,17 @@
 import { useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Bell, ChevronRight, FileText, LogOut, RefreshCcw, Shield, Sliders } from "lucide-react";
+import {
+  Bell,
+  ChevronRight,
+  FileText,
+  LogOut,
+  MessageSquare,
+  RefreshCcw,
+  Shield,
+  Sliders,
+} from "lucide-react";
 import { Btn, PageHeader, Panel, Reveal } from "@/components/pathly/ui";
+import { FeedbackForm } from "@/components/pathly/feedback-form";
 import { signOut } from "@/lib/auth";
 import {
   LEGAL_DOCUMENT_LABEL,
@@ -150,6 +160,16 @@ function SettingsPage() {
               <LogOut className="size-4" /> Sair da conta
             </Btn>
           </div>
+        </Section>
+      </Reveal>
+
+      <Reveal delay={160}>
+        <Section icon={MessageSquare} title="Falar com a gente">
+          <p className="pt-3 text-sm text-muted-foreground">
+            Achou um erro ou sentiu falta de alguma coisa? Escreve aqui — chega direto pra quem
+            constrói a Pathly.
+          </p>
+          <FeedbackForm />
         </Section>
       </Reveal>
 

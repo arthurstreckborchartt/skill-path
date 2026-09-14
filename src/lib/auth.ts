@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { setTelemetryUser } from "@/lib/telemetry";
 
 export type SessionState = { session: Session | null; loading: boolean };
 
@@ -15,11 +16,15 @@ export function useSession(): SessionState {
     let active = true;
 
     supabase.auth.getSession().then(({ data }) => {
-      if (active) setState({ session: data.session, loading: false });
+      if (!active) return;
+      setState({ session: data.session, loading: false });
+      setTelemetryUser(data.session?.user.id ?? null);
     });
 
     const { data } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (active) setState({ session, loading: false });
+      if (!active) return;
+      setState({ session, loading: false });
+      setTelemetryUser(session?.user.id ?? null);
     });
 
     return () => {
