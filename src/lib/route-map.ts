@@ -215,6 +215,20 @@ export type RouteProgress = {
   streak: number;
 };
 
+/**
+ * Os ids das etapas ("step-1".."step-7") repetem entre os modelos de rota, então progresso salvo
+ * de uma rota antiga combinaria com as etapas de uma rota nova gerada num novo onboarding.
+ * A assinatura identifica de qual rota o progresso é: se mudar, o progresso salvo é descartado.
+ */
+function routeSignature(steps: RouteStep[], profile: ActiveProfile): string {
+  return [
+    profile.isPersonalized ? "p" : "demo",
+    profile.target,
+    profile.goalType,
+    steps.map((s) => `${s.id}|${s.title}`).join(">"),
+  ].join("::");
+}
+
 /** Rota demo já vem com progresso de exemplo pré-preenchido; rota real gerada começa sempre zerada. */
 function seedProgress(steps: RouteStep[], isPersonalized: boolean): RouteProgress {
   if (isPersonalized) {
