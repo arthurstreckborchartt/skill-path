@@ -3,6 +3,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, ArrowRight, Check, Cloud, Sparkles, TrendingUp } from "lucide-react";
 import { Btn, Logo, ProgressBar } from "@/components/pathly/ui";
 import { useSession } from "@/lib/auth";
+import { loadCloudProfile, saveCloudProfile } from "@/lib/cloud-sync";
 import {
   CardSelect,
   FieldGroup,
@@ -23,8 +24,6 @@ import {
   horizons,
   learningStyles,
   loadProfile,
-  loadCloudProfile,
-  saveCloudProfile,
   opportunityTypes,
   professionSuggestions,
   routePreview,
