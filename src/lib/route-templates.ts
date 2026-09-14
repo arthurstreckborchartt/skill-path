@@ -802,7 +802,9 @@ export function generateRoute(profile: OnboardingProfile): RouteStep[] {
   const current = profile.income.noIncome ? 0 : (profile.income.current ?? 0);
   const target = Math.max(profile.income.target ?? current + 1000, current + 500);
 
-  const horizon = horizons.find((h) => h.id === profile.income.horizon)?.months ?? 10;
+  // O prazo (income.horizon) não entra aqui de propósito: encurtar a rota porque a pessoa
+  // escolheu "3 meses" seria inventar um caminho mais curto que não existe. O ritmo real sai das
+  // horas por semana, e a tela da rota compara esse ritmo com o prazo escolhido.
   const hoursPerWeek = Math.max(2, profile.study.hoursPerWeek || 7);
 
   // Experiência avançada pula as primeiras etapas de fundamentos, mas nunca menos de 3 restantes.

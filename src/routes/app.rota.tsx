@@ -19,7 +19,7 @@ export const Route = createFileRoute("/app/rota")({
       { property: "og:title", content: "Minha rota na Pathly" },
       {
         property: "og:description",
-        content: "Etapas, projetos e habilidades ordenados pelo impacto na sua renda.",
+        content: "Etapas, projetos e habilidades na ordem dos pré-requisitos.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -83,6 +83,22 @@ function RoutePage() {
     return steps;
   }, [view, steps, current]);
 
+  /**
+   * O prazo escolhido no onboarding não entra na geração da rota — o ritmo sai só das horas por
+   * semana. Em vez de deixar a resposta sem efeito nenhum, aqui ela vira a comparação honesta
+   * entre o prazo que a pessoa quer e o que o ritmo dela realmente entrega.
+   */
+  const ritmo = useMemo(() => {
+    const horasRestantes = steps
+      .filter((s) => s.state !== "concluído")
+      .reduce((total, s) => total + (s.hours * (100 - s.checkPct)) / 100, 0);
+    const prazoMeses = profile.deadlineMonths;
+    if (!prazoMeses || horasRestantes <= 0) return null;
+    const cabe = stats.monthsLeft <= prazoMeses;
+    const horasNecessarias = Math.ceil(horasRestantes / (prazoMeses * 4.3));
+    return { cabe, prazoMeses, horasNecessarias };
+  }, [steps, profile.deadlineMonths, stats.monthsLeft]);
+
   function select(id: string) {
     setSelectedId(id);
     setSheetOpen(true);
@@ -114,7 +130,8 @@ function RoutePage() {
                 </span>
               </p>
               <p className="mt-1 text-xs text-muted-foreground">
-                Renda projetada hoje: R$ {stats.incomeNow.toLocaleString("pt-BR")}/mês
+                Marco alcançado: R$ {stats.incomeNow.toLocaleString("pt-BR")} — divisão da distância
+                até a sua meta, não previsão de salário.
               </p>
             </div>
             <div className="text-right">
@@ -152,6 +169,23 @@ function RoutePage() {
               value={stats.totalXp.toLocaleString("pt-BR")}
             />
           </div>
+
+          {ritmo && (
+            <p className="mt-4 border-t border-border pt-4 text-xs text-muted-foreground">
+              {ritmo.cabe ? (
+                <>
+                  No seu ritmo de {profile.hoursPerWeek}h por semana, a rota cabe no prazo de{" "}
+                  {ritmo.prazoMeses} meses que você definiu.
+                </>
+              ) : (
+                <>
+                  Você definiu {ritmo.prazoMeses} meses de prazo, mas a {profile.hoursPerWeek}h por
+                  semana a rota leva cerca de {stats.monthsLeft}. Para caber no prazo seriam{" "}
+                  {ritmo.horasNecessarias}h por semana — ou dá para manter o ritmo e mover o prazo.
+                </>
+              )}
+            </p>
+          )}
         </Panel>
       </Reveal>
 

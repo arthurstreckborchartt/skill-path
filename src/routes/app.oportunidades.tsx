@@ -8,15 +8,16 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/app/oportunidades")({
   head: () => ({
     meta: [
-      { title: "Oportunidades — Pathly" },
+      { title: "Oportunidades (prévia) — Pathly" },
       {
         name: "description",
-        content: "Vagas, estágios e freelas com compatibilidade calculada a partir da sua rota.",
+        content: "Prévia de interface com dados de exemplo. Ainda não há vagas reais na Pathly.",
       },
-      { property: "og:title", content: "Oportunidades — Pathly" },
+      { name: "robots", content: "noindex" },
+      { property: "og:title", content: "Oportunidades (prévia) — Pathly" },
       {
         property: "og:description",
-        content: "Veja o quanto falta para você aplicar em cada oportunidade.",
+        content: "Prévia de interface com dados de exemplo.",
       },
     ],
   }),
@@ -34,14 +35,25 @@ function OpportunitiesPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Oportunidades"
-        subtitle="Compatibilidade calculada com base na sua rota atual"
+        title="Oportunidades (prévia)"
+        subtitle="Tela de exemplo — ainda não existe busca de vagas na Pathly"
         action={
-          <Chip tone="primary">
-            <Target className="size-3.5" /> {opportunities.length} abertas
+          <Chip tone="muted">
+            <Target className="size-3.5" /> exemplo
           </Chip>
         }
       />
+
+      {/* Sem link nos menus, mas a URL continua acessível: quem chegar aqui precisa saber
+          na primeira linha que nada nesta tela é real. */}
+      <div className="rounded-2xl border border-accent/40 bg-accent/10 p-4">
+        <p className="text-sm font-medium">Nada aqui é uma vaga real.</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          As empresas, as descrições e os percentuais desta tela são inventados, para desenhar a
+          interface. Não se candidate e não use isso para decidir nada. Quando houver vagas de
+          verdade, elas virão de curadoria manual e esta tela volta para o menu.
+        </p>
+      </div>
 
       <Reveal>
         <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0">
@@ -82,7 +94,11 @@ function OpportunitiesPage() {
                   <p
                     className={cn(
                       "font-display text-2xl font-semibold",
-                      o.match >= 75 ? "text-primary" : o.match >= 50 ? "text-accent" : "text-muted-foreground",
+                      o.match >= 75
+                        ? "text-primary"
+                        : o.match >= 50
+                          ? "text-accent"
+                          : "text-muted-foreground",
                     )}
                   >
                     {o.match}%

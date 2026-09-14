@@ -170,9 +170,7 @@ export function SearchField({
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    const list = q
-      ? suggestions.filter((s) => s.toLowerCase().includes(q))
-      : suggestions;
+    const list = q ? suggestions.filter((s) => s.toLowerCase().includes(q)) : suggestions;
     return list.slice(0, 6);
   }, [query, suggestions]);
 

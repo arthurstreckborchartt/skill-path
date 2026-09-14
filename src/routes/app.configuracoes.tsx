@@ -27,7 +27,7 @@ export const Route = createFileRoute("/app/configuracoes")({
       { title: "Configurações — Pathly" },
       {
         name: "description",
-        content: "Ajuste sua meta, ritmo de estudo, notificações e privacidade na Pathly.",
+        content: "Refaça sua rota, envie feedback e gerencie sua conta na Pathly.",
       },
       { property: "og:title", content: "Configurações — Pathly" },
       { property: "og:description", content: "Recalcule a rota quando o seu cenário mudar." },
@@ -36,41 +36,12 @@ export const Route = createFileRoute("/app/configuracoes")({
   component: SettingsPage,
 });
 
-function Toggle({ label, hint, initial }: { label: string; hint: string; initial?: boolean }) {
-  const [on, setOn] = useState(initial ?? false);
-  return (
-    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 py-4">
-      <div className="min-w-0">
-        <p className="text-sm font-medium">{label}</p>
-        <p className="text-xs text-muted-foreground">{hint}</p>
-      </div>
-      <button
-        role="switch"
-        aria-checked={on}
-        aria-label={label}
-        onClick={() => setOn(!on)}
-        className={cn(
-          "tap relative h-7 w-12 shrink-0 rounded-full transition-colors",
-          on ? "bg-primary" : "bg-muted",
-        )}
-      >
-        <span
-          className={cn(
-            "absolute top-1 size-5 rounded-full bg-background transition-transform duration-300 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)]",
-            on ? "translate-x-6" : "translate-x-1",
-          )}
-        />
-      </button>
-    </div>
-  );
-}
-
 function Section({
   icon: Icon,
   title,
   children,
 }: {
-  icon: typeof Bell;
+  icon: typeof Shield;
   title: string;
   children: React.ReactNode;
 }) {
@@ -89,7 +60,6 @@ function Section({
 
 function SettingsPage() {
   const navigate = useNavigate();
-  const [hours, setHours] = useState(12);
 
   async function handleSignOut() {
     await signOut();
@@ -102,60 +72,25 @@ function SettingsPage() {
 
       <Reveal>
         <Section icon={Sliders} title="Rota e ritmo">
-          <div className="py-4">
-            <div className="mb-3 flex items-center justify-between">
-              <p className="text-sm font-medium">Horas livres por semana</p>
-              <span className="font-display text-sm text-primary">{hours}h</span>
-            </div>
-            <input
-              type="range"
-              min={2}
-              max={40}
-              value={hours}
-              onChange={(e) => setHours(Number(e.target.value))}
-              aria-label="Horas livres por semana"
-              className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-muted accent-primary"
-            />
-            <p className="mt-3 text-xs text-muted-foreground">
-              Alterar o ritmo recalcula os prazos das etapas ainda não concluídas.
+          <p className="py-4 text-sm text-muted-foreground">
+            O conteúdo e o ritmo da sua rota vêm das respostas do onboarding — principalmente a área
+            escolhida, sua experiência e as horas que você tem por semana. Para mudar qualquer uma
+            delas, refaça o onboarding.
+          </p>
+          <div className="pb-4">
+            <Btn variant="outline" size="sm" onClick={() => navigate({ to: "/onboarding" })}>
+              <RefreshCcw className="size-4" /> Refazer onboarding
+            </Btn>
+            <p className="mt-2 text-xs text-muted-foreground">
+              Gera uma rota nova. O progresso da rota atual não é transferido.
             </p>
           </div>
-          <Toggle
-            label="Modo intenso"
-            hint="Etapas mais curtas e metas semanais mais agressivas"
-            initial={false}
-          />
-          <Toggle
-            label="Incluir freelas na rota"
-            hint="Gera renda antes da meta principal ser atingida"
-            initial
-          />
-        </Section>
-      </Reveal>
-
-      <Reveal delay={80}>
-        <Section icon={Bell} title="Notificações">
-          <Toggle label="Lembrete diário" hint="Um empurrão no horário que você escolher" initial />
-          <Toggle
-            label="Novas oportunidades"
-            hint="Quando surgir vaga acima de 70% de match"
-            initial
-          />
-          <Toggle label="Resumo semanal" hint="Seu progresso e XP da semana" initial={false} />
         </Section>
       </Reveal>
 
       <Reveal delay={140}>
         <Section icon={Shield} title="Conta e privacidade">
-          <Toggle
-            label="Perfil visível para empresas"
-            hint="Recrutadores podem ver seu portfólio"
-            initial={false}
-          />
           <div className="flex flex-wrap gap-3 pt-4">
-            <Btn variant="outline" size="sm">
-              <RefreshCcw className="size-4" /> Recalcular rota
-            </Btn>
             <Btn variant="ghost" size="sm" onClick={handleSignOut}>
               <LogOut className="size-4" /> Sair da conta
             </Btn>

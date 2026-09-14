@@ -21,6 +21,7 @@ import {
   SectionLabel,
 } from "@/components/pathly/ui";
 import { steps } from "@/lib/mock";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -29,7 +30,7 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Conte onde você está e onde quer chegar. A Pathly cria sua rota personalizada de habilidades, projetos e oportunidades.",
+          "Conte onde você está e onde quer chegar. A Pathly monta sua sequência de habilidades e projetos de portfólio, com progresso etapa a etapa.",
       },
       { property: "og:title", content: "Pathly — sua rota até a renda que você quer" },
       {
@@ -43,12 +44,10 @@ export const Route = createFileRoute("/")({
 });
 
 const transformation = [
-  { label: "R$ 2.600", note: "hoje", tone: "muted" as const },
   { label: "Habilidades", note: "o que aprender, na ordem certa" },
-  { label: "Projetos", note: "prova real de capacidade" },
-  { label: "Experiência", note: "freelas e entregas" },
-  { label: "Oportunidades", note: "vagas compatíveis" },
-  { label: "R$ 8.000", note: "objetivo", tone: "primary" as const },
+  { label: "Projetos", note: "portfólio que prova o que você sabe" },
+  { label: "Freelas", note: "primeiras entregas pagas" },
+  { label: "Candidaturas", note: "currículo e portfólio prontos" },
 ];
 
 function Nav() {
@@ -85,35 +84,46 @@ function Nav() {
   );
 }
 
+/**
+ * Primeira dobra. Usa animação de CSS (`fade-up`) em vez do <Reveal>, que só revela o conteúdo
+ * depois que o JS hidrata e o IntersectionObserver dispara — no HTML do servidor o texto sai com
+ * opacidade zero, e numa conexão ruim a dobra mais importante do site aparece em branco.
+ */
+const fadeUp = "animate-[fade-up_0.6s_cubic-bezier(0.16,1,0.3,1)_both]";
+
 function Hero() {
   return (
-    <section className="halo relative overflow-hidden px-5 pt-16 pb-10 sm:px-8 sm:pt-24">
+    <section className="halo relative overflow-hidden px-5 pt-8 pb-10 sm:px-8 sm:pt-10">
       <div
         aria-hidden
         className="animate-[drift_18s_ease-in-out_infinite_alternate] pointer-events-none absolute -top-40 left-1/2 -z-10 size-[42rem] -translate-x-1/2 rounded-full bg-primary/12 blur-[120px]"
       />
       <div className="mx-auto w-full max-w-4xl text-center">
-        <Reveal>
-          <Chip tone="primary" className="mb-6">
+        <div className={fadeUp}>
+          <Chip tone="primary" className="mb-4">
             <Sparkles className="size-3.5" /> Rota gerada para o seu ponto de partida
           </Chip>
-        </Reveal>
-        <Reveal delay={80}>
-          <h1 className="font-display text-4xl leading-[1.05] font-semibold sm:text-6xl">
-            Pare de aprender <span className="text-muted-foreground">coisas aleatórias.</span>
-            <br />
-            Descubra exatamente o que aprender para{" "}
-            <span className="text-gradient">chegar na renda que você quer.</span>
-          </h1>
-        </Reveal>
-        <Reveal delay={160}>
-          <p className="mx-auto mt-6 max-w-2xl text-base text-muted-foreground sm:text-lg">
-            Conte onde você está e onde quer chegar. A Pathly cria sua rota personalizada de
-            habilidades, projetos e oportunidades.
-          </p>
-        </Reveal>
-        <Reveal delay={240}>
-          <div className="mt-9 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+        </div>
+        <h1
+          className={cn(fadeUp, "font-display text-4xl leading-[1.05] font-semibold sm:text-5xl")}
+          style={{ animationDelay: "80ms" }}
+        >
+          Pare de aprender <span className="text-foreground/60">coisas aleatórias.</span>
+          <br />
+          Descubra exatamente o que aprender para{" "}
+          <span className="text-gradient">chegar na renda que você quer.</span>
+        </h1>
+        {/* text-foreground/85 e não text-muted-foreground: sob o halo do hero o secundário cai
+            para 4,6:1 de contraste, no limite do AA. Aqui fica acima de 9:1. */}
+        <p
+          className={cn(fadeUp, "mx-auto mt-4 max-w-2xl text-base text-foreground/85")}
+          style={{ animationDelay: "160ms" }}
+        >
+          Você responde onde está e onde quer chegar. A Pathly monta a sequência de habilidades e os
+          projetos de portfólio que levam até lá, e acompanha seu progresso etapa a etapa.
+        </p>
+        <div className={cn(fadeUp, "mt-6")} style={{ animationDelay: "240ms" }}>
+          <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
             <Link to="/onboarding" className="w-full sm:w-auto">
               <Btn size="lg" className="w-full sm:w-auto">
                 Criar minha rota <ArrowRight className="size-4" />
@@ -125,48 +135,34 @@ function Hero() {
               </Btn>
             </a>
           </div>
-          <p className="mt-4 text-xs text-muted-foreground">
-            10 perguntas · 2 minutos · sem cartão de crédito
+          <p className="mt-3.5 text-xs text-foreground/70">
+            Até 14 perguntas · 2 minutos · sem cartão de crédito
           </p>
-        </Reveal>
+        </div>
       </div>
 
-      {/* Transformation */}
-      <Reveal delay={320} className="mx-auto mt-16 w-full max-w-3xl">
-        <div className="panel p-5 sm:p-8">
-          <div className="flex flex-col items-stretch gap-2">
+      {/* Prévia compacta da rota — precisa caber na primeira dobra, junto do CTA. */}
+      <div
+        className={cn(fadeUp, "mx-auto mt-6 w-full max-w-3xl")}
+        style={{ animationDelay: "320ms" }}
+      >
+        <div className="panel p-3 sm:p-4">
+          <div className="grid gap-2 sm:grid-cols-4">
             {transformation.map((item, i) => (
-              <div key={item.label} className="flex flex-col items-center gap-2">
-                <div
-                  className={[
-                    "flex w-full items-center justify-between rounded-2xl px-4 py-3.5 transition-colors sm:px-6",
-                    item.tone === "primary"
-                      ? "bg-primary/12"
-                      : item.tone === "muted"
-                        ? "bg-surface-2"
-                        : "bg-surface-2/50 hover:bg-surface-2",
-                  ].join(" ")}
-                >
-                  <span
-                    className={[
-                      "font-display text-lg font-semibold sm:text-2xl",
-                      item.tone === "primary" ? "text-primary" : "",
-                    ].join(" ")}
-                  >
-                    {item.label}
-                  </span>
-                  <span className="ml-4 text-right text-xs text-muted-foreground sm:text-sm">
-                    {item.note}
-                  </span>
-                </div>
-                {i < transformation.length - 1 && (
-                  <div className="h-4 w-px bg-gradient-to-b from-primary/60 to-accent/30" />
-                )}
+              <div
+                key={item.label}
+                className="rounded-2xl bg-surface-2/50 px-3 py-2.5 text-left sm:text-center"
+              >
+                <span className="text-[10px] font-semibold tracking-[0.14em] text-primary">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+                <p className="font-display text-base font-semibold">{item.label}</p>
+                <p className="mt-0.5 text-xs text-foreground/70">{item.note}</p>
               </div>
             ))}
           </div>
         </div>
-      </Reveal>
+      </div>
     </section>
   );
 }
@@ -185,7 +181,7 @@ const howItWorks = [
   {
     icon: LineChart,
     title: "Você avança e mede",
-    body: "Checklists, XP, projetos e progresso de renda projetada em cada etapa concluída.",
+    body: "Checklists, XP e projetos entregues em cada etapa concluída — dá para ver o quanto já andou.",
   },
 ];
 
@@ -202,8 +198,8 @@ const benefits = [
   },
   {
     icon: BriefcaseBusiness,
-    title: "Oportunidades reais",
-    body: "Vagas e freelas com percentual de compatibilidade e o que falta para você aplicar.",
+    title: "Ordem que faz sentido",
+    body: "Cada etapa só abre depois da anterior, com o pré-requisito explícito. Você nunca fica sem saber o próximo passo.",
   },
   {
     icon: Zap,
@@ -289,8 +285,13 @@ function Landing() {
                           {step.eta} · {step.difficulty} · +{step.xp} XP
                         </p>
                       </div>
-                      <span className="shrink-0 font-display text-sm text-primary">
-                        R$ {step.incomeAfter.toLocaleString("pt-BR")}
+                      <span className="shrink-0 text-right">
+                        <span className="block text-[10px] text-muted-foreground">
+                          meta parcial
+                        </span>
+                        <span className="font-display text-sm text-primary">
+                          R$ {step.incomeAfter.toLocaleString("pt-BR")}
+                        </span>
                       </span>
                     </div>
                   </Panel>
@@ -299,6 +300,11 @@ function Landing() {
               <Reveal delay={400}>
                 <p className="px-2 pt-2 text-sm text-muted-foreground">
                   + 4 etapas até a especialização final
+                </p>
+                <p className="px-2 pt-2 text-xs text-muted-foreground">
+                  Exemplo de rota para quem quer migrar para back-end. A meta parcial divide a
+                  distância entre a renda que você informa hoje e a meta que você mesmo define — é
+                  um marco do seu objetivo, não previsão de salário.
                 </p>
               </Reveal>
             </div>
@@ -340,16 +346,16 @@ function Landing() {
             <Panel className="h-full">
               <SectionLabel>Progresso</SectionLabel>
               <h3 className="mt-3 font-display text-2xl font-semibold">
-                Você vê a renda projetada subir
+                Você vê o quanto já andou
               </h3>
               <p className="mt-2 text-sm text-muted-foreground">
-                Cada etapa concluída atualiza a projeção do que seu perfil vale no mercado.
+                Cada tarefa marcada atualiza o progresso da etapa, as horas estudadas e o XP.
               </p>
               <div className="mt-7 space-y-4">
                 {[
                   { k: "Habilidades da rota", v: 38 },
                   { k: "Projetos no portfólio", v: 45 },
-                  { k: "Prontidão para vagas", v: 62 },
+                  { k: "Etapas concluídas", v: 62 },
                 ].map((row, i) => (
                   <div key={row.k}>
                     <div className="mb-2 flex justify-between text-xs">
@@ -364,19 +370,19 @@ function Landing() {
           </Reveal>
           <Reveal delay={120}>
             <Panel className="h-full">
-              <SectionLabel>IA personalizada</SectionLabel>
+              <SectionLabel>Como a rota é montada</SectionLabel>
               <h3 className="mt-3 font-display text-2xl font-semibold">
-                A rota se ajusta ao seu ritmo
+                Regras claras, não caixa-preta
               </h3>
               <p className="mt-2 text-sm text-muted-foreground">
-                Mudou o tempo disponível, o objetivo ou o interesse? A rota é recalculada mantendo o
-                que você já conquistou.
+                A rota sai da área que você escolhe, da sua experiência e das horas que você tem por
+                semana. Mesma resposta, mesma rota — sem sorteio e sem IA opinando.
               </p>
               <ul className="mt-7 space-y-3 text-sm">
                 {[
-                  "Etapas reordenadas conforme seu progresso real",
-                  "Sugestões de projeto ligadas às vagas que você quer",
-                  "Alertas quando uma habilidade destrava uma oportunidade",
+                  "A área escolhida define o conteúdo das etapas",
+                  "Quem já tem experiência começa adiante, sem repetir fundamento",
+                  "Suas horas por semana definem o ritmo e o prazo estimado",
                 ].map((t) => (
                   <li key={t} className="flex gap-3">
                     <span className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-primary/15 text-primary">

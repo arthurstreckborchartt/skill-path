@@ -29,7 +29,7 @@ export const Route = createFileRoute("/app/")({
       { title: "Início — Pathly" },
       {
         name: "description",
-        content: "Seu progresso, próxima etapa e renda projetada em um só lugar.",
+        content: "Seu progresso, a próxima etapa e o plano da semana em um só lugar.",
       },
       { property: "og:title", content: "Seu painel na Pathly" },
       { property: "og:description", content: "Veja onde você está na rota e o próximo passo." },
@@ -99,9 +99,11 @@ function Dashboard() {
                 <p className="font-display text-3xl font-semibold text-primary">
                   <AnimatedNumber value={profile.goalIncome} prefix="R$ " />
                 </p>
+                {/* Renda informada por quem usa. Concluir etapa não muda renda de ninguém —
+                    o número da etapa é marco da meta, e fica na tela da rota. */}
                 <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
                   <TrendingUp className="size-3.5 text-primary" />
-                  hoje: R$ {stats.incomeNow.toLocaleString("pt-BR")}
+                  sua renda hoje: R$ {profile.currentIncome.toLocaleString("pt-BR")}
                 </p>
               </div>
             </div>
@@ -126,8 +128,8 @@ function Dashboard() {
             </p>
             <h2 className="mt-4 font-display text-xl font-semibold">Rota concluída</h2>
             <p className="mt-1.5 text-sm text-muted-foreground">
-              Você percorreu todas as etapas até {profile.target.toLowerCase()}. Habilidades,
-              projetos e oportunidades ficam disponíveis para revisão a qualquer momento.
+              Você percorreu todas as etapas até {profile.target.toLowerCase()}. Suas habilidades e
+              projetos ficam disponíveis para revisão a qualquer momento.
             </p>
           </Panel>
         </Reveal>

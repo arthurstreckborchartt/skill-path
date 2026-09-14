@@ -80,7 +80,8 @@ function NodeCard({
       className={cn(
         "tap group w-full rounded-3xl border p-4 text-left transition-all duration-300",
         "border-border bg-surface-1/70 hover:-translate-y-0.5 hover:border-primary/30",
-        active && "border-primary/50 bg-primary/[0.06] shadow-[0_18px_50px_-30px_var(--color-primary)]",
+        active &&
+          "border-primary/50 bg-primary/[0.06] shadow-[0_18px_50px_-30px_var(--color-primary)]",
         locked && "opacity-70",
         align === "right" && "lg:text-right",
       )}
@@ -114,13 +115,8 @@ function NodeCard({
           <ProgressBar value={step.state === "concluído" ? 100 : step.checkPct} />
         </div>
       )}
-      <p
-        className={cn(
-          "mt-3 text-xs text-muted-foreground",
-          align === "right" && "lg:text-right",
-        )}
-      >
-        Renda projetada{" "}
+      <p className={cn("mt-3 text-xs text-muted-foreground", align === "right" && "lg:text-right")}>
+        Meta parcial{" "}
         <span className="font-medium text-foreground">
           R$ {step.incomeAfter.toLocaleString("pt-BR")}
         </span>
@@ -269,16 +265,12 @@ export function StepDetail({
       </div>
 
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-        <Metric
-          icon={<TrendingUp className="size-3" />}
-          label="Impacto"
-          value={step.impactLevel}
-        />
+        <Metric icon={<TrendingUp className="size-3" />} label="Impacto" value={step.impactLevel} />
         <Metric icon={<Clock className="size-3" />} label="Tempo" value={step.eta} />
         <Metric icon={<Gauge className="size-3" />} label="Dificuldade" value={step.difficulty} />
         <Metric
           icon={<TrendingUp className="size-3" />}
-          label="Renda depois"
+          label="Meta parcial"
           value={`R$ ${step.incomeAfter.toLocaleString("pt-BR")}`}
         />
       </div>
@@ -291,10 +283,15 @@ export function StepDetail({
       </div>
 
       <div className="rounded-2xl border border-primary/25 bg-primary/[0.06] p-4">
+        {/* demandPct é um peso autoral por etapa (route-templates.ts), não medição de vagas
+            abertas. O texto precisa deixar isso explícito para não virar estatística falsa. */}
         <p className="text-sm">
-          Essa habilidade aparece em{" "}
-          <span className="font-display font-semibold text-primary">{step.demandPct}%</span> das
-          oportunidades recomendadas para você.
+          Peso desta habilidade na área:{" "}
+          <span className="font-display font-semibold text-primary">{step.demandPct}%</span>
+        </p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Estimativa editorial da Pathly sobre o quanto ela é exigida — não é uma medição de vagas
+          abertas.
         </p>
         <p className="mt-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
           <Flag className="size-3.5 text-accent" /> Marco: {step.milestone}
@@ -307,7 +304,11 @@ export function StepDetail({
           <div className="mt-2 flex flex-wrap gap-2">
             {prereqs.map((p) => (
               <Chip key={p.id} tone={p.state === "concluído" ? "primary" : "muted"}>
-                {p.state === "concluído" ? <Check className="size-3" /> : <Lock className="size-3" />}
+                {p.state === "concluído" ? (
+                  <Check className="size-3" />
+                ) : (
+                  <Lock className="size-3" />
+                )}
                 {p.title}
               </Chip>
             ))}

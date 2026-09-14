@@ -42,7 +42,7 @@ export const Route = createFileRoute("/onboarding")({
       {
         name: "description",
         content:
-          "Uma conversa rápida sobre onde você está e onde quer chegar. A Pathly monta a rota de habilidades, projetos e oportunidades.",
+          "Uma conversa rápida sobre onde você está e onde quer chegar. A Pathly monta a rota de habilidades e projetos de portfólio.",
       },
       { property: "og:title", content: "Monte sua rota na Pathly" },
       {
@@ -157,21 +157,21 @@ const screens: Screen[] = [
     id: "learning",
     chapter: "Como você aprende",
     title: "Como você prefere aprender?",
-    hint: "Pode marcar mais de um formato.",
+    hint: "Pode marcar mais de um. Fica no seu perfil; ainda não muda o conteúdo da rota.",
     valid: (p) => p.learningStyles.length > 0,
   },
   {
     id: "budget",
     chapter: "Como você aprende",
     title: "Está disposto a investir dinheiro em cursos?",
-    hint: "Existe rota boa 100% gratuita — só precisamos saber.",
+    hint: "As etapas da rota não dependem de curso pago. Isto fica registrado no seu perfil.",
     valid: (p) => !!p.budget,
   },
   {
     id: "work_model",
     chapter: "Onde você quer chegar",
     title: "Qual modelo de trabalho você prefere?",
-    hint: "Usamos isso para filtrar oportunidades reais.",
+    hint: "Fica registrado no seu perfil. Ainda não muda o conteúdo da rota.",
     valid: (p) => !!p.workModel,
   },
   {
@@ -188,8 +188,8 @@ const analysisSteps = [
   "Mapeando suas habilidades",
   "Pesando sua experiência",
   "Encaixando no seu tempo disponível",
-  "Cruzando com o mercado",
-  "Desenhando caminhos possíveis",
+  "Ordenando as etapas por pré-requisito",
+  "Escolhendo os projetos de portfólio",
 ];
 
 type Phase = "questions" | "building" | "ready";
@@ -515,9 +515,7 @@ function BuildingScreen({ onDone }: { onDone: () => void }) {
   const [done, setDone] = useState(0);
 
   useEffect(() => {
-    const timers = analysisSteps.map((_, i) =>
-      setTimeout(() => setDone(i + 1), 500 + i * 620),
-    );
+    const timers = analysisSteps.map((_, i) => setTimeout(() => setDone(i + 1), 500 + i * 620));
     const finish = setTimeout(onDone, 500 + analysisSteps.length * 620 + 700);
     return () => {
       timers.forEach(clearTimeout);
@@ -537,7 +535,7 @@ function BuildingScreen({ onDone }: { onDone: () => void }) {
             Estamos montando sua rota…
           </h1>
           <p className="mt-2.5 text-sm text-muted-foreground">
-            Cruzando o seu ponto de partida com habilidades, projetos e oportunidades.
+            Montando a sequência de habilidades e os projetos a partir do que você respondeu.
           </p>
         </div>
 
@@ -591,13 +589,7 @@ function BuildingScreen({ onDone }: { onDone: () => void }) {
 
 /* ---------- ready ---------- */
 
-function ReadyScreen({
-  profile,
-  onGo,
-}: {
-  profile: OnboardingProfile;
-  onGo: () => void;
-}) {
+function ReadyScreen({ profile, onGo }: { profile: OnboardingProfile; onGo: () => void }) {
   const milestones = routePreview(profile);
 
   return (

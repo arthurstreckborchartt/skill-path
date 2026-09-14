@@ -85,7 +85,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         name: "description",
         content:
-          "A Pathly cria sua rota personalizada de habilidades, projetos e oportunidades até a renda que você quer.",
+          "A Pathly cria sua rota personalizada de habilidades e projetos de portfólio até a renda que você quer.",
       },
       { property: "og:title", content: "Pathly" },
       {

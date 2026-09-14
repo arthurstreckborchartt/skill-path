@@ -112,9 +112,15 @@ export const skillCatalog: { group: string; items: string[] }[] = [
     group: "Tecnologia",
     items: ["Python", "JavaScript", "TypeScript", "React", "Node.js", "SQL", "Git", "HTML/CSS"],
   },
-  { group: "Dados & IA", items: ["Excel", "Power BI", "Pandas", "Machine Learning", "Prompt de IA"] },
+  {
+    group: "Dados & IA",
+    items: ["Excel", "Power BI", "Pandas", "Machine Learning", "Prompt de IA"],
+  },
   { group: "Design", items: ["Figma", "Photoshop", "Illustrator", "UI Design", "Motion"] },
-  { group: "Negócios", items: ["Vendas", "Marketing", "Tráfego pago", "Copywriting", "Gestão de projetos"] },
+  {
+    group: "Negócios",
+    items: ["Vendas", "Marketing", "Tráfego pago", "Copywriting", "Gestão de projetos"],
+  },
   { group: "Outras", items: ["Inglês", "Atendimento", "Escrita", "Edição de vídeo"] },
 ];
 
@@ -188,6 +194,16 @@ export const studyPresets: { id: string; label: string; hoursPerWeek: number }[]
 
 /* ---------- profile ---------- */
 
+/**
+ * Campos coletados que ainda NÃO influenciam a rota gerada (`generateRoute`):
+ * `learningStyles`, `budget`, `workModel`, `opportunities` e `study.presetId`.
+ * Ficam salvos no perfil, e as telas que perguntam avisam que não mudam o conteúdo — nenhuma
+ * delas promete um efeito que não existe. Antes de usar qualquer um deles no gerador, ajuste
+ * também o texto da tela correspondente em routes/onboarding.tsx.
+ *
+ * `goal`, `income.horizon`, `situation`, `currentProfession` e `skills` também não entram no
+ * gerador, mas aparecem no app (Perfil e Rota), então a resposta tem destino visível.
+ */
 export type OnboardingProfile = {
   version: number;
   goal: GoalId | null;

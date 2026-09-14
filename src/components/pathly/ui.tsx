@@ -140,6 +140,15 @@ export function Reveal({
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+
+    // O conteúdo começa invisível: se o observer não existir ou a pessoa pedir menos movimento,
+    // aparece direto. Nunca deixar o texto preso em opacidade zero.
+    const reduzMovimento = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    if (typeof IntersectionObserver === "undefined" || reduzMovimento) {
+      setShown(true);
+      return;
+    }
+
     const io = new IntersectionObserver(
       ([entry]) => {
         if (entry?.isIntersecting) {
@@ -150,7 +159,13 @@ export function Reveal({
       { threshold: 0.15 },
     );
     io.observe(el);
-    return () => io.disconnect();
+    // Rede de segurança: se o observer não disparar (layout estranho, aba em segundo plano),
+    // o conteúdo aparece mesmo assim em vez de sumir da página.
+    const fallback = window.setTimeout(() => setShown(true), 1500);
+    return () => {
+      io.disconnect();
+      window.clearTimeout(fallback);
+    };
   }, []);
 
   return (

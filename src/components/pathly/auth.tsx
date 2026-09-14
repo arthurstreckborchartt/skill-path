@@ -44,7 +44,7 @@ export function AuthLayout({
             { label: "R$ 2.600", note: "onde você está" },
             { label: "Habilidades certas", note: "na ordem que faz sentido" },
             { label: "Projetos reais", note: "portfólio que prova" },
-            { label: "Oportunidades", note: "vagas compatíveis" },
+            { label: "Freelas e candidaturas", note: "as últimas etapas da rota" },
             { label: "R$ 8.000", note: "onde você quer chegar", highlight: true },
           ].map((row, i) => (
             <div

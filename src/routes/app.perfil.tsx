@@ -51,7 +51,13 @@ function buildBadges(
     { label: "Primeiro projeto", icon: Sparkles, earned: stats.projects.length >= 1 },
     { label: "Primeira renda extra", icon: Zap, earned: hasMilestone("renda extra") },
     { label: "Portfólio pronto", icon: Trophy, earned: hasMilestone("portfólio") },
-    { label: "Meta de renda", icon: Sparkles, earned: goalIncome > 0 && incomeNow >= goalIncome },
+    // Conquista por chegar ao fim da rota. Não afirma que a renda subiu: concluir etapa não paga
+    // ninguém — `incomeNow` é o marco da última etapa concluída.
+    {
+      label: "Última etapa",
+      icon: Sparkles,
+      earned: goalIncome > 0 && incomeNow >= goalIncome,
+    },
   ];
 }
 
@@ -123,7 +129,9 @@ function ProfilePage() {
 
       <div className="grid gap-4 sm:grid-cols-3">
         {[
-          { k: "Renda atual", v: stats.incomeNow, prefix: "R$ " },
+          // A renda informada no onboarding, não `stats.incomeNow` (que é o marco da última
+          // etapa concluída e não representa o que a pessoa ganha hoje).
+          { k: "Renda informada", v: profile.currentIncome, prefix: "R$ " },
           { k: "Meta de renda", v: profile.goalIncome, prefix: "R$ " },
           { k: "XP acumulado", v: stats.totalXp, prefix: "" },
         ].map((m, i) => (

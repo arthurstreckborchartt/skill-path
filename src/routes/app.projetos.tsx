@@ -1,8 +1,8 @@
-import { useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { useMemo, useState } from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowUpRight, Clock, FolderKanban } from "lucide-react";
-import { Btn, Chip, PageHeader, Panel, ProgressBar, Reveal } from "@/components/pathly/ui";
-import { projects } from "@/lib/mock";
+import { Chip, PageHeader, Panel, ProgressBar, Reveal } from "@/components/pathly/ui";
+import { useRouteProgressContext } from "@/lib/route-progress-context";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/app/projetos")({
@@ -25,8 +25,37 @@ export const Route = createFileRoute("/app/projetos")({
 
 const tabs = ["Todos", "Em andamento", "Concluído", "Sugerido"];
 
+/**
+ * Os projetos saem das etapas da rota que a pessoa gerou — antes esta tela lia uma lista fixa de
+ * `lib/mock`, então quem escolheu Dados ou Marketing via projetos de back-end como se fossem seus.
+ */
 function ProjectsPage() {
   const [tab, setTab] = useState("Todos");
+  const { views } = useRouteProgressContext();
+
+  const projects = useMemo(
+    () =>
+      views.flatMap((step) =>
+        step.projects.map((title) => ({
+          id: `${step.id}-${title}`,
+          title,
+          stepTitle: step.title,
+          summary: step.goal,
+          stack: step.skills,
+          eta: step.eta,
+          impact: step.impactLevel,
+          status:
+            step.state === "concluído"
+              ? "Concluído"
+              : step.state === "atual"
+                ? "Em andamento"
+                : "Sugerido",
+          progress: step.state === "concluído" ? 100 : step.state === "atual" ? step.checkPct : 0,
+        })),
+      ),
+    [views],
+  );
+
   const list = projects.filter((p) => tab === "Todos" || p.status === tab);
 
   return (
@@ -89,24 +118,35 @@ function ProjectsPage() {
               <div className="mt-5">
                 <div className="mb-2 flex justify-between text-xs text-muted-foreground">
                   <span className="flex items-center gap-1.5">
-                    <Clock className="size-3.5" /> {p.weeks} semana{p.weeks === 1 ? "" : "s"} ·
-                    impacto {p.impact.toLowerCase()}
+                    <Clock className="size-3.5" /> {p.eta} · impacto {p.impact}
                   </span>
                   <span>{p.progress}%</span>
                 </div>
                 <ProgressBar value={p.progress} delay={220 + i * 90} />
               </div>
 
-              <div className="mt-5 pt-1">
-                <Btn variant={p.status === "Sugerido" ? "primary" : "soft"} size="sm">
-                  {p.status === "Sugerido" ? "Começar projeto" : "Abrir projeto"}
-                  <ArrowUpRight className="size-4" />
-                </Btn>
+              <div className="mt-auto pt-5">
+                <Link
+                  to="/app/rota"
+                  className="tap inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
+                >
+                  Etapa: {p.stepTitle} <ArrowUpRight className="size-4" />
+                </Link>
               </div>
             </Panel>
           </Reveal>
         ))}
       </div>
+
+      {list.length === 0 && (
+        <Panel className="text-center">
+          <p className="text-sm text-muted-foreground">
+            {tab === "Todos"
+              ? "Sua rota ainda não tem projetos."
+              : `Nenhum projeto ${tab.toLowerCase()} por enquanto.`}
+          </p>
+        </Panel>
+      )}
     </div>
   );
 }

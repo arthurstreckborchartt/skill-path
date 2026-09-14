@@ -17,7 +17,7 @@ export const Route = createFileRoute("/cadastro")({
       { property: "og:title", content: "Criar conta na Pathly" },
       {
         property: "og:description",
-        content: "Dez perguntas e sua rota personalizada de habilidades está pronta.",
+        content: "Poucas perguntas e sua rota personalizada de habilidades está pronta.",
       },
     ],
   }),

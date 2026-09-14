@@ -1,6 +1,16 @@
 import { Link, Outlet, useRouterState } from "@tanstack/react-router";
-import { Bell, Compass, FolderKanban, Home, Settings, Sparkles, User, Zap } from "lucide-react";
-import { Logo } from "./ui";
+import {
+  ArrowRight,
+  Bell,
+  Compass,
+  FolderKanban,
+  Home,
+  Settings,
+  Sparkles,
+  User,
+  Zap,
+} from "lucide-react";
+import { Btn, Logo } from "./ui";
 import { levelFromXp } from "@/lib/route-map";
 import { RouteProgressProvider, useRouteProgressContext } from "@/lib/route-progress-context";
 import { cn } from "@/lib/utils";
@@ -59,10 +69,48 @@ export function AppShell() {
   );
 }
 
+/** A rota só é lida do localStorage depois que o componente monta (ver route-map.ts). */
+function RouteLoading() {
+  return (
+    <div className="space-y-4" aria-busy="true">
+      <div className="skeleton h-8 w-2/3" />
+      <div className="skeleton h-36 w-full" />
+      <div className="skeleton h-24 w-full" />
+    </div>
+  );
+}
+
+/**
+ * Sem onboarding concluído não existe rota pessoal — e o fallback do hook é a rota de exemplo,
+ * de outra pessoa. Mostrar aquilo para quem acabou de criar conta faz parecer que o app veio
+ * preenchido com dados alheios, então aqui a tela pede o onboarding em vez do Outlet.
+ */
+function OnboardingGate() {
+  return (
+    <div className="mx-auto max-w-lg py-10 text-center">
+      <span className="mx-auto grid size-12 place-items-center rounded-2xl bg-primary/15 text-primary">
+        <Compass className="size-6" />
+      </span>
+      <h1 className="mt-4 font-display text-2xl font-semibold">Falta montar a sua rota</h1>
+      <p className="mt-2 text-sm text-muted-foreground">
+        São até 14 perguntas sobre onde você está e onde quer chegar, em uns 2 minutos. Sem elas não
+        há o que mostrar aqui — e a rota de exemplo da página inicial é de outra pessoa, não sua.
+      </p>
+      <Link to="/onboarding" className="mt-6 inline-block">
+        <Btn size="lg">
+          Montar minha rota <ArrowRight className="size-4" />
+        </Btn>
+      </Link>
+    </div>
+  );
+}
+
 function AppShellInner() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const { stats } = useRouteProgressContext();
+  const { stats, profile, hydrated } = useRouteProgressContext();
   const level = levelFromXp(stats.totalXp);
+  // Configurações continua acessível sem rota: é de onde se sai da conta e se manda feedback.
+  const needsOnboarding = hydrated && !profile.isPersonalized && pathname !== "/app/configuracoes";
 
   return (
     <div className="min-h-screen bg-background">
@@ -127,7 +175,7 @@ function AppShellInner() {
         className="animate-[fade-up_0.5s_cubic-bezier(0.16,1,0.3,1)_both] px-4 pt-6 pb-28 sm:px-6 lg:ml-64 lg:px-10 lg:pt-10 lg:pb-16"
       >
         <div className="mx-auto w-full max-w-5xl">
-          <Outlet />
+          {!hydrated ? <RouteLoading /> : needsOnboarding ? <OnboardingGate /> : <Outlet />}
         </div>
       </main>
 
