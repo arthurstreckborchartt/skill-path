@@ -1,7 +1,6 @@
 import { Link, Outlet, useRouterState } from "@tanstack/react-router";
 import {
   ArrowRight,
-  Bell,
   Compass,
   FolderKanban,
   Home,
@@ -157,16 +156,11 @@ function AppShellInner() {
           <Logo />
         </Link>
         <div className="flex items-center gap-2">
+          {/* O sino saiu: era um botão sem função, no canto mais difícil de alcançar com uma mão. */}
           <span className="flex items-center gap-1.5 rounded-full bg-xp/15 px-2.5 py-1 text-xs font-semibold text-xp">
             <Zap className="size-3.5" />
             {stats.totalXp}
           </span>
-          <button
-            aria-label="Notificações"
-            className="tap grid size-9 place-items-center rounded-full bg-surface text-muted-foreground"
-          >
-            <Bell className="size-4" />
-          </button>
         </div>
       </header>
 

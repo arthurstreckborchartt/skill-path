@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+﻿import { useEffect } from "react";
 import {
   BookOpen,
   Check,
@@ -79,7 +79,7 @@ function NodeCard({
       onClick={onSelect}
       className={cn(
         "tap group w-full rounded-3xl border p-4 text-left transition-all duration-300",
-        "border-border bg-surface-1/70 hover:-translate-y-0.5 hover:border-primary/30",
+        "border-border bg-surface/70 hover:-translate-y-0.5 hover:border-primary/30",
         active &&
           "border-primary/50 bg-primary/[0.06] shadow-[0_18px_50px_-30px_var(--color-primary)]",
         locked && "opacity-70",
@@ -222,6 +222,7 @@ export function StepDetail({
   onComplete,
   onReopen,
   justCompleted,
+  hideActions,
 }: {
   step: StepView;
   allSteps: StepView[];
@@ -229,6 +230,8 @@ export function StepDetail({
   onComplete: () => void;
   onReopen: () => void;
   justCompleted: boolean;
+  /** No sheet do celular as ações vão para o rodapé fixo, não para o fim do conteúdo. */
+  hideActions?: boolean;
 }) {
   const locked = step.state === "bloqueado";
   const prereqs = step.prereqs
@@ -240,7 +243,7 @@ export function StepDetail({
     <div className="relative space-y-5">
       {justCompleted && (
         <div className="pointer-events-none absolute inset-0 z-10 grid place-items-center">
-          <div className="animate-[pop_0.4s_cubic-bezier(0.34,1.56,0.64,1)_both] rounded-3xl border border-primary/40 bg-surface-1/95 px-6 py-5 text-center backdrop-blur">
+          <div className="animate-[pop_0.4s_cubic-bezier(0.34,1.56,0.64,1)_both] rounded-3xl border border-primary/40 bg-surface/95 px-6 py-5 text-center backdrop-blur">
             <div className="mx-auto grid size-12 place-items-center rounded-2xl bg-primary text-primary-foreground">
               <Check className="size-6" />
             </div>
@@ -402,27 +405,64 @@ export function StepDetail({
         </ul>
       </div>
 
-      <div className="flex flex-wrap gap-2 border-t border-border pt-4">
-        {step.state === "concluído" ? (
-          <>
-            <Chip tone="primary">
-              <Check className="size-3" /> Etapa concluída
-            </Chip>
-            <Btn variant="ghost" size="sm" onClick={onReopen}>
-              Reabrir etapa
-            </Btn>
-          </>
-        ) : locked ? (
-          <Chip tone="muted">
-            <Lock className="size-3" /> Conclua os pré-requisitos para liberar
-          </Chip>
-        ) : (
-          <Btn onClick={onComplete} disabled={locked || !prereqsDone}>
-            <Check className="size-4" /> Concluir etapa
-          </Btn>
-        )}
-      </div>
+      {!hideActions && (
+        <div className="border-t border-border pt-4">
+          <StepActions
+            step={step}
+            prereqsDone={prereqsDone}
+            onComplete={onComplete}
+            onReopen={onReopen}
+          />
+        </div>
+      )}
     </div>
+  );
+}
+
+/**
+ * Ações da etapa. Fica separado porque no celular elas são fixadas no rodapé do sheet, na altura
+ * do polegar, em vez de ficarem no fim de um conteúdo que exige rolar até o fim para alcançar.
+ */
+export function StepActions({
+  step,
+  prereqsDone,
+  onComplete,
+  onReopen,
+  full,
+}: {
+  step: StepView;
+  prereqsDone: boolean;
+  onComplete: () => void;
+  onReopen: () => void;
+  full?: boolean;
+}) {
+  const locked = step.state === "bloqueado";
+
+  if (step.state === "concluído") {
+    return (
+      <div className="flex flex-wrap items-center gap-2">
+        <Chip tone="primary">
+          <Check className="size-3" /> Etapa concluída
+        </Chip>
+        <Btn variant="ghost" size="sm" onClick={onReopen}>
+          Reabrir etapa
+        </Btn>
+      </div>
+    );
+  }
+
+  if (locked || !prereqsDone) {
+    return (
+      <Chip tone="muted">
+        <Lock className="size-3" /> Conclua os pré-requisitos para liberar
+      </Chip>
+    );
+  }
+
+  return (
+    <Btn onClick={onComplete} size={full ? "lg" : "md"} className={cn(full && "w-full")}>
+      <Check className="size-4" /> Concluir etapa
+    </Btn>
   );
 }
 
@@ -430,10 +470,12 @@ export function DetailSheet({
   step,
   onClose,
   children,
+  footer,
 }: {
   step: StepView;
   onClose: () => void;
   children: React.ReactNode;
+  footer?: React.ReactNode;
 }) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -448,17 +490,35 @@ export function DetailSheet({
         onClick={onClose}
         className="absolute inset-0 animate-[fade-in_0.25s_ease-out_both] bg-background/70 backdrop-blur-sm"
       />
-      <div className="absolute inset-x-0 bottom-0 max-h-[88vh] animate-[slide-up_0.35s_cubic-bezier(0.16,1,0.3,1)_both] overflow-y-auto rounded-t-3xl border-t border-border bg-surface-1 p-5 pb-24">
-        <div className="mb-4 flex items-center justify-between">
-          <span className="text-xs text-muted-foreground">Etapa {step.order}</span>
-          <button
-            onClick={onClose}
-            className="tap grid size-9 place-items-center rounded-full bg-surface-2 text-muted-foreground"
-          >
-            <X className="size-4" />
-          </button>
+      <div className="absolute inset-x-0 bottom-0 flex max-h-[88svh] animate-[slide-up_0.35s_cubic-bezier(0.16,1,0.3,1)_both] flex-col rounded-t-3xl border-t border-border bg-surface">
+        {/* Alça: o gesto de fechar puxando para baixo é o esperado num sheet de celular, e o X
+            fica no canto superior, fora do alcance do polegar. */}
+        <button
+          onClick={onClose}
+          aria-label="Fechar detalhes"
+          className="tap flex shrink-0 justify-center pt-3 pb-1"
+        >
+          <span className="h-1.5 w-10 rounded-full bg-muted-foreground/40" />
+        </button>
+
+        <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto px-5 pb-5">
+          <div className="mb-4 flex items-center justify-between">
+            <span className="text-xs text-muted-foreground">Etapa {step.order}</span>
+            <button
+              onClick={onClose}
+              className="tap grid size-9 place-items-center rounded-full bg-surface-2 text-muted-foreground"
+            >
+              <X className="size-4" />
+            </button>
+          </div>
+          {children}
         </div>
-        {children}
+
+        {footer && (
+          <div className="shrink-0 border-t border-border bg-surface px-5 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
+            {footer}
+          </div>
+        )}
       </div>
     </div>
   );

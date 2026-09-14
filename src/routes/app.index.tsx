@@ -153,9 +153,11 @@ function Dashboard() {
                   </span>
                 </p>
               </div>
+              {/* Largura total no celular: a ação principal da tela precisa ser fácil de acertar
+                  com o polegar, não um botão estreito no canto. */}
               <Link
                 to="/app/rota"
-                className="tap inline-flex h-11 shrink-0 items-center gap-2 rounded-full bg-signal px-5 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-glow)] hover:brightness-110"
+                className="tap inline-flex h-12 w-full shrink-0 items-center justify-center gap-2 rounded-full bg-signal px-5 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-glow)] hover:brightness-110 sm:h-11 sm:w-auto"
               >
                 Continuar <ArrowRight className="size-4" />
               </Link>

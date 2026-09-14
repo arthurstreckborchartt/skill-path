@@ -1,8 +1,8 @@
-import { useMemo, useState } from "react";
+﻿import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Calendar, Clock, Layers, Sparkles, Target, TrendingUp, Zap } from "lucide-react";
 import { Chip, PageHeader, Panel, ProgressBar, Reveal } from "@/components/pathly/ui";
-import { DetailSheet, RouteTrack, StepDetail } from "@/components/pathly/route-map";
+import { DetailSheet, RouteTrack, StepActions, StepDetail } from "@/components/pathly/route-map";
 import type { StepView } from "@/lib/route-map";
 import { useRouteProgressContext } from "@/lib/route-progress-context";
 import { cn } from "@/lib/utils";
@@ -48,7 +48,7 @@ function Stat({
   hint?: string;
 }) {
   return (
-    <div className="rounded-2xl border border-border bg-surface-1/60 p-4">
+    <div className="rounded-2xl border border-border bg-surface/60 p-4">
       <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
         {icon}
         {label}
@@ -219,7 +219,7 @@ function RoutePage() {
       )}
 
       {/* seletor de visualização */}
-      <div className="inline-flex gap-1 rounded-full border border-border bg-surface-1/60 p-1">
+      <div className="inline-flex gap-1 rounded-full border border-border bg-surface/60 p-1">
         {views.map((v) => (
           <button
             key={v.id}
@@ -239,7 +239,7 @@ function RoutePage() {
       {/* mapa + detalhe */}
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] lg:items-start">
         <div>
-          <div className="mb-4 flex items-center justify-between rounded-2xl border border-border bg-surface-1/50 px-4 py-3">
+          <div className="mb-4 flex items-center justify-between rounded-2xl border border-border bg-surface/50 px-4 py-3">
             <div>
               <p className="text-[11px] text-muted-foreground">Hoje</p>
               <p className="font-display text-sm font-semibold">
@@ -277,9 +277,23 @@ function RoutePage() {
         )}
       </div>
 
-      {/* bottom sheet no mobile */}
+      {/* bottom sheet no mobile — ação principal fixa no rodapé, na altura do polegar */}
       {sheetOpen && selected && (
-        <DetailSheet step={selected} onClose={() => setSheetOpen(false)}>
+        <DetailSheet
+          step={selected}
+          onClose={() => setSheetOpen(false)}
+          footer={
+            <StepActions
+              step={selected}
+              prereqsDone={selected.prereqs.every((id) =>
+                steps.some((s) => s.id === id && s.state === "concluído"),
+              )}
+              onComplete={() => completeStep(selected.id)}
+              onReopen={() => reopenStep(selected.id)}
+              full
+            />
+          }
+        >
           <StepDetail
             step={selected}
             allSteps={steps}
@@ -287,6 +301,7 @@ function RoutePage() {
             onComplete={() => completeStep(selected.id)}
             onReopen={() => reopenStep(selected.id)}
             justCompleted={celebrating?.id === selected.id}
+            hideActions
           />
         </DetailSheet>
       )}
