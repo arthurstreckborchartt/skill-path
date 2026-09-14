@@ -215,6 +215,20 @@ export type RouteProgress = {
   streak: number;
 };
 
+/**
+ * Os ids das etapas ("step-1".."step-7") repetem entre os modelos de rota, então progresso salvo
+ * de uma rota antiga combinaria com as etapas de uma rota nova gerada num novo onboarding.
+ * A assinatura identifica de qual rota o progresso é: se mudar, o progresso salvo é descartado.
+ */
+function routeSignature(steps: RouteStep[], profile: ActiveProfile): string {
+  return [
+    profile.isPersonalized ? "p" : "demo",
+    profile.target,
+    profile.goalType,
+    steps.map((s) => `${s.id}|${s.title}`).join(">"),
+  ].join("::");
+}
+
 /** Rota demo já vem com progresso de exemplo pré-preenchido; rota real gerada começa sempre zerada. */
 function seedProgress(steps: RouteStep[], isPersonalized: boolean): RouteProgress {
   if (isPersonalized) {
@@ -228,12 +242,14 @@ function seedProgress(steps: RouteStep[], isPersonalized: boolean): RouteProgres
   };
 }
 
-function readProgress(fallback: RouteProgress): RouteProgress {
+function readProgress(fallback: RouteProgress, signature: string): RouteProgress {
   if (typeof window === "undefined") return fallback;
   try {
     const raw = window.localStorage.getItem(KEY);
     if (!raw) return fallback;
-    const parsed = JSON.parse(raw) as Partial<RouteProgress>;
+    const parsed = JSON.parse(raw) as Partial<RouteProgress> & { signature?: string };
+    // Progresso de outra rota (outro onboarding / outra área) não vale para esta.
+    if (parsed.signature !== signature) return fallback;
     return {
       done: parsed.done ?? fallback.done,
       checks: parsed.checks ?? fallback.checks,
@@ -284,14 +300,19 @@ export function useRouteProgress() {
     const resolved = resolveActiveRoute();
     setActive(resolved);
     const fallback = seedProgress(resolved.steps, resolved.profile.isPersonalized);
-    setProgress(readProgress(fallback));
+    setProgress(readProgress(fallback, routeSignature(resolved.steps, resolved.profile)));
     setHydrated(true);
   }, []);
+
+  const signature = useMemo(
+    () => routeSignature(active.steps, active.profile),
+    [active.steps, active.profile],
+  );
 
   useEffect(() => {
     if (!hydrated) return;
     try {
-      window.localStorage.setItem(KEY, JSON.stringify(progress));
+      window.localStorage.setItem(KEY, JSON.stringify({ ...progress, signature }));
     } catch {
       /* ignora quota */
     }
