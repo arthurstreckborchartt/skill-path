@@ -73,10 +73,20 @@ export function AuthField({
   label,
   type = "text",
   placeholder,
+  value,
+  onChange,
+  autoComplete,
+  required,
+  disabled,
 }: {
   label: string;
   type?: string;
   placeholder?: string;
+  value: string;
+  onChange: (value: string) => void;
+  autoComplete?: string;
+  required?: boolean;
+  disabled?: boolean;
 }) {
   return (
     <label className="block">
@@ -84,13 +94,29 @@ export function AuthField({
       <input
         type={type}
         placeholder={placeholder}
-        className="h-12 w-full rounded-xl border border-input bg-surface/60 px-4 text-sm outline-none transition-all placeholder:text-muted-foreground/70 focus:border-primary/50 focus:ring-4 focus:ring-primary/10"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        autoComplete={autoComplete}
+        required={required}
+        disabled={disabled}
+        className="h-12 w-full rounded-xl border border-input bg-surface/60 px-4 text-sm outline-none transition-all placeholder:text-muted-foreground/70 focus:border-primary/50 focus:ring-4 focus:ring-primary/10 disabled:opacity-60"
       />
     </label>
   );
 }
 
-export function AuthSocial() {
+export function AuthError({ message }: { message: string }) {
+  return (
+    <p
+      role="alert"
+      className="rounded-xl border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+    >
+      {message}
+    </p>
+  );
+}
+
+export function AuthSocial({ onGoogle, disabled }: { onGoogle: () => void; disabled?: boolean }) {
   return (
     <div>
       <div className="flex items-center gap-3 text-xs text-muted-foreground">
@@ -98,17 +124,14 @@ export function AuthSocial() {
         ou continue com
         <span className="h-px flex-1 bg-border" />
       </div>
-      <div className="mt-4 grid grid-cols-2 gap-3">
-        {["Google", "GitHub"].map((p) => (
-          <button
-            key={p}
-            type="button"
-            className="tap h-11 rounded-xl border border-border text-sm text-foreground transition-colors hover:border-primary/40 hover:bg-surface/60"
-          >
-            {p}
-          </button>
-        ))}
-      </div>
+      <button
+        type="button"
+        onClick={onGoogle}
+        disabled={disabled}
+        className="tap mt-4 h-11 w-full rounded-xl border border-border text-sm text-foreground transition-colors hover:border-primary/40 hover:bg-surface/60 disabled:opacity-60"
+      >
+        Google
+      </button>
     </div>
   );
 }

@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Bell, ChevronRight, FileText, LogOut, RefreshCcw, Shield, Sliders } from "lucide-react";
 import { Btn, PageHeader, Panel, Reveal } from "@/components/pathly/ui";
+import { signOut } from "@/lib/auth";
 import {
   LEGAL_DOCUMENT_LABEL,
   LEGAL_DOCUMENTS,
@@ -77,7 +78,13 @@ function Section({
 }
 
 function SettingsPage() {
+  const navigate = useNavigate();
   const [hours, setHours] = useState(12);
+
+  async function handleSignOut() {
+    await signOut();
+    navigate({ to: "/login" });
+  }
 
   return (
     <div className="space-y-6">
@@ -139,7 +146,7 @@ function SettingsPage() {
             <Btn variant="outline" size="sm">
               <RefreshCcw className="size-4" /> Recalcular rota
             </Btn>
-            <Btn variant="ghost" size="sm">
+            <Btn variant="ghost" size="sm" onClick={handleSignOut}>
               <LogOut className="size-4" /> Sair da conta
             </Btn>
           </div>
