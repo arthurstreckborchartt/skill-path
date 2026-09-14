@@ -6,6 +6,7 @@ This branch was created by Replit from main at 30d1a69. It is intentionally isol
 
 - Do not force-push, rebase, amend, or squash the published history.
 - Do not copy these files into main until the draft PR is reviewed.
+- While this PR is open, do not edit the persistence files listed below on main; review this branch first.
 - The source of truth for this work is branch replit/persistence-supabase.
 
 ## What changed
