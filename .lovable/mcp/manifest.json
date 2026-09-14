@@ -1,0 +1,101 @@
+{
+  "version": 1,
+  "sdk_version": "2.0.4",
+  "path": "/mcp",
+  "auth": {
+    "type": "none"
+  },
+  "mcp": {
+    "server": {
+      "name": "pathly",
+      "version": "0.1.0",
+      "title": "Pathly"
+    },
+    "tools": [
+      {
+        "name": "list_pathly_catalogs",
+        "title": "Listar catálogos do Pathly",
+        "description": "Lista as opções válidas (ids e rótulos) de objetivos, áreas, experiência, prazos, estilos de aprendizado, orçamento, situação e modelo de trabalho usadas para gerar uma rota.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "generate_pathly_route",
+        "title": "Gerar rota do Pathly",
+        "description": "Gera uma rota de estudo personalizada (etapas, habilidades, projetos, horas, XP e renda projetada) a partir da área desejada, renda atual, renda desejada, experiência e horas de estudo por semana. Use list_pathly_catalogs para os ids válidos.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "properties": {
+            "area": {
+              "type": "string",
+              "enum": [
+                "tech",
+                "design",
+                "marketing",
+                "sales",
+                "finance",
+                "engineering",
+                "admin",
+                "audiovisual",
+                "data",
+                "ai",
+                "other"
+              ],
+              "description": "Área desejada, ex. 'tech'."
+            },
+            "currentIncome": {
+              "type": "number",
+              "description": "Renda mensal atual em reais (0 se não tem renda)."
+            },
+            "targetIncome": {
+              "type": "number",
+              "description": "Renda mensal desejada em reais."
+            },
+            "experience": {
+              "type": "string",
+              "enum": [
+                "none",
+                "lt1",
+                "1to3",
+                "3to5",
+                "gt5"
+              ],
+              "description": "Experiência na área desejada."
+            },
+            "hoursPerWeek": {
+              "type": "number",
+              "description": "Horas de estudo por semana."
+            },
+            "goal": {
+              "description": "Id do objetivo, ex. 'earn_more'.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "area",
+            "currentIncome",
+            "targetIncome",
+            "experience",
+            "hoursPerWeek"
+          ]
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
