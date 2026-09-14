@@ -1,26 +1,18 @@
 import { Link, Outlet, useRouterState } from "@tanstack/react-router";
-import {
-  Bell,
-  Compass,
-  FolderKanban,
-  Home,
-  Settings,
-  Sparkles,
-  Target,
-  User,
-  Zap,
-} from "lucide-react";
+import { Bell, Compass, FolderKanban, Home, Settings, Sparkles, User, Zap } from "lucide-react";
 import { Logo } from "./ui";
 import { levelFromXp } from "@/lib/route-map";
 import { RouteProgressProvider, useRouteProgressContext } from "@/lib/route-progress-context";
 import { cn } from "@/lib/utils";
 
+// Oportunidades (vagas) fica fora da navegação por enquanto: a tela ainda usa dados de
+// exemplo (mock), e mostrar vaga fictícia pra usuário real derruba confiança. A rota
+// continua existindo (não foi apagada), só não aparece nos menus até ter dado real.
 const primaryNav = [
   { to: "/app", label: "Início", icon: Home, exact: true },
   { to: "/app/rota", label: "Minha rota", icon: Compass },
   { to: "/app/habilidades", label: "Habilidades", icon: Zap },
   { to: "/app/projetos", label: "Projetos", icon: FolderKanban },
-  { to: "/app/oportunidades", label: "Oportunidades", icon: Target },
 ];
 
 const secondaryNav = [
@@ -32,7 +24,7 @@ const mobileNav = [
   { to: "/app", label: "Home", icon: Home, exact: true },
   { to: "/app/rota", label: "Rota", icon: Compass },
   { to: "/app/projetos", label: "Projetos", icon: FolderKanban },
-  { to: "/app/oportunidades", label: "Vagas", icon: Target },
+  { to: "/app/habilidades", label: "Skills", icon: Zap },
   { to: "/app/perfil", label: "Perfil", icon: User },
 ];
 
