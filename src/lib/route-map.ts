@@ -242,12 +242,14 @@ function seedProgress(steps: RouteStep[], isPersonalized: boolean): RouteProgres
   };
 }
 
-function readProgress(fallback: RouteProgress): RouteProgress {
+function readProgress(fallback: RouteProgress, signature: string): RouteProgress {
   if (typeof window === "undefined") return fallback;
   try {
     const raw = window.localStorage.getItem(KEY);
     if (!raw) return fallback;
-    const parsed = JSON.parse(raw) as Partial<RouteProgress>;
+    const parsed = JSON.parse(raw) as Partial<RouteProgress> & { signature?: string };
+    // Progresso de outra rota (outro onboarding / outra área) não vale para esta.
+    if (parsed.signature !== signature) return fallback;
     return {
       done: parsed.done ?? fallback.done,
       checks: parsed.checks ?? fallback.checks,
