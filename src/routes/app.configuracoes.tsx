@@ -1,15 +1,19 @@
-import { useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
-  Bell,
+  Check,
   ChevronRight,
   FileText,
   LogOut,
   MessageSquare,
+  Monitor,
+  Moon,
+  Palette,
   RefreshCcw,
   Shield,
   Sliders,
+  Sun,
 } from "lucide-react";
+import { useTheme, type ThemeChoice } from "@/lib/theme";
 import { Btn, PageHeader, Panel, Reveal } from "@/components/pathly/ui";
 import { FeedbackForm } from "@/components/pathly/feedback-form";
 import { signOut } from "@/lib/auth";
@@ -35,6 +39,58 @@ export const Route = createFileRoute("/app/configuracoes")({
   }),
   component: SettingsPage,
 });
+
+const THEME_OPTIONS: { id: ThemeChoice; label: string; hint: string; icon: typeof Sun }[] = [
+  { id: "system", label: "Tema do sistema", hint: "Acompanha o aparelho", icon: Monitor },
+  { id: "light", label: "Claro", hint: "Fundo claro o tempo todo", icon: Sun },
+  { id: "dark", label: "Escuro", hint: "Fundo escuro o tempo todo", icon: Moon },
+];
+
+function ThemePicker() {
+  const { choice, resolved, setChoice } = useTheme();
+
+  return (
+    <div className="py-4">
+      <div role="radiogroup" aria-label="Tema" className="grid gap-2 sm:grid-cols-3">
+        {THEME_OPTIONS.map((option) => {
+          const active = choice === option.id;
+          const Icon = option.icon;
+          return (
+            <button
+              key={option.id}
+              role="radio"
+              aria-checked={active}
+              onClick={() => setChoice(option.id)}
+              className={cn(
+                "tap flex min-h-14 items-center gap-3 rounded-2xl border px-4 py-3 text-left transition-colors",
+                active
+                  ? "border-primary/50 bg-primary/10"
+                  : "border-border bg-surface-2/40 hover:border-primary/30",
+              )}
+            >
+              <Icon
+                className={cn(
+                  "size-4.5 shrink-0",
+                  active ? "text-primary" : "text-muted-foreground",
+                )}
+              />
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-sm font-medium">{option.label}</span>
+                <span className="block truncate text-xs text-muted-foreground">{option.hint}</span>
+              </span>
+              {active && <Check className="size-4 shrink-0 text-primary" />}
+            </button>
+          );
+        })}
+      </div>
+      <p className="mt-3 text-xs text-muted-foreground">
+        {choice === "system"
+          ? `Seguindo o aparelho — agora está no ${resolved === "dark" ? "escuro" : "claro"}. Se você mudar o tema do celular, o app muda junto.`
+          : "Sua escolha fica salva neste aparelho e vale nas próximas visitas."}
+      </p>
+    </div>
+  );
+}
 
 function Section({
   icon: Icon,
@@ -71,6 +127,12 @@ function SettingsPage() {
       <PageHeader title="Configurações" subtitle="Ajuste a rota ao seu momento" />
 
       <Reveal>
+        <Section icon={Palette} title="Aparência">
+          <ThemePicker />
+        </Section>
+      </Reveal>
+
+      <Reveal delay={60}>
         <Section icon={Sliders} title="Rota e ritmo">
           <p className="py-4 text-sm text-muted-foreground">
             O conteúdo e o ritmo da sua rota vêm das respostas do onboarding — principalmente a área

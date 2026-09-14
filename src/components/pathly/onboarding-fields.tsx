@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState, type ReactNode } from "react";
+﻿import { useMemo, useRef, useState, type ReactNode } from "react";
 import { Check, Plus, Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Option, SkillEntry, SkillLevel } from "@/lib/onboarding";
@@ -92,7 +92,7 @@ export function MoneyField({
             onChange(digits ? Number(digits) : null);
           }}
           placeholder={placeholder}
-          className="h-16 w-full rounded-2xl border border-input bg-surface/60 pr-5 pl-14 font-display text-2xl outline-none transition-all placeholder:text-muted-foreground/40 focus:border-primary/50 focus:ring-4 focus:ring-primary/10"
+          className="h-16 w-full rounded-2xl border border-input bg-surface/60 pr-5 pl-14 font-display text-2xl outline-none transition-all placeholder:text-muted-foreground focus:border-primary/50 focus:ring-4 focus:ring-primary/10"
         />
       </div>
       {quick && (
@@ -187,7 +187,7 @@ export function SearchField({
           }}
           onFocus={() => setOpen(true)}
           placeholder={placeholder}
-          className="h-14 w-full rounded-2xl border border-input bg-surface/60 pr-5 pl-12 text-base outline-none transition-all placeholder:text-muted-foreground/50 focus:border-primary/50 focus:ring-4 focus:ring-primary/10"
+          className="h-14 w-full rounded-2xl border border-input bg-surface/60 pr-5 pl-12 text-base outline-none transition-all placeholder:text-muted-foreground focus:border-primary/50 focus:ring-4 focus:ring-primary/10"
         />
       </div>
       {open && filtered.length > 0 && (
@@ -310,7 +310,7 @@ export function SkillPicker({
               }
             }}
             placeholder="Ex: AutoCAD"
-            className="h-12 min-w-0 flex-1 rounded-2xl border border-input bg-surface/60 px-4 text-sm outline-none transition-all placeholder:text-muted-foreground/50 focus:border-primary/50 focus:ring-4 focus:ring-primary/10"
+            className="h-12 min-w-0 flex-1 rounded-2xl border border-input bg-surface/60 px-4 text-sm outline-none transition-all placeholder:text-muted-foreground focus:border-primary/50 focus:ring-4 focus:ring-primary/10"
           />
           <button
             type="button"
@@ -393,7 +393,7 @@ export function HoursSlider({
         aria-label="Horas de estudo por semana"
         className="mt-4 h-2 w-full cursor-pointer appearance-none rounded-full outline-none [&::-webkit-slider-thumb]:size-5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:shadow-[var(--shadow-glow)]"
         style={{
-          background: `linear-gradient(to right, oklch(0.86 0.16 172) ${pct}%, var(--muted) ${pct}%)`,
+          background: `linear-gradient(to right, var(--primary) ${pct}%, var(--muted) ${pct}%)`,
         }}
       />
       <p className="mt-3 text-xs text-muted-foreground">

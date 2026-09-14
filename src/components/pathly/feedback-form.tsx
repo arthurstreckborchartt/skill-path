@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { useRouterState } from "@tanstack/react-router";
 import { Send } from "lucide-react";
 import { Btn } from "./ui";
@@ -103,7 +103,7 @@ export function FeedbackForm() {
         required
         disabled={status === "sending"}
         placeholder="O que aconteceu, ou o que você queria que existisse?"
-        className="w-full resize-none rounded-xl border border-input bg-surface/60 px-4 py-3 text-sm outline-none transition-all placeholder:text-muted-foreground/70 focus:border-primary/50 focus:ring-4 focus:ring-primary/10 disabled:opacity-60"
+        className="w-full resize-none rounded-xl border border-input bg-surface/60 px-4 py-3 text-sm outline-none transition-all placeholder:text-muted-foreground focus:border-primary/50 focus:ring-4 focus:ring-primary/10 disabled:opacity-60"
       />
 
       {status === "error" && (

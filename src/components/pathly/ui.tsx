@@ -5,16 +5,20 @@ import { cn } from "@/lib/utils";
 
 export function Logo({ className, compact }: { className?: string; compact?: boolean }) {
   return (
-    <span className={cn("flex items-center gap-2.5", className)}>
+    // coarse:min-h-11 — a logo costuma ser link de volta para o início; em tela de toque
+    // precisa dos 44px mesmo sendo visualmente menor.
+    <span className={cn("flex items-center gap-2.5 coarse:min-h-11", className)}>
       <span className="relative grid size-8 shrink-0 place-items-center rounded-xl bg-signal shadow-[var(--shadow-glow)]">
         <svg viewBox="0 0 24 24" className="size-4" fill="none" aria-hidden="true">
+          {/* A marca fica sobre o gradiente de ação nos dois temas, então segue o token que
+              já é o "texto sobre a cor primária" — sem cor fixa. */}
           <path
             d="M5 19c0-5 4-5 6-7s1-6-1-7"
-            stroke="oklch(0.19 0.04 170)"
+            stroke="var(--primary-foreground)"
             strokeWidth="2.4"
             strokeLinecap="round"
           />
-          <circle cx="18" cy="6.5" r="2.6" fill="oklch(0.19 0.04 170)" />
+          <circle cx="18" cy="6.5" r="2.6" fill="var(--primary-foreground)" />
         </svg>
       </span>
       {!compact && (
@@ -44,8 +48,9 @@ export const btnStyles = {
   ghost: "text-muted-foreground hover:text-foreground hover:bg-surface/60",
 };
 
+// Em tela de toque nenhum botão fica abaixo de 44px de altura (md e lg já passam).
 const btnSizes = {
-  sm: "h-9 px-4 text-sm",
+  sm: "h-9 coarse:h-11 px-4 text-sm",
   md: "h-11 px-5 text-sm",
   lg: "h-13 px-7 text-base",
 };
@@ -308,8 +313,8 @@ export function Ring({
         />
         <defs>
           <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="oklch(0.86 0.16 172)" />
-            <stop offset="100%" stopColor="oklch(0.72 0.13 245)" />
+            <stop offset="0%" stopColor="var(--primary)" />
+            <stop offset="100%" stopColor="var(--accent)" />
           </linearGradient>
         </defs>
       </svg>

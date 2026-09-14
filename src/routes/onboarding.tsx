@@ -264,7 +264,7 @@ function Onboarding() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="flex items-center justify-between gap-3 px-5 py-4 sm:px-8 sm:py-5">
+      <header className="flex items-center justify-between gap-3 px-5 pt-[calc(1rem+env(safe-area-inset-top))] pb-4 sm:px-8 sm:py-5">
         <Link to="/" className="tap min-w-0">
           <Logo />
         </Link>
@@ -287,7 +287,8 @@ function Onboarding() {
         <ProgressBar value={progress} delay={60} className="h-1" />
       </div>
 
-      <main className="flex flex-1 flex-col px-5 pt-8 pb-28 sm:px-8 sm:pt-12 sm:pb-12">
+      {/* pb-36 no celular abre espaço para o rodapé fixo sem cobrir a última opção da lista. */}
+      <main className="flex flex-1 flex-col px-5 pt-8 pb-36 sm:px-8 sm:pt-12 sm:pb-12">
         <div
           key={screen.id}
           className="animate-[fade-up_0.5s_cubic-bezier(0.16,1,0.3,1)_both] mx-auto w-full max-w-lg"
@@ -491,12 +492,12 @@ function Onboarding() {
         </div>
       </main>
 
-      <footer className="fixed inset-x-0 bottom-0 border-t border-border bg-background/85 px-5 py-4 backdrop-blur-xl sm:static sm:border-0 sm:bg-transparent sm:px-8 sm:pb-10 sm:backdrop-blur-none">
+      <footer className="fixed inset-x-0 bottom-0 border-t border-border bg-background/85 px-5 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] backdrop-blur-xl sm:static sm:border-0 sm:bg-transparent sm:px-8 sm:pb-10 sm:backdrop-blur-none">
         <div className="mx-auto flex w-full max-w-lg items-center gap-3">
           {position > 0 && (
             <Btn variant="outline" size="lg" onClick={() => setIndex(position - 1)}>
               <ArrowLeft className="size-4" />
-              <span className="hidden sm:inline">Voltar</span>
+              Voltar
             </Btn>
           )}
           <Btn size="lg" className="flex-1" disabled={!canAdvance} onClick={next}>

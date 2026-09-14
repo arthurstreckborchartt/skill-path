@@ -1,4 +1,4 @@
-import { type ReactNode } from "react";
+﻿import { type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { Logo } from "./ui";
 import { cn } from "@/lib/utils";
@@ -99,7 +99,7 @@ export function AuthField({
         autoComplete={autoComplete}
         required={required}
         disabled={disabled}
-        className="h-12 w-full rounded-xl border border-input bg-surface/60 px-4 text-sm outline-none transition-all placeholder:text-muted-foreground/70 focus:border-primary/50 focus:ring-4 focus:ring-primary/10 disabled:opacity-60"
+        className="h-12 w-full rounded-xl border border-input bg-surface/60 px-4 text-sm outline-none transition-all placeholder:text-muted-foreground focus:border-primary/50 focus:ring-4 focus:ring-primary/10 disabled:opacity-60"
       />
     </label>
   );

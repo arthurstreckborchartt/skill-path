@@ -152,7 +152,7 @@ function AppShellInner() {
       </aside>
 
       {/* Mobile top bar */}
-      <header className="sticky top-0 z-30 flex items-center justify-between border-b border-border bg-background/80 px-4 py-3 backdrop-blur-xl lg:hidden">
+      <header className="sticky top-0 z-30 flex items-center justify-between border-b border-border bg-background/80 px-4 pt-[calc(0.75rem+env(safe-area-inset-top))] pb-3 backdrop-blur-xl lg:hidden">
         <Link to="/" className="tap">
           <Logo />
         </Link>
@@ -172,7 +172,8 @@ function AppShellInner() {
 
       <main
         key={pathname}
-        className="animate-[fade-up_0.5s_cubic-bezier(0.16,1,0.3,1)_both] px-4 pt-6 pb-28 sm:px-6 lg:ml-64 lg:px-10 lg:pt-10 lg:pb-16"
+        // 8rem + área segura: a barra inferior (56px) nunca cobre o fim do conteúdo no iPhone.
+        className="animate-[fade-up_0.5s_cubic-bezier(0.16,1,0.3,1)_both] px-4 pt-6 pb-[calc(8rem+env(safe-area-inset-bottom))] sm:px-6 lg:ml-64 lg:px-10 lg:pt-10 lg:pb-16"
       >
         <div className="mx-auto w-full max-w-5xl">
           {!hydrated ? <RouteLoading /> : needsOnboarding ? <OnboardingGate /> : <Outlet />}
@@ -180,7 +181,7 @@ function AppShellInner() {
       </main>
 
       {/* Mobile bottom nav */}
-      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden">
+      <nav className="pb-safe fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background/90 backdrop-blur-xl lg:hidden">
         <ul className="grid grid-cols-5">
           {mobileNav.map(({ to, label, icon: Icon, exact }) => (
             <li key={to}>

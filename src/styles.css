@@ -3,6 +3,8 @@
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
+/* Telas de toque: alvo mínimo de 44px sem engordar a interface no desktop. */
+@custom-variant coarse (@media (pointer: coarse));
 
 /*
  * Pathly design system — dark "ink" canvas, vibrant mint/aqua signal color,
@@ -38,6 +40,10 @@
   --color-accent-foreground: var(--accent-foreground);
   --color-xp: var(--xp);
   --color-xp-foreground: var(--xp-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
   --color-border: var(--border);
@@ -77,8 +83,78 @@
   }
 }
 
+/*
+ * Tema claro é o padrão do :root; o escuro vive em .dark. Quem decide qual classe entra no <html>
+ * é o script inline do __root.tsx, que roda antes da primeira pintura lendo a preferência salva e,
+ * na falta dela, o `prefers-color-scheme` do sistema. Sem JavaScript o app fica no tema claro.
+ *
+ * Toda cor daqui é semântica: nenhum componente deve escrever oklch/hex direto.
+ */
 :root {
+  color-scheme: light;
   --radius: 1rem;
+  --background: oklch(0.975 0.006 245);
+  --foreground: oklch(0.24 0.025 258);
+  --surface: oklch(0.995 0.003 245);
+  --surface-2: oklch(0.955 0.008 245);
+  --card: oklch(0.995 0.003 245);
+  --card-foreground: oklch(0.24 0.025 258);
+  --popover: oklch(0.995 0.003 245);
+  --popover-foreground: oklch(0.24 0.025 258);
+  /* Estes valores foram escolhidos medindo contraste contra --background, não no olho:
+     todos passam 4,5:1 como texto. Ao mexer, meça de novo. */
+  --primary: oklch(0.5 0.115 175);
+  --primary-foreground: oklch(0.99 0.005 180);
+  --secondary: oklch(0.945 0.01 245);
+  --secondary-foreground: oklch(0.26 0.025 258);
+  --muted: oklch(0.945 0.008 245);
+  --muted-foreground: oklch(0.47 0.022 258);
+  --accent: oklch(0.52 0.13 245);
+  --accent-foreground: oklch(0.99 0.005 245);
+  --xp: oklch(0.52 0.12 68);
+  --xp-foreground: oklch(0.99 0.005 80);
+  --success: oklch(0.49 0.12 155);
+  --success-foreground: oklch(0.99 0.005 160);
+  --warning: oklch(0.52 0.12 75);
+  --warning-foreground: oklch(0.99 0.005 80);
+  --destructive: oklch(0.52 0.19 25);
+  --destructive-foreground: oklch(0.99 0.005 250);
+  --border: oklch(0.24 0.03 258 / 15%);
+  --input: oklch(0.24 0.03 258 / 30%);
+  --ring: oklch(0.5 0.115 175 / 45%);
+  --chart-1: oklch(0.5 0.115 175);
+  --chart-2: oklch(0.52 0.13 245);
+  --chart-3: oklch(0.57 0.13 68);
+  --chart-4: oklch(0.5 0.13 300);
+  --chart-5: oklch(0.55 0.16 20);
+  --sidebar: oklch(0.985 0.005 245);
+  --sidebar-foreground: oklch(0.26 0.025 258);
+  --sidebar-primary: oklch(0.5 0.115 175);
+  --sidebar-primary-foreground: oklch(0.99 0.005 180);
+  --sidebar-accent: oklch(0.945 0.01 245);
+  --sidebar-accent-foreground: oklch(0.24 0.025 258);
+  --sidebar-border: oklch(0.24 0.03 258 / 11%);
+  --sidebar-ring: oklch(0.5 0.115 175 / 40%);
+
+  /* No claro o gradiente precisa ser escuro o bastante para carregar texto branco em cima. */
+  --gradient-signal: linear-gradient(
+    135deg,
+    oklch(0.53 0.12 172) 0%,
+    oklch(0.51 0.12 205) 55%,
+    oklch(0.49 0.13 248) 100%
+  );
+  --gradient-halo: radial-gradient(
+    60% 60% at 50% 0%,
+    color-mix(in oklab, var(--primary) 12%, transparent) 0%,
+    transparent 70%
+  );
+  --shadow-soft: 0 1px 2px oklch(0.24 0.03 258 / 0.06), 0 12px 40px -18px oklch(0.24 0.03 258 / 0.18);
+  --shadow-lift: 0 2px 6px oklch(0.24 0.03 258 / 0.08), 0 28px 60px -28px oklch(0.24 0.03 258 / 0.22);
+  --shadow-glow: 0 16px 44px -22px color-mix(in oklab, var(--primary) 55%, transparent);
+}
+
+.dark {
+  color-scheme: dark;
   --background: oklch(0.16 0.018 258);
   --foreground: oklch(0.97 0.005 250);
   --surface: oklch(0.2 0.02 258);
@@ -92,13 +168,17 @@
   --secondary: oklch(0.26 0.022 258);
   --secondary-foreground: oklch(0.96 0.005 250);
   --muted: oklch(0.24 0.02 258);
-  --muted-foreground: oklch(0.7 0.018 258);
+  --muted-foreground: oklch(0.74 0.018 258);
   --accent: oklch(0.72 0.13 232);
   --accent-foreground: oklch(0.18 0.03 240);
   --xp: oklch(0.82 0.15 78);
   --xp-foreground: oklch(0.22 0.05 70);
-  --destructive: oklch(0.65 0.19 22);
-  --destructive-foreground: oklch(0.98 0.005 250);
+  --success: oklch(0.78 0.15 158);
+  --success-foreground: oklch(0.19 0.04 160);
+  --warning: oklch(0.82 0.15 78);
+  --warning-foreground: oklch(0.22 0.05 70);
+  --destructive: oklch(0.7 0.17 22);
+  --destructive-foreground: oklch(0.17 0.03 25);
   --border: oklch(1 0 0 / 9%);
   --input: oklch(1 0 0 / 12%);
   --ring: oklch(0.82 0.16 168 / 55%);
@@ -130,10 +210,6 @@
   --shadow-soft: 0 1px 2px oklch(0 0 0 / 0.3), 0 12px 40px -18px oklch(0 0 0 / 0.55);
   --shadow-lift: 0 2px 6px oklch(0 0 0 / 0.28), 0 28px 60px -28px oklch(0 0 0 / 0.7);
   --shadow-glow: 0 20px 60px -24px color-mix(in oklab, var(--primary) 45%, transparent);
-}
-
-.dark {
-  color-scheme: dark;
 }
 
 @layer base {
@@ -263,6 +339,19 @@
     z-index: -1;
     pointer-events: none;
   }
+}
+
+/* Áreas seguras do iPhone (notch em cima, barra de gestos embaixo). */
+@utility pt-safe {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+@utility pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+@utility mb-safe {
+  margin-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 @utility tap {
