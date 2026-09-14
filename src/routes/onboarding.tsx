@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, ArrowRight, Check, Cloud, Sparkles, TrendingUp } from "lucide-react";
 import { Btn, Logo, ProgressBar } from "@/components/pathly/ui";
+import { useSession } from "@/lib/auth";
 import {
   CardSelect,
   FieldGroup,
@@ -22,6 +23,8 @@ import {
   horizons,
   learningStyles,
   loadProfile,
+  loadCloudProfile,
+  saveCloudProfile,
   opportunityTypes,
   professionSuggestions,
   routePreview,
@@ -196,33 +199,49 @@ type Phase = "questions" | "building" | "ready";
 
 function Onboarding() {
   const navigate = useNavigate();
+  const { session, loading: sessionLoading } = useSession();
   const [profile, setProfile] = useState<OnboardingProfile>(emptyProfile());
   const [index, setIndex] = useState(0);
   const [phase, setPhase] = useState<Phase>("questions");
   const [saved, setSaved] = useState(false);
   const hydrated = useRef(false);
 
-  // restore autosaved answers
+  // restore local answers first, then prefer the cloud copy when the user is authenticated
   useEffect(() => {
-    const stored = loadProfile();
-    if (stored) {
-      setProfile(stored);
-      setIndex(Math.min(stored.lastScreenIndex, screens.length - 1));
+    if (sessionLoading) return;
+    let active = true;
+
+    async function hydrate() {
+      const stored = loadProfile();
+      const cloud = session?.user.id ? await loadCloudProfile(session.user.id) : null;
+      if (!active) return;
+
+      const restored = cloud ?? stored;
+      if (restored) {
+        setProfile(restored);
+        setIndex(Math.min(restored.lastScreenIndex, screens.length - 1));
+      }
+      hydrated.current = true;
     }
-    hydrated.current = true;
-  }, []);
+
+    void hydrate();
+    return () => {
+      active = false;
+    };
+  }, [session?.user.id, sessionLoading]);
 
   // autosave (debounced). Depois que o onboarding é concluído o `next()` já salvou tudo, e um
   // save extra aqui remontaria os timers da tela de "montando sua rota" via re-render.
   useEffect(() => {
     if (!hydrated.current || phase !== "questions") return;
     const t = setTimeout(() => {
-      saveProfile({ ...profile, lastScreenIndex: index });
+      const next = saveProfile({ ...profile, lastScreenIndex: index });
+      if (session?.user.id) void saveCloudProfile(session.user.id, next);
       setSaved(true);
       setTimeout(() => setSaved(false), 1400);
     }, 500);
     return () => clearTimeout(t);
-  }, [profile, index, phase]);
+  }, [profile, index, phase, session?.user.id]);
 
   const visible = useMemo(() => screens.filter((s) => !s.skip?.(profile)), [profile]);
   const screen = visible[Math.min(index, visible.length - 1)]!;
@@ -245,7 +264,8 @@ function Onboarding() {
     }
     const completed = { ...profile, completedAt: new Date().toISOString() };
     setProfile(completed);
-    saveProfile({ ...completed, lastScreenIndex: total - 1 });
+    const next = saveProfile({ ...completed, lastScreenIndex: total - 1 });
+    if (session?.user.id) void saveCloudProfile(session.user.id, next);
     setPhase("building");
   }
 
