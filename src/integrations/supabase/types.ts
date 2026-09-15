@@ -14,7 +14,159 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      feedback: {
+        Row: {
+          created_at: string
+          id: string
+          kind: string
+          message: string
+          page: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kind: string
+          message: string
+          page?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kind?: string
+          message?: string
+          page?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      pathly_profiles: {
+        Row: {
+          goal_text: string | null
+          onboarding: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          goal_text?: string | null
+          onboarding: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          goal_text?: string | null
+          onboarding?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      pathly_resources: {
+        Row: {
+          areas: string[]
+          created_at: string
+          id: string
+          is_free: boolean
+          kind: string
+          language: string
+          level: string | null
+          provider: string | null
+          slug: string
+          source: string
+          source_license: string
+          summary: string
+          title: string
+          topics: string[]
+          url: string
+        }
+        Insert: {
+          areas?: string[]
+          created_at?: string
+          id?: string
+          is_free?: boolean
+          kind: string
+          language?: string
+          level?: string | null
+          provider?: string | null
+          slug: string
+          source: string
+          source_license: string
+          summary: string
+          title: string
+          topics?: string[]
+          url: string
+        }
+        Update: {
+          areas?: string[]
+          created_at?: string
+          id?: string
+          is_free?: boolean
+          kind?: string
+          language?: string
+          level?: string | null
+          provider?: string | null
+          slug?: string
+          source?: string
+          source_license?: string
+          summary?: string
+          title?: string
+          topics?: string[]
+          url?: string
+        }
+        Relationships: []
+      }
+      pathly_route_progress: {
+        Row: {
+          progress: Json
+          route_signature: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          progress: Json
+          route_signature: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          progress?: Json
+          route_signature?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      pathly_routes: {
+        Row: {
+          area: string
+          created_at: string
+          generator: string
+          id: string
+          signature: string
+          steps: Json
+          user_id: string
+        }
+        Insert: {
+          area: string
+          created_at?: string
+          generator?: string
+          id?: string
+          signature: string
+          steps: Json
+          user_id: string
+        }
+        Update: {
+          area?: string
+          created_at?: string
+          generator?: string
+          id?: string
+          signature?: string
+          steps?: Json
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
