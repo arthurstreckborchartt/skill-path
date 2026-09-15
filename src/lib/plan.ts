@@ -1,15 +1,16 @@
 import { useCallback, useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 /**
  * Planos da Pathly.
  *
- * Por enquanto isto é **só a camada visual**: o plano vive no navegador e qualquer pessoa pode
- * trocar pelo devtools. Não é falha, é o escopo — a cobrança ainda não existe. Quando a Stripe
- * entrar, o plano passa a vir do servidor (assinatura conferida no backend) e este módulo troca
- * a fonte sem que as telas mudem, porque elas só consomem `usePlan()`.
+ * O plano de verdade vive no banco, em `pathly_profiles.plano`, escrito só pelo webhook do
+ * Stripe. O `localStorage` aqui é **cache de tela**: serve para o app não piscar "Gratuito"
+ * enquanto a consulta ao banco não volta.
  *
- * Enquanto isso não acontece, nada aqui pode dar a entender que já existe cobrança: o botão de
- * assinar não cobra, e a tela precisa dizer isso.
+ * Isso importa: quem confia no cache para decidir acesso está confiando em algo que qualquer
+ * pessoa edita pelo devtools. Toda decisão que custa dinheiro — qual provedor de IA chamar, por
+ * exemplo — é tomada no servidor, lendo o banco. As telas usam isto só para desenhar.
  */
 
 export type PlanId = "free" | "pro";
@@ -82,19 +83,53 @@ export function usePlan() {
   // Começa sempre no gratuito para o HTML do servidor bater com o primeiro paint do cliente;
   // ler o localStorage direto no useState causaria divergência de hidratação.
   const [plan, setPlan] = useState<PlanId>("free");
+  const [conferindo, setConferindo] = useState(true);
 
-  useEffect(() => setPlan(ler()), []);
+  useEffect(() => {
+    setPlan(ler());
 
-  const mudar = useCallback((proximo: PlanId) => {
-    setPlan(proximo);
-    try {
-      window.localStorage.setItem(CHAVE, proximo);
-    } catch {
-      // Sem storage o plano vale só para esta sessão — melhor que quebrar a tela.
-    }
+    // E logo em seguida o valor do banco, que é o que vale. O cache pode estar velho (assinou
+    // em outro aparelho) ou adulterado.
+    let vivo = true;
+    void (async () => {
+      try {
+        const { data } = await supabase.auth.getSession();
+        const id = data.session?.user.id;
+        if (!id) return;
+        const tabela = supabase as unknown as {
+          from(t: string): {
+            select(c: string): {
+              eq(
+                c: string,
+                v: string,
+              ): { maybeSingle(): Promise<{ data: Record<string, unknown> | null }> };
+            };
+          };
+        };
+        const { data: linha } = await tabela
+          .from("pathly_profiles")
+          .select("plano")
+          .eq("user_id", id)
+          .maybeSingle();
+        if (!vivo) return;
+        const doBanco: PlanId = linha?.["plano"] === "pro" ? "pro" : "free";
+        setPlan(doBanco);
+        try {
+          window.localStorage.setItem(CHAVE, doBanco);
+        } catch {
+          // storage indisponível: o estado desta sessão já está correto
+        }
+      } finally {
+        if (vivo) setConferindo(false);
+      }
+    })();
+
+    return () => {
+      vivo = false;
+    };
   }, []);
 
-  return { plan, isPro: plan === "pro", mudar };
+  return { plan, isPro: plan === "pro", conferindo };
 }
 
 /** Uma etapa está atrás do paywall quando passa do limite do gratuito. `order` começa em 1. */

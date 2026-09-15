@@ -19,7 +19,9 @@ import { Route as PrivacidadeRouteImport } from './routes/privacidade'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as TermosRouteImport } from './routes/termos'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
+import { Route as ApiAssinaturaRouteImport } from './routes/api.assinatura'
 import { Route as ApiRotaRouteImport } from './routes/api.rota'
+import { Route as ApiStripeWebhookRouteImport } from './routes/api.stripe-webhook'
 import { Route as AppIndexRouteImport } from './routes/app.index'
 import { Route as AppConfiguracoesRouteImport } from './routes/app.configuracoes'
 import { Route as AppHabilidadesRouteImport } from './routes/app.habilidades'
@@ -82,9 +84,19 @@ const Char91DotwellKnownChar93OauthProtectedResourceRoute =
     path: '/.well-known/oauth-protected-resource',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiAssinaturaRoute = ApiAssinaturaRouteImport.update({
+  id: '/api/assinatura',
+  path: '/api/assinatura',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiRotaRoute = ApiRotaRouteImport.update({
   id: '/api/rota',
   path: '/api/rota',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiStripeWebhookRoute = ApiStripeWebhookRouteImport.update({
+  id: '/api/stripe-webhook',
+  path: '/api/stripe-webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppIndexRoute = AppIndexRouteImport.update({
@@ -149,7 +161,9 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/termos': typeof TermosRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  '/api/assinatura': typeof ApiAssinaturaRoute
   '/api/rota': typeof ApiRotaRoute
+  '/api/stripe-webhook': typeof ApiStripeWebhookRoute
   '/app/configuracoes': typeof AppConfiguracoesRoute
   '/app/habilidades': typeof AppHabilidadesRoute
   '/app/oportunidades': typeof AppOportunidadesRoute
@@ -171,7 +185,9 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/termos': typeof TermosRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  '/api/assinatura': typeof ApiAssinaturaRoute
   '/api/rota': typeof ApiRotaRoute
+  '/api/stripe-webhook': typeof ApiStripeWebhookRoute
   '/app/configuracoes': typeof AppConfiguracoesRoute
   '/app/habilidades': typeof AppHabilidadesRoute
   '/app/oportunidades': typeof AppOportunidadesRoute
@@ -195,7 +211,9 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/termos': typeof TermosRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  '/api/assinatura': typeof ApiAssinaturaRoute
   '/api/rota': typeof ApiRotaRoute
+  '/api/stripe-webhook': typeof ApiStripeWebhookRoute
   '/app/configuracoes': typeof AppConfiguracoesRoute
   '/app/habilidades': typeof AppHabilidadesRoute
   '/app/oportunidades': typeof AppOportunidadesRoute
@@ -220,7 +238,9 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/termos'
     | '/.well-known/oauth-protected-resource'
+    | '/api/assinatura'
     | '/api/rota'
+    | '/api/stripe-webhook'
     | '/app/configuracoes'
     | '/app/habilidades'
     | '/app/oportunidades'
@@ -242,7 +262,9 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/termos'
     | '/.well-known/oauth-protected-resource'
+    | '/api/assinatura'
     | '/api/rota'
+    | '/api/stripe-webhook'
     | '/app/configuracoes'
     | '/app/habilidades'
     | '/app/oportunidades'
@@ -265,7 +287,9 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/termos'
     | '/.well-known/oauth-protected-resource'
+    | '/api/assinatura'
     | '/api/rota'
+    | '/api/stripe-webhook'
     | '/app/configuracoes'
     | '/app/habilidades'
     | '/app/oportunidades'
@@ -289,7 +313,9 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermosRoute: typeof TermosRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  ApiAssinaturaRoute: typeof ApiAssinaturaRoute
   ApiRotaRoute: typeof ApiRotaRoute
+  ApiStripeWebhookRoute: typeof ApiStripeWebhookRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
 }
@@ -366,11 +392,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/assinatura': {
+      id: '/api/assinatura'
+      path: '/api/assinatura'
+      fullPath: '/api/assinatura'
+      preLoaderRoute: typeof ApiAssinaturaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/rota': {
       id: '/api/rota'
       path: '/api/rota'
       fullPath: '/api/rota'
       preLoaderRoute: typeof ApiRotaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/stripe-webhook': {
+      id: '/api/stripe-webhook'
+      path: '/api/stripe-webhook'
+      fullPath: '/api/stripe-webhook'
+      preLoaderRoute: typeof ApiStripeWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/app/': {
@@ -482,7 +522,9 @@ const rootRouteChildren: RootRouteChildren = {
   TermosRoute: TermosRoute,
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
+  ApiAssinaturaRoute: ApiAssinaturaRoute,
   ApiRotaRoute: ApiRotaRoute,
+  ApiStripeWebhookRoute: ApiStripeWebhookRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
 }
