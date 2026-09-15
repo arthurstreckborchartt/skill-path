@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useSession } from "@/lib/auth";
+import { loadCloudProfile, loadCloudRouteProgress, saveCloudRouteProgress } from "@/lib/cloud-sync";
 import { steps as baseSteps, user, type Difficulty, type Step } from "@/lib/mock";
 import { generateRoute, roleLabelForArea } from "@/lib/route-templates";
 import {
@@ -6,6 +8,7 @@ import {
   goals,
   horizons,
   loadProfile,
+  saveProfile,
   situations,
   type SkillLevel,
 } from "@/lib/onboarding";
@@ -293,6 +296,7 @@ export type StepView = RouteStep & {
 };
 
 export function useRouteProgress() {
+  const { session, loading: sessionLoading } = useSession();
   const [active, setActive] = useState<{ steps: RouteStep[]; profile: ActiveProfile }>({
     steps: DEMO_STEPS,
     profile: DEMO_PROFILE,
@@ -302,12 +306,42 @@ export function useRouteProgress() {
   const [celebrating, setCelebrating] = useState<{ id: string; xp: number } | null>(null);
 
   useEffect(() => {
-    const resolved = resolveActiveRoute();
-    setActive(resolved);
-    const fallback = seedProgress(resolved.steps, resolved.profile.isPersonalized);
-    setProgress(readProgress(fallback, routeSignature(resolved.steps, resolved.profile)));
-    setHydrated(true);
-  }, []);
+    if (sessionLoading) return;
+    let activeRequest = true;
+
+    async function hydrate() {
+      const localProfile = loadProfile();
+      const cloudProfile = session?.user.id ? await loadCloudProfile(session.user.id) : null;
+      if (!activeRequest) return;
+
+      if (
+        cloudProfile?.completedAt &&
+        (!localProfile?.updatedAt ||
+          !cloudProfile.updatedAt ||
+          cloudProfile.updatedAt >= localProfile.updatedAt)
+      ) {
+        saveProfile(cloudProfile);
+      }
+
+      const resolved = resolveActiveRoute();
+      const signature = routeSignature(resolved.steps, resolved.profile);
+      const fallback = seedProgress(resolved.steps, resolved.profile.isPersonalized);
+      const localProgress = readProgress(fallback, signature);
+      const cloudProgress = session?.user.id
+        ? await loadCloudRouteProgress(session.user.id, signature)
+        : null;
+      if (!activeRequest) return;
+
+      setActive(resolved);
+      setProgress(cloudProgress ?? localProgress);
+      setHydrated(true);
+    }
+
+    void hydrate();
+    return () => {
+      activeRequest = false;
+    };
+  }, [session?.user.id, sessionLoading]);
 
   const signature = useMemo(
     () => routeSignature(active.steps, active.profile),
@@ -318,10 +352,11 @@ export function useRouteProgress() {
     if (!hydrated) return;
     try {
       window.localStorage.setItem(KEY, JSON.stringify({ ...progress, signature }));
+      if (session?.user.id) void saveCloudRouteProgress(session.user.id, signature, progress);
     } catch {
       /* ignora quota */
     }
-  }, [progress, hydrated]);
+  }, [progress, hydrated, session?.user.id, signature]);
 
   const steps = active.steps;
   const profile = active.profile;
