@@ -1,10 +1,21 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute, useSearch } from "@tanstack/react-router";
-import { Check, Sparkles, X } from "lucide-react";
-import { Btn, Chip, PageHeader, Panel } from "@/components/pathly/ui";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  CheckCircle2,
+  CreditCard,
+  LockKeyhole,
+  ShieldCheck,
+  Sparkles,
+  X,
+} from "lucide-react";
+import { Btn, Chip, Logo, PageHeader, Panel } from "@/components/pathly/ui";
 import { PLANOS, usePlan, type Plano } from "@/lib/plan";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import logoAsset from "@/assets/pathly-email-logo.png.asset.json";
 
 export const Route = createFileRoute("/app/planos")({
   staticData: { sitemap: false },
@@ -15,10 +26,167 @@ export const Route = createFileRoute("/app/planos")({
         name: "description",
         content: "O plano gratuito e o Pro da Pathly, lado a lado.",
       },
+      { property: "og:title", content: "Planos — Pathly" },
+      {
+        property: "og:description",
+        content: "Compare os planos da Pathly e libere sua rota profissional completa.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: PlanosPage,
 });
+
+function CheckoutPathly({
+  email,
+  ocupado,
+  erro,
+  onClose,
+  onConfirmar,
+}: {
+  email: string;
+  ocupado: boolean;
+  erro: string | null;
+  onClose: () => void;
+  onConfirmar: () => void;
+}) {
+  const pro = PLANOS.find((plano) => plano.id === "pro");
+
+  useEffect(() => {
+    function fecharComEscape(event: KeyboardEvent) {
+      if (event.key === "Escape" && !ocupado) onClose();
+    }
+    const overflowAnterior = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", fecharComEscape);
+    return () => {
+      document.body.style.overflow = overflowAnterior;
+      window.removeEventListener("keydown", fecharComEscape);
+    };
+  }, [ocupado, onClose]);
+
+  if (!pro) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 overflow-y-auto bg-background"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="checkout-title"
+    >
+      <div className="pointer-events-none fixed inset-0 bg-[var(--gradient-halo)]" />
+      <div className="relative mx-auto flex min-h-screen w-full max-w-6xl flex-col px-4 pb-8 pt-[max(1rem,env(safe-area-inset-top))] sm:px-8 lg:px-10">
+        <header className="flex h-16 items-center justify-between border-b border-border/70">
+          <Logo />
+          <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+            <LockKeyhole className="size-3.5 text-primary" />
+            Ambiente seguro
+          </div>
+        </header>
+
+        <main className="grid flex-1 items-center gap-8 py-5 sm:py-8 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16 lg:py-12">
+          <section className="order-2 animate-fade-up lg:order-1 lg:pr-4">
+            <Btn variant="ghost" size="sm" className="-ml-4 mb-7 hidden lg:inline-flex" onClick={onClose} disabled={ocupado}>
+              <ArrowLeft className="size-4" /> Voltar aos planos
+            </Btn>
+
+            <Chip tone="primary" className="mb-4">
+              <Sparkles className="size-3" /> 14 dias por nossa conta
+            </Chip>
+            <h1 id="checkout-title" className="max-w-xl font-display text-4xl font-semibold leading-tight sm:text-5xl">
+              Sua rota inteira, sem bloqueios.
+            </h1>
+            <p className="mt-4 max-w-lg text-base leading-relaxed text-muted-foreground sm:text-lg">
+              Acesse cada etapa, projeto e habilidade que liga sua situação atual à sua próxima meta profissional.
+            </p>
+
+            <div className="mt-8 grid gap-3 sm:grid-cols-2">
+              {pro.inclui.slice(0, 4).map((item) => (
+                <div key={item} className="flex items-start gap-3 border-t border-border/70 py-3 text-sm">
+                  <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-primary" />
+                  <span>{item}</span>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section className="order-1 animate-fade-up [animation-delay:100ms] lg:order-2">
+            <div className="mb-4 flex items-center justify-between lg:hidden">
+              <Btn variant="ghost" size="sm" className="-ml-4" onClick={onClose} disabled={ocupado}>
+                <ArrowLeft className="size-4" /> Planos
+              </Btn>
+              <Chip tone="primary">
+                <Sparkles className="size-3" /> 14 dias grátis
+              </Chip>
+            </div>
+            <div className="overflow-hidden rounded-[var(--radius-xl)] border border-primary/30 bg-card shadow-[var(--shadow-lift)]">
+              <div className="bg-signal p-5 text-primary-foreground sm:p-6">
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wider opacity-80">Seu plano</p>
+                    <h2 className="mt-1 font-display text-2xl font-semibold">Pathly Pro</h2>
+                  </div>
+                  <img
+                    src={logoAsset.url}
+                    alt="Logo da Pathly"
+                    className="size-12 rounded-xl border border-primary-foreground/20 object-cover shadow-lg"
+                  />
+                </div>
+              </div>
+
+              <div className="p-5 sm:p-7">
+                <div className="flex items-end justify-between gap-4 border-b border-border pb-5">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Depois do período grátis</p>
+                    <p className="mt-1 font-display text-3xl font-semibold">{pro.preco}</p>
+                  </div>
+                  <span className="pb-1 text-sm text-muted-foreground">{pro.periodo}</span>
+                </div>
+
+                <div className="space-y-4 py-5">
+                  <div className="flex items-center justify-between gap-4 text-sm">
+                    <span className="text-muted-foreground">Hoje</span>
+                    <span className="font-semibold text-primary">R$ 0</span>
+                  </div>
+                  <div className="flex items-center justify-between gap-4 text-sm">
+                    <span className="text-muted-foreground">Período grátis</span>
+                    <span className="font-medium">14 dias</span>
+                  </div>
+                  <div className="flex items-start gap-3 rounded-lg bg-surface-2 p-3.5">
+                    <CreditCard className="mt-0.5 size-4 shrink-0 text-primary" />
+                    <div className="min-w-0">
+                      <p className="text-xs text-muted-foreground">Conta da assinatura</p>
+                      <p className="truncate text-sm font-medium">{email}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {erro && (
+                  <p className="mb-4 rounded-lg border border-destructive/30 bg-destructive/[0.06] p-3 text-sm" role="alert">
+                    {erro}
+                  </p>
+                )}
+
+                <Btn size="lg" className="w-full" onClick={onConfirmar} disabled={ocupado}>
+                  {ocupado ? "Preparando pagamento…" : "Continuar para pagamento"}
+                  {!ocupado && <ArrowRight className="size-4" />}
+                </Btn>
+
+                <div className="mt-4 flex items-start gap-2 text-xs leading-relaxed text-muted-foreground">
+                  <ShieldCheck className="mt-0.5 size-4 shrink-0 text-primary" />
+                  <p>
+                    Você será encaminhado ao Stripe para informar o cartão. A Pathly não armazena seus dados de pagamento.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+        </main>
+      </div>
+    </div>
+  );
+}
 
 function CardPlano({
   plano,
@@ -91,6 +259,23 @@ function PlanosPage() {
   const busca = useSearch({ strict: false }) as { assinatura?: string };
   const [ocupado, setOcupado] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+  const [checkoutAberto, setCheckoutAberto] = useState(false);
+  const [email, setEmail] = useState("Sua conta Pathly");
+
+  async function abrirCheckout() {
+    setErro(null);
+    if (plan === "pro") {
+      await irParaStripe();
+      return;
+    }
+    const { data } = await supabase.auth.getSession();
+    if (!data.session) {
+      setErro("Entre de novo para assinar.");
+      return;
+    }
+    setEmail(data.session.user.email ?? "Sua conta Pathly");
+    setCheckoutAberto(true);
+  }
 
   /**
    * Manda para o Stripe. Quem já assina cai no portal — cancelar, trocar cartão, ver faturas —
@@ -163,7 +348,7 @@ function PlanosPage() {
             plano={p}
             atual={!conferindo && plan === p.id}
             ocupado={ocupado}
-            onEscolher={irParaStripe}
+            onEscolher={() => void abrirCheckout()}
           />
         ))}
       </div>
@@ -172,6 +357,16 @@ function PlanosPage() {
         14 dias grátis. Cancele quando quiser, direto por aqui — o acesso continua até o fim do
         período já pago.
       </p>
+
+      {checkoutAberto && (
+        <CheckoutPathly
+          email={email}
+          ocupado={ocupado}
+          erro={erro}
+          onClose={() => setCheckoutAberto(false)}
+          onConfirmar={() => void irParaStripe()}
+        />
+      )}
     </div>
   );
 }
