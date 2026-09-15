@@ -8,10 +8,15 @@ import {
   Heading,
   Hr,
   Html,
+  Img,
   Preview,
   Section,
   Text,
 } from '@react-email/components'
+
+import logoAsset from '@/assets/pathly-email-logo.png.asset.json'
+
+const LOGO_URL = `https://pathlyapp.app${logoAsset.url}`
 
 interface EmailLayoutProps {
   preview: string
@@ -37,20 +42,24 @@ export function EmailLayout({
       <Body style={main}>
         <Container style={container}>
           <Section style={brandRow}>
-            <Text style={brandMark}>P</Text>
+            <Img src={LOGO_URL} width="44" height="44" alt="Pathly" style={brandMark} />
             <Text style={brand}>Pathly</Text>
           </Section>
-          <Text style={eyebrowStyle}>{eyebrow}</Text>
-          <Heading style={heading}>{title}</Heading>
-          <Section style={content}>{children}</Section>
-          {action ? (
-            <Button style={button} href={action.href}>
-              {action.label}
-            </Button>
-          ) : null}
-          <Hr style={divider} />
-          <Text style={footerStyle}>{footer}</Text>
-          <Text style={tagline}>Aprenda o que realmente importa para ganhar mais.</Text>
+          <Section style={hero}>
+            <Text style={eyebrowStyle}>{eyebrow}</Text>
+            <Heading style={heading}>{title}</Heading>
+            <Section style={content}>{children}</Section>
+            {action ? (
+              <Button style={button} href={action.href}>
+                {action.label} &nbsp;→
+              </Button>
+            ) : null}
+          </Section>
+          <Section style={footerSection}>
+            <Text style={footerStyle}>{footer}</Text>
+            <Hr style={divider} />
+            <Text style={tagline}>Aprenda o que realmente importa para ganhar mais.</Text>
+          </Section>
         </Container>
       </Body>
     </Html>
@@ -58,7 +67,7 @@ export function EmailLayout({
 }
 
 export const paragraph = {
-  color: '#475569',
+  color: '#b9c6d6',
   fontFamily: 'Arial, sans-serif',
   fontSize: '16px',
   lineHeight: '26px',
@@ -66,7 +75,7 @@ export const paragraph = {
 }
 
 export const inlineLink = {
-  color: '#087f6f',
+  color: '#5ce6cb',
   textDecoration: 'underline',
 }
 
@@ -92,40 +101,41 @@ const main = {
 }
 
 const container = {
-  backgroundColor: '#ffffff',
-  border: '1px solid #dce5e3',
+  backgroundColor: '#101925',
+  border: '1px solid #263647',
   borderRadius: '8px',
   margin: '0 auto',
   maxWidth: '560px',
-  padding: '36px 40px 30px',
+  overflow: 'hidden',
+  padding: '0',
 }
 
-const brandRow = { margin: '0 0 40px' }
+const brandRow = {
+  backgroundColor: '#0b121c',
+  borderBottom: '1px solid #263647',
+  margin: '0',
+  padding: '22px 38px',
+}
 
 const brandMark = {
-  backgroundColor: '#16d3ad',
-  borderRadius: '6px',
-  color: '#073b34',
   display: 'inline-block',
-  fontSize: '16px',
-  fontWeight: '700' as const,
-  lineHeight: '30px',
-  margin: '0 10px 0 0',
-  textAlign: 'center' as const,
-  width: '30px',
+  margin: '0 12px 0 0',
+  verticalAlign: 'middle',
 }
 
 const brand = {
-  color: '#101b2a',
+  color: '#f4f8fb',
   display: 'inline-block',
-  fontSize: '19px',
+  fontSize: '21px',
   fontWeight: '700' as const,
   margin: '0',
   verticalAlign: 'middle',
 }
 
+const hero = { padding: '38px 40px 34px' }
+
 const eyebrowStyle = {
-  color: '#087f6f',
+  color: '#5ce6cb',
   fontSize: '12px',
   fontWeight: '700' as const,
   letterSpacing: '1px',
@@ -134,7 +144,7 @@ const eyebrowStyle = {
 }
 
 const heading = {
-  color: '#101b2a',
+  color: '#f4f8fb',
   fontSize: '30px',
   fontWeight: '700' as const,
   lineHeight: '38px',
@@ -144,27 +154,33 @@ const heading = {
 const content = { margin: '0' }
 
 const button = {
-  backgroundColor: '#0f9f87',
+  backgroundColor: '#32d6b6',
   borderRadius: '7px',
-  color: '#ffffff',
+  color: '#09231e',
   fontSize: '15px',
   fontWeight: '700' as const,
   margin: '8px 0 10px',
-  padding: '13px 22px',
+  padding: '14px 22px',
   textDecoration: 'none',
 }
 
-const divider = { borderColor: '#e5ecea', margin: '30px 0 20px' }
+const footerSection = {
+  backgroundColor: '#0b121c',
+  borderTop: '1px solid #263647',
+  padding: '23px 40px 26px',
+}
+
+const divider = { borderColor: '#263647', margin: '18px 0' }
 
 const footerStyle = {
-  color: '#718096',
+  color: '#8292a6',
   fontSize: '12px',
   lineHeight: '19px',
   margin: '0 0 12px',
 }
 
 const tagline = {
-  color: '#087f6f',
+  color: '#5ce6cb',
   fontSize: '12px',
   fontWeight: '700' as const,
   margin: '0',
