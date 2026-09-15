@@ -9,6 +9,7 @@
 - Sessão com objetivo, conceito, exemplo, active recall, feedback, prática e checkpoint.
 - Feedback explica por que a opção está errada e oferece nova tentativa.
 - XP de atividade/revisão idempotente.
+- Repetição precoce sem ganho de XP/domínio e nota sensível aos erros do quiz.
 - Domínio limitado a 80% sem revisão e “Dominada” somente a partir de 85%.
 - Agendamento inicial de revisão espaçada.
 - Dashboard com próxima sessão/revisão e métricas comprováveis.

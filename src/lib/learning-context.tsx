@@ -146,6 +146,9 @@ export function LearningSystemProvider({ children }: { children: ReactNode }) {
   const completeActivity = useCallback(async ({ activity, score, confidence, minutesSpent }: CompleteInput) => {
     const existing = progress.find((item) => item.activityId === activity.id);
     const review = existing ? isReviewDue(existing) : false;
+    // Reabrir uma sessão concluída antes da revisão é permitido para consulta, mas não cria
+    // evidência nova, domínio ou XP. Isso torna a recompensa totalmente idempotente.
+    if (existing?.status === "completed" && !review) return { xp: 0, review: false };
     const now = new Date();
     const attempts = (existing?.attempts ?? 0) + 1;
     const passed = score >= 70;

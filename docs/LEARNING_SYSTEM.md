@@ -111,6 +111,7 @@ Pessoa
 - Desafio: recompensa maior.
 - Revisão: recompensa própria.
 - Evento único impede repetir uma conclusão para farmar XP.
+- Reabrir uma sessão antes da revisão não eleva domínio nem cria nova evidência; erros no teste reduzem a nota registrada.
 - Nível usa XP legado + XP comprovado.
 - Não há ranking ou competição artificial.
 
