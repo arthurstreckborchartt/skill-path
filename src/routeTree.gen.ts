@@ -16,6 +16,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as McpRouteImport } from './routes/mcp'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as PrivacidadeRouteImport } from './routes/privacidade'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as TermosRouteImport } from './routes/termos'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as AppIndexRouteImport } from './routes/app.index'
@@ -59,6 +60,11 @@ const OnboardingRoute = OnboardingRouteImport.update({
 const PrivacidadeRoute = PrivacidadeRouteImport.update({
   id: '/privacidade',
   path: '/privacidade',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TermosRoute = TermosRouteImport.update({
@@ -116,6 +122,7 @@ export interface FileRoutesByFullPath {
   '/mcp': typeof McpRoute
   '/onboarding': typeof OnboardingRoute
   '/privacidade': typeof PrivacidadeRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/termos': typeof TermosRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/app/configuracoes': typeof AppConfiguracoesRoute
@@ -133,6 +140,7 @@ export interface FileRoutesByTo {
   '/mcp': typeof McpRoute
   '/onboarding': typeof OnboardingRoute
   '/privacidade': typeof PrivacidadeRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/termos': typeof TermosRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/app/configuracoes': typeof AppConfiguracoesRoute
@@ -152,6 +160,7 @@ export interface FileRoutesById {
   '/mcp': typeof McpRoute
   '/onboarding': typeof OnboardingRoute
   '/privacidade': typeof PrivacidadeRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/termos': typeof TermosRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/app/configuracoes': typeof AppConfiguracoesRoute
@@ -172,6 +181,7 @@ export interface FileRouteTypes {
     | '/mcp'
     | '/onboarding'
     | '/privacidade'
+    | '/sitemap.xml'
     | '/termos'
     | '/.well-known/oauth-protected-resource'
     | '/app/configuracoes'
@@ -189,6 +199,7 @@ export interface FileRouteTypes {
     | '/mcp'
     | '/onboarding'
     | '/privacidade'
+    | '/sitemap.xml'
     | '/termos'
     | '/.well-known/oauth-protected-resource'
     | '/app/configuracoes'
@@ -207,6 +218,7 @@ export interface FileRouteTypes {
     | '/mcp'
     | '/onboarding'
     | '/privacidade'
+    | '/sitemap.xml'
     | '/termos'
     | '/.well-known/oauth-protected-resource'
     | '/app/configuracoes'
@@ -226,6 +238,7 @@ export interface RootRouteChildren {
   McpRoute: typeof McpRoute
   OnboardingRoute: typeof OnboardingRoute
   PrivacidadeRoute: typeof PrivacidadeRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermosRoute: typeof TermosRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
 }
@@ -279,6 +292,13 @@ declare module '@tanstack/react-router' {
       path: '/privacidade'
       fullPath: '/privacidade'
       preLoaderRoute: typeof PrivacidadeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/termos': {
@@ -377,6 +397,7 @@ const rootRouteChildren: RootRouteChildren = {
   McpRoute: McpRoute,
   OnboardingRoute: OnboardingRoute,
   PrivacidadeRoute: PrivacidadeRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermosRoute: TermosRoute,
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
