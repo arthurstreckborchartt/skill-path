@@ -3,7 +3,7 @@ import generateRouteTool from "./tools/generate-route";
 import listCatalogsTool from "./tools/list-catalogs";
 
 const supabaseUrl = (
-  process.env.SUPABASE_URL ?? import.meta.env.VITE_SUPABASE_URL
+  process.env["SUPABASE_URL"] ?? import.meta.env["VITE_SUPABASE_URL"]
 ).replace(/\/+$/, "");
 
 export default defineMcp({
