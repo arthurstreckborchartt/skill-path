@@ -4,6 +4,7 @@ import { AppShell } from "@/components/pathly/app-shell";
 import { useSession } from "@/lib/auth";
 
 export const Route = createFileRoute("/app")({
+  staticData: { sitemap: "exclude-subtree" },
   component: ProtectedApp,
 });
 

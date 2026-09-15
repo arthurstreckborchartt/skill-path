@@ -7,6 +7,7 @@ import { authErrorMessage, signInWithGoogle } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/cadastro")({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [
       { title: "Criar conta na Pathly" },

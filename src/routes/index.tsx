@@ -24,6 +24,7 @@ import { steps } from "@/lib/mock";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/")({
+  staticData: { sitemap: true },
   head: () => ({
     meta: [
       { title: "Pathly — Aprenda o que realmente importa para ganhar mais" },
