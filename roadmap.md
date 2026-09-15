@@ -7,4 +7,4 @@
 - [x] Definir e aprovar a nova direção visual.
 - [x] Implementar design system, navegação e experiências principais.
 - [x] Atualizar checkout e e-mails para a nova identidade.
-- [ ] Validar fluxos, acessibilidade e responsividade.
+- [x] Validar fluxos, acessibilidade e responsividade.
