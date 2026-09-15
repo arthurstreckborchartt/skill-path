@@ -87,7 +87,7 @@ function CheckoutPathly({
 
         <main className="grid flex-1 items-center gap-8 py-5 sm:py-8 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16 lg:py-12">
           <section className="order-2 animate-fade-up lg:order-1 lg:pr-4">
-            <Btn variant="ghost" size="sm" className="-ml-4 mb-7" onClick={onClose} disabled={ocupado}>
+            <Btn variant="ghost" size="sm" className="-ml-4 mb-7 hidden lg:inline-flex" onClick={onClose} disabled={ocupado}>
               <ArrowLeft className="size-4" /> Voltar aos planos
             </Btn>
 
