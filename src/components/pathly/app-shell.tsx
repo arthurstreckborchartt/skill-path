@@ -12,6 +12,8 @@ import {
 import { Btn, Logo } from "./ui";
 import { levelFromXp } from "@/lib/route-map";
 import { RouteProgressProvider, useRouteProgressContext } from "@/lib/route-progress-context";
+import { LearningSystemProvider } from "@/lib/learning-context";
+import { useLearningSystem } from "@/lib/learning-context";
 import { cn } from "@/lib/utils";
 
 // Oportunidades (vagas) fica fora da navegação por enquanto: a tela ainda usa dados de
@@ -59,7 +61,9 @@ function SideItem({
 export function AppShell() {
   return (
     <RouteProgressProvider>
-      <AppShellInner />
+      <LearningSystemProvider>
+        <AppShellInner />
+      </LearningSystemProvider>
     </RouteProgressProvider>
   );
 }
@@ -103,7 +107,9 @@ function OnboardingGate() {
 function AppShellInner() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { stats, profile, hydrated } = useRouteProgressContext();
-  const level = levelFromXp(stats.totalXp);
+  const learning = useLearningSystem();
+  const totalXp = stats.totalXp + learning.xpTotal;
+  const level = levelFromXp(totalXp);
   // Configurações continua acessível sem rota: é de onde se sai da conta e se manda feedback.
   const needsOnboarding = hydrated && !profile.isPersonalized && pathname !== "/app/configuracoes";
 
@@ -152,7 +158,7 @@ function AppShellInner() {
         <div className="flex items-center gap-2">
           <span className="flex items-center gap-1.5 rounded-md bg-xp/15 px-2.5 py-1 text-xs font-semibold text-xp">
             <Zap className="size-3.5" />
-            {stats.totalXp}
+             {totalXp}
           </span>
         </div>
       </header>

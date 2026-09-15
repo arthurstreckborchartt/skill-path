@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ArrowRight,
+  Brain,
   Check,
   Clock,
   Compass,
@@ -19,6 +20,7 @@ import {
   type WeekPlanState,
 } from "@/lib/route-map";
 import { useRouteProgressContext } from "@/lib/route-progress-context";
+import { useLearningSystem } from "@/lib/learning-context";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/app/")({
@@ -53,12 +55,19 @@ const weekStateTone: Record<WeekPlanState, "primary" | "accent" | "muted" | "neu
 
 function Dashboard() {
   const { views, currentIndex, stats, profile } = useRouteProgressContext();
-  const level = levelFromXp(stats.totalXp);
+  const learning = useLearningSystem();
+  const totalXp = stats.totalXp + learning.xpTotal;
+  const level = levelFromXp(totalXp);
   const nextAction = getNextAction(views, currentIndex);
   const weekPlan = getWeekPlan(views);
   const insights = getInsights(views, stats, profile.hoursPerWeek);
-  const completed = views.filter((s) => s.state === "concluído");
-  const routeDone = stats.percent >= 100;
+  const routeDone = stats.percent >= 100 && !learning.nextActivity;
+  const learningDone = learning.progress.filter((item) => item.status === "completed");
+  const minutesStudied = learning.progress.reduce((total, item) => total + item.minutesSpent, 0);
+  const averageMastery = learning.mastery.length
+    ? Math.round(learning.mastery.reduce((total, item) => total + item.mastery, 0) / learning.mastery.length)
+    : 0;
+  const primaryActivity = learning.nextActivity;
 
   return (
     <div className="space-y-8">
@@ -82,7 +91,7 @@ function Dashboard() {
         </div>
       </Reveal>
 
-      {routeDone || !nextAction ? (
+      {routeDone || (!primaryActivity && !nextAction) ? (
         <Reveal delay={140}>
           <Panel className="text-center">
             <p className="mx-auto grid size-12 place-items-center rounded-2xl bg-primary/15 text-primary">
@@ -103,28 +112,29 @@ function Dashboard() {
                 <span className="flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.12em] text-primary uppercase">
                   <Compass className="size-3" /> Seu próximo passo
                 </span>
-                <p className="mt-4 text-sm text-background/60">{nextAction.stepTitle}</p>
+                 <p className="mt-4 text-sm text-background/60">{primaryActivity ? views.find((step) => step.id === primaryActivity.stepId)?.title : nextAction?.stepTitle}</p>
                 <p className="mt-1 font-display text-3xl font-bold text-balance sm:text-4xl">
-                  {nextAction.label}
+                   {primaryActivity?.title ?? nextAction?.label}
                 </p>
                 <p className="mt-4 flex items-center gap-4 text-sm text-background/70">
                   <span className="flex items-center gap-1">
-                    <Clock className="size-3.5" /> {nextAction.timeLabel}
+                     <Clock className="size-3.5" /> {primaryActivity ? `${primaryActivity.estimatedMinutes} min` : nextAction?.timeLabel}
                   </span>
                   <span className="flex items-center gap-1 text-xp">
-                    <Zap className="size-3.5" /> +{nextAction.xp} XP
+                     <Zap className="size-3.5" /> XP por evidência
                   </span>
                 </p>
                 {insights[0] && <p className="mt-5 max-w-2xl text-sm leading-relaxed text-background/55">{insights[0]}</p>}
               </div>
               {/* Largura total no celular: a ação principal da tela precisa ser fácil de acertar
                   com o polegar, não um botão estreito no canto. */}
-              <Link
-                to="/app/rota"
+              {primaryActivity ? <Link
+                to="/app/aprender/$activityId"
+                params={{ activityId: primaryActivity.id }}
                 className="tap inline-flex h-12 w-full shrink-0 items-center justify-center gap-2 rounded-lg bg-primary px-6 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-glow)] hover:bg-primary/90 sm:w-auto"
               >
-                Começar agora <ArrowRight className="size-4" />
-              </Link>
+                {learning.reviewsDue.length > 0 ? "Revisar agora" : "Começar agora"} <ArrowRight className="size-4" />
+              </Link> : <Link to="/app/rota" className="tap inline-flex h-12 w-full shrink-0 items-center justify-center gap-2 rounded-lg bg-primary px-6 text-sm font-semibold text-primary-foreground sm:w-auto">Ver caminho <ArrowRight className="size-4" /></Link>}
             </div>
           </Panel>
         </Reveal>
@@ -157,7 +167,7 @@ function Dashboard() {
 
       <Reveal delay={220}>
         <div className="grid grid-cols-2 border-y border-border sm:grid-cols-4">
-          {[{ k: "Etapas", v: `${stats.doneCount}/${stats.total}` }, { k: "Projetos", v: stats.projects.length }, { k: "Habilidades", v: stats.skills.length }, { k: "Ritmo semanal", v: `${profile.hoursPerWeek}h` }].map((m) => (
+          {[{ k: "Sessões", v: learningDone.length }, { k: "Tempo real", v: `${Math.floor(minutesStudied / 60)}h${minutesStudied % 60 ? ` ${minutesStudied % 60}min` : ""}` }, { k: "Domínio médio", v: `${averageMastery}%` }, { k: "Revisões", v: learning.reviewsDue.length }].map((m) => (
             <div key={m.k} className="border-border px-4 py-5 odd:border-r sm:border-r sm:last:border-r-0">
               <p className="font-display text-2xl font-bold">{m.v}</p><p className="mt-1 text-xs text-muted-foreground">{m.k}</p>
             </div>
@@ -169,7 +179,7 @@ function Dashboard() {
         <Reveal delay={250}>
           <div className="grid gap-5 lg:grid-cols-[1.4fr_0.6fr]">
             <Panel>
-              <div className="flex items-center justify-between"><div><p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">Desafio da semana</p><h3 className="mt-1 font-display text-xl font-bold">Complete 3 movimentos da rota</h3></div><Chip tone="xp"><Zap className="size-3" /> +500 XP</Chip></div>
+               <div className="flex items-center justify-between gap-4"><div><p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">Plano da semana</p><h3 className="mt-1 font-display text-xl font-bold">Avance no seu ritmo de {profile.hoursPerWeek}h</h3></div><Chip tone={learning.reviewsDue.length ? "accent" : "primary"}>{learning.reviewsDue.length ? <Brain className="size-3" /> : <Check className="size-3" />} {learning.reviewsDue.length ? `${learning.reviewsDue.length} revisões` : "Em dia"}</Chip></div>
               <div className="mt-6 grid grid-cols-5 gap-2">
                 {weekPlan.map((item) => { const Icon = weekStateIcon[item.state]; return <div key={`${item.day}-${item.label}`} className={cn("border-t-2 pt-3", item.state === "hoje" ? "border-primary" : "border-border")}><span className="text-[10px] font-semibold text-muted-foreground">{item.day}</span><Chip tone={weekStateTone[item.state]} className="mt-2 !p-0 size-7 justify-center"><Icon className="size-3.5" /></Chip><p className="mt-2 line-clamp-2 text-[10px] leading-tight text-muted-foreground">{item.label}</p></div>; })}
               </div>
@@ -183,25 +193,25 @@ function Dashboard() {
 
       <Reveal delay={300}>
           <Panel>
-            <h3 className="font-display text-lg font-semibold">Atividade</h3>
-            {completed.length === 0 ? (
+             <h3 className="font-display text-lg font-semibold">Evidências recentes</h3>
+             {learningDone.length === 0 ? (
               <p className="mt-3 text-sm text-muted-foreground">
-                Suas etapas concluídas aparecem aqui. Comece pela etapa atual na sua rota.
+                 Suas sessões concluídas, tentativas e revisões aparecem aqui.
               </p>
             ) : (
               <ul className="mt-4 divide-y divide-border">
-                {completed.map((s) => (
-                  <li key={s.id} className="flex items-center gap-3 py-3">
+                 {learningDone.slice(-5).reverse().map((item) => {
+                   const activity = learning.activities.find((candidate) => candidate.id === item.activityId);
+                   return <li key={item.activityId} className="flex items-center gap-3 py-3">
                     <span className="grid size-8 shrink-0 place-items-center rounded-xl bg-primary/12 text-primary">
                       <Check className="size-4" />
                     </span>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm">{s.title}</p>
-                      <p className="text-xs text-muted-foreground">{s.milestone}</p>
+                       <p className="truncate text-sm">{activity?.title ?? item.activityId}</p>
+                       <p className="text-xs text-muted-foreground">{item.score}% · {item.minutesSpent} min · {item.attempts} tentativa{item.attempts === 1 ? "" : "s"}</p>
                     </div>
-                    <span className="shrink-0 text-xs font-medium text-xp">+{s.xp}</span>
-                  </li>
-                ))}
+                   </li>;
+                 })}
               </ul>
             )}
             {stats.projects.length > 0 && (

@@ -30,6 +30,7 @@ import { Route as AppPerfilRouteImport } from './routes/app.perfil'
 import { Route as AppPlanosRouteImport } from './routes/app.planos'
 import { Route as AppProjetosRouteImport } from './routes/app.projetos'
 import { Route as AppRotaRouteImport } from './routes/app.rota'
+import { Route as AppAprenderActivityIdRouteImport } from './routes/app.aprender.$activityId'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 
@@ -139,6 +140,11 @@ const AppRotaRoute = AppRotaRouteImport.update({
   path: '/rota',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAprenderActivityIdRoute = AppAprenderActivityIdRouteImport.update({
+  id: '/aprender/$activityId',
+  path: '/aprender/$activityId',
+  getParentRoute: () => AppRoute,
+} as any)
 const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
   id: '/lovable/email/auth/preview',
   path: '/lovable/email/auth/preview',
@@ -172,6 +178,7 @@ export interface FileRoutesByFullPath {
   '/app/projetos': typeof AppProjetosRoute
   '/app/rota': typeof AppRotaRoute
   '/app/': typeof AppIndexRoute
+  '/app/aprender/$activityId': typeof AppAprenderActivityIdRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
 }
@@ -196,6 +203,7 @@ export interface FileRoutesByTo {
   '/app/projetos': typeof AppProjetosRoute
   '/app/rota': typeof AppRotaRoute
   '/app': typeof AppIndexRoute
+  '/app/aprender/$activityId': typeof AppAprenderActivityIdRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
 }
@@ -222,6 +230,7 @@ export interface FileRoutesById {
   '/app/projetos': typeof AppProjetosRoute
   '/app/rota': typeof AppRotaRoute
   '/app/': typeof AppIndexRoute
+  '/app/aprender/$activityId': typeof AppAprenderActivityIdRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
 }
@@ -249,6 +258,7 @@ export interface FileRouteTypes {
     | '/app/projetos'
     | '/app/rota'
     | '/app/'
+    | '/app/aprender/$activityId'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
   fileRoutesByTo: FileRoutesByTo
@@ -273,6 +283,7 @@ export interface FileRouteTypes {
     | '/app/projetos'
     | '/app/rota'
     | '/app'
+    | '/app/aprender/$activityId'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
   id:
@@ -298,6 +309,7 @@ export interface FileRouteTypes {
     | '/app/projetos'
     | '/app/rota'
     | '/app/'
+    | '/app/aprender/$activityId'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
   fileRoutesById: FileRoutesById
@@ -469,6 +481,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppRotaRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/aprender/$activityId': {
+      id: '/app/aprender/$activityId'
+      path: '/aprender/$activityId'
+      fullPath: '/app/aprender/$activityId'
+      preLoaderRoute: typeof AppAprenderActivityIdRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/lovable/email/auth/preview': {
       id: '/lovable/email/auth/preview'
       path: '/lovable/email/auth/preview'
@@ -495,6 +514,7 @@ interface AppRouteChildren {
   AppProjetosRoute: typeof AppProjetosRoute
   AppRotaRoute: typeof AppRotaRoute
   AppIndexRoute: typeof AppIndexRoute
+  AppAprenderActivityIdRoute: typeof AppAprenderActivityIdRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
@@ -506,6 +526,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppProjetosRoute: AppProjetosRoute,
   AppRotaRoute: AppRotaRoute,
   AppIndexRoute: AppIndexRoute,
+  AppAprenderActivityIdRoute: AppAprenderActivityIdRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)

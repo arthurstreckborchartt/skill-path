@@ -23,6 +23,7 @@ import { Btn, Chip, Panel, ProgressBar } from "@/components/pathly/ui";
 import { resourcesForTopics } from "@/lib/catalog";
 import { buscasParaEtapa } from "@/lib/study-links";
 import { ETAPAS_GRATIS, etapaBloqueadaPorPlano, usePlan } from "@/lib/plan";
+import { useLearningSystem } from "@/lib/learning-context";
 import { difficultyTone, type NodeState, type StepView } from "@/lib/route-map";
 import { cn } from "@/lib/utils";
 
@@ -296,6 +297,7 @@ export function StepDetail({
   // que nenhuma etapa fique sem caminho (ver src/lib/study-links.ts).
   const buscas = buscasParaEtapa(step.skills);
   const { isPro } = usePlan();
+  const learning = useLearningSystem();
   const bloqueadaPorPlano = etapaBloqueadaPorPlano(step.order, isPro) && step.state !== "concluído";
   const gratis = buscas.filter((b) => b.tipo === "grátis");
   const pagos = buscas.filter((b) => b.tipo === "pago");
@@ -481,7 +483,7 @@ export function StepDetail({
       <div>
         <div className="mb-2 flex items-center justify-between text-xs">
           <span className="flex items-center gap-1.5 text-muted-foreground">
-            <Layers className="size-3.5" /> Checklist
+            <Layers className="size-3.5" /> Sessões com evidência
           </span>
           <span className="font-medium">
             {step.checksDone}/{step.checksTotal}
@@ -490,16 +492,22 @@ export function StepDetail({
         <ProgressBar value={step.checkPct} />
         <ul className="mt-3 space-y-1">
           {step.checklist.map((c) => {
-            const checked = step.checkedIds.includes(c.id);
+            const activityId = `${step.id}:${c.id}`;
+            const activityProgress = learning.progressFor(activityId);
+            const checked = activityProgress?.status === "completed" || step.checkedIds.includes(c.id);
             return (
               <li key={c.id}>
-                <button
-                  disabled={locked}
-                  onClick={() => onToggleCheck(c.id)}
+                <Link
+                  to="/app/aprender/$activityId"
+                  params={{ activityId }}
+                  aria-disabled={locked || bloqueadaPorPlano}
+                  onClick={(event) => {
+                    if (locked || bloqueadaPorPlano) event.preventDefault();
+                  }}
                   className={cn(
-                    "tap flex w-full items-center gap-3 rounded-xl px-2 py-2 text-left text-sm transition-colors",
-                    !locked && "hover:bg-surface-2/60",
-                    locked && "cursor-not-allowed opacity-60",
+                    "tap flex min-h-12 w-full items-center gap-3 rounded-xl px-2 py-2 text-left text-sm transition-colors",
+                    !locked && !bloqueadaPorPlano && "hover:bg-surface-2/60",
+                    (locked || bloqueadaPorPlano) && "cursor-not-allowed opacity-60",
                   )}
                 >
                   <span
@@ -512,10 +520,16 @@ export function StepDetail({
                   >
                     {checked && <Check className="size-3" />}
                   </span>
-                  <span className={cn(checked && "text-muted-foreground line-through")}>
-                    {c.label}
+                  <span className="min-w-0 flex-1">
+                    <span className={cn("block", checked && "text-muted-foreground")}>{c.label}</span>
+                    <span className="mt-0.5 block text-xs text-muted-foreground">
+                      {activityProgress?.score != null
+                        ? `${activityProgress.score}% · ${activityProgress.attempts} tentativa${activityProgress.attempts === 1 ? "" : "s"}`
+                        : checked ? "Histórico anterior preservado" : "Aprender · testar · praticar"}
+                    </span>
                   </span>
-                </button>
+                  {!checked && !locked && !bloqueadaPorPlano && <ArrowUpRight className="size-4 shrink-0 text-primary" />}
+                </Link>
               </li>
             );
           })}
@@ -589,6 +603,14 @@ export function StepActions({
     return (
       <Chip tone="muted">
         <Lock className="size-3" /> Conclua os pré-requisitos para liberar
+      </Chip>
+    );
+  }
+
+  if (step.checksDone < step.checksTotal) {
+    return (
+      <Chip tone="muted">
+        <BookOpen className="size-3" /> Conclua as sessões para liberar a etapa
       </Chip>
     );
   }

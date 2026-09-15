@@ -10,9 +10,10 @@
 - [x] Validar fluxos, acessibilidade e responsividade.
 
 ## Learning System
-- [ ] Auditar arquitetura, dados, fluxos e persistência atuais.
-- [ ] Planejar e implementar a fundação do estado de aprendizado persistente.
-- [ ] Evoluir dashboard, caminho, aulas, avaliações, domínio e revisões por fases.
+- [x] Auditar arquitetura, dados, fluxos e persistência atuais.
+- [x] Planejar e implementar a fundação do estado de aprendizado persistente.
+- [x] Evoluir dashboard, caminho e a primeira sessão avaliável com domínio e revisões.
+- [ ] Ampliar avaliações, desafios, revisões e conteúdo editorial por área.
 - [ ] Integrar gamificação baseada em evidência, projetos e tutor contextual.
 - [ ] Validar fluxos críticos em celular e desktop.
-- [ ] Manter `docs/LEARNING_SYSTEM.md` e `docs/IMPLEMENTATION_STATUS.md` atualizados.
+- [x] Manter `docs/LEARNING_SYSTEM.md` e `docs/IMPLEMENTATION_STATUS.md` atualizados.
