@@ -41,6 +41,63 @@ export type Database = {
         }
         Relationships: []
       }
+      pathly_learning_activity_progress: {
+        Row: {
+          activity_id: string
+          activity_type: string
+          attempts: number
+          completed_at: string | null
+          confidence: number | null
+          created_at: string
+          last_answer_correct: boolean | null
+          minutes_spent: number
+          review_due_at: string | null
+          route_signature: string
+          score: number | null
+          skill_names: string[]
+          status: string
+          step_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          activity_id: string
+          activity_type?: string
+          attempts?: number
+          completed_at?: string | null
+          confidence?: number | null
+          created_at?: string
+          last_answer_correct?: boolean | null
+          minutes_spent?: number
+          review_due_at?: string | null
+          route_signature: string
+          score?: number | null
+          skill_names?: string[]
+          status?: string
+          step_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          activity_id?: string
+          activity_type?: string
+          attempts?: number
+          completed_at?: string | null
+          confidence?: number | null
+          created_at?: string
+          last_answer_correct?: boolean | null
+          minutes_spent?: number
+          review_due_at?: string | null
+          route_signature?: string
+          score?: number | null
+          skill_names?: string[]
+          status?: string
+          step_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       pathly_profiles: {
         Row: {
           assinatura_ate: string | null
@@ -69,6 +126,48 @@ export type Database = {
           onboarding?: Json
           plano?: string
           stripe_customer_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      pathly_project_progress: {
+        Row: {
+          completed_at: string | null
+          evidence_url: string | null
+          progress: number
+          project_id: string
+          reflection: string | null
+          route_signature: string
+          status: string
+          step_id: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          evidence_url?: string | null
+          progress?: number
+          project_id: string
+          reflection?: string | null
+          route_signature: string
+          status?: string
+          step_id: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          evidence_url?: string | null
+          progress?: number
+          project_id?: string
+          reflection?: string | null
+          route_signature?: string
+          status?: string
+          step_id?: string
+          title?: string
           updated_at?: string
           user_id?: string
         }
@@ -175,6 +274,72 @@ export type Database = {
           id?: string
           signature?: string
           steps?: Json
+          user_id?: string
+        }
+        Relationships: []
+      }
+      pathly_skill_mastery: {
+        Row: {
+          evidence_count: number
+          last_practiced_at: string | null
+          mastery: number
+          route_signature: string
+          skill_key: string
+          skill_name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          evidence_count?: number
+          last_practiced_at?: string | null
+          mastery?: number
+          route_signature: string
+          skill_key: string
+          skill_name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          evidence_count?: number
+          last_practiced_at?: string | null
+          mastery?: number
+          route_signature?: string
+          skill_key?: string
+          skill_name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      pathly_xp_events: {
+        Row: {
+          amount: number
+          created_at: string
+          event_key: string
+          id: string
+          metadata: Json
+          route_signature: string
+          source: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          event_key: string
+          id?: string
+          metadata?: Json
+          route_signature: string
+          source: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          event_key?: string
+          id?: string
+          metadata?: Json
+          route_signature?: string
+          source?: string
           user_id?: string
         }
         Relationships: []
