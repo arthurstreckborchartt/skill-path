@@ -439,6 +439,12 @@ export function useRouteProgress() {
         if (p.done.includes(stepId)) return p;
         // Rota é linear: concluir uma etapa com pré-requisito pendente quebraria XP, % e "etapa atual".
         if (!step.prereqs.every((id) => p.done.includes(id))) return p;
+        // Uma etapa pessoal só fecha depois que todas as sessões geraram evidência. Etapas antigas
+        // já concluídas são preservadas pelo retorno acima e não perdem progresso na migração.
+        if (
+          profile.isPersonalized &&
+          !step.checklist.every((item) => p.checks.includes(`${stepId}:${item.id}`))
+        ) return p;
         const next = {
           ...p,
           done: [...p.done, stepId],
@@ -451,7 +457,7 @@ export function useRouteProgress() {
       setCelebrating({ id: stepId, xp: step.xp });
       window.setTimeout(() => setCelebrating(null), 2200);
     },
-    [steps],
+    [profile.isPersonalized, steps],
   );
 
   const reopenStep = useCallback((stepId: string) => {
