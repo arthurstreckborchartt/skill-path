@@ -393,13 +393,18 @@ export const CATALOG: CatalogResource[] = [
   },
 ];
 
-/** Materiais que cobrem qualquer um dos assuntos, priorizando português e a área da rota. */
-export function resourcesForTopics(topics: string[], area: AreaId, limit = 3): CatalogResource[] {
+/**
+ * Materiais que cobrem qualquer um dos assuntos. Prioriza a área da rota quando ela é conhecida,
+ * e depois português — o público é brasileiro e material em inglês trava quem está começando.
+ */
+export function resourcesForTopics(topics: string[], area?: AreaId, limit = 3): CatalogResource[] {
   const wanted = topics.map((t) => t.toLowerCase());
   return CATALOG.filter((r) => r.topics.some((t) => wanted.includes(t.toLowerCase())))
     .sort((a, b) => {
-      const areaScore = Number(b.areas.includes(area)) - Number(a.areas.includes(area));
-      if (areaScore !== 0) return areaScore;
+      if (area) {
+        const areaScore = Number(b.areas.includes(area)) - Number(a.areas.includes(area));
+        if (areaScore !== 0) return areaScore;
+      }
       return Number(b.language === "pt") - Number(a.language === "pt");
     })
     .slice(0, limit);

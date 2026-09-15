@@ -1,5 +1,6 @@
 ﻿import { useEffect } from "react";
 import {
+  ArrowUpRight,
   BookOpen,
   Check,
   Clock,
@@ -14,6 +15,7 @@ import {
   Zap,
 } from "lucide-react";
 import { Btn, Chip, Panel, ProgressBar } from "@/components/pathly/ui";
+import { resourcesForTopics } from "@/lib/catalog";
 import { difficultyTone, type NodeState, type StepView } from "@/lib/route-map";
 import { cn } from "@/lib/utils";
 
@@ -238,6 +240,8 @@ export function StepDetail({
     .map((id) => allSteps.find((s) => s.id === id))
     .filter((s): s is StepView => Boolean(s));
   const prereqsDone = prereqs.every((p) => p.state === "concluído");
+  // Material real do catálogo para as habilidades desta etapa (ver src/lib/catalog.ts).
+  const materiais = resourcesForTopics(step.skills);
 
   return (
     <div className="relative space-y-5">
@@ -346,18 +350,42 @@ export function StepDetail({
       <div>
         <p className="text-xs font-medium text-muted-foreground">Recursos de estudo</p>
         <div className="mt-2 space-y-2">
-          {step.resources.map((r) => (
-            <div
-              key={r.label}
-              className="flex items-center justify-between gap-3 rounded-xl bg-surface-2/40 px-4 py-3 text-sm transition-colors hover:bg-surface-2"
-            >
-              <span className="flex min-w-0 items-center gap-2">
-                <BookOpen className="size-3.5 shrink-0 text-primary" />
-                <span className="truncate">{r.label}</span>
-              </span>
-              <span className="shrink-0 text-xs text-muted-foreground">{r.type}</span>
-            </div>
-          ))}
+          {materiais.length > 0
+            ? materiais.map((r) => (
+                <a
+                  key={r.slug}
+                  href={r.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="tap flex min-h-14 items-center justify-between gap-3 rounded-xl bg-surface-2/40 px-4 py-3 text-sm transition-colors hover:bg-surface-2"
+                >
+                  <span className="flex min-w-0 items-center gap-2">
+                    <BookOpen className="size-3.5 shrink-0 text-primary" />
+                    <span className="min-w-0">
+                      <span className="block truncate font-medium">{r.title}</span>
+                      <span className="block truncate text-xs text-muted-foreground">
+                        {r.provider} · {r.kind}
+                        {r.language === "en" && " · em inglês"}
+                      </span>
+                    </span>
+                  </span>
+                  <ArrowUpRight className="size-4 shrink-0 text-muted-foreground" />
+                </a>
+              ))
+            : /* Sem material no catálogo para os assuntos desta etapa: mostra o rótulo autoral
+                 em vez de deixar a seção vazia. */
+              step.resources.map((r) => (
+                <div
+                  key={r.label}
+                  className="flex items-center justify-between gap-3 rounded-xl bg-surface-2/40 px-4 py-3 text-sm"
+                >
+                  <span className="flex min-w-0 items-center gap-2">
+                    <BookOpen className="size-3.5 shrink-0 text-primary" />
+                    <span className="truncate">{r.label}</span>
+                  </span>
+                  <span className="shrink-0 text-xs text-muted-foreground">{r.type}</span>
+                </div>
+              ))}
         </div>
       </div>
 
