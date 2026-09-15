@@ -93,21 +93,21 @@ const screens: Screen[] = [
     id: "income_current",
     chapter: "Onde você está hoje",
     title: "Quanto você ganha atualmente?",
-    hint: "Sem julgamento — é só o ponto de partida da sua rota.",
+    hint: "É daqui que partem os marcos da sua rota. Sem julgamento — ninguém além de você vê.",
     valid: (p) => p.income.noIncome || (p.income.current ?? 0) > 0,
   },
   {
     id: "income_target",
     chapter: "Onde você quer chegar",
     title: "E quanto você gostaria de ganhar?",
-    hint: "Pense num número que mudaria a sua vida, e em quanto tempo.",
+    hint: "A distância entre os dois números vira o marco de cada etapa da rota.",
     valid: (p) => (p.income.target ?? 0) > 0 && !!p.income.horizon,
   },
   {
     id: "situation",
     chapter: "Onde você está hoje",
     title: "Qual é a sua situação atual?",
-    hint: "Isso muda o ritmo e o tipo de etapa que vamos sugerir.",
+    hint: "Fica registrado no seu perfil. Ainda não muda o conteúdo da rota.",
     valid: (p) => !!p.situation,
   },
   {
@@ -128,7 +128,7 @@ const screens: Screen[] = [
     id: "experience",
     chapter: "Onde você está hoje",
     title: "Quanta experiência profissional você tem?",
-    hint: "Conte qualquer experiência, inclusive informal.",
+    hint: "Quem já tem experiência começa adiante, sem repetir fundamento.",
     valid: (p) => !!p.experience,
   },
   {
@@ -150,7 +150,7 @@ const screens: Screen[] = [
     id: "study_time",
     chapter: "Como você aprende",
     title: "Quanto tempo você tem para estudar?",
-    hint: "Escolha um ritmo ou ajuste no detalhe.",
+    hint: "É o que define o ritmo e o prazo estimado de cada etapa.",
     valid: (p) => p.study.hoursPerWeek > 0,
   },
   {

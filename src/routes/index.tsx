@@ -101,7 +101,7 @@ function Hero() {
       <div className="mx-auto w-full max-w-4xl text-center">
         <div className={fadeUp}>
           <Chip tone="primary" className="mb-4">
-            <Sparkles className="size-3.5" /> Rota gerada para o seu ponto de partida
+            <Sparkles className="size-3.5" /> Para quem quer migrar para tecnologia
           </Chip>
         </div>
         <h1
@@ -110,7 +110,7 @@ function Hero() {
         >
           Pare de aprender <span className="text-foreground/60">coisas aleatórias.</span>
           <br />
-          Descubra exatamente o que aprender para{" "}
+          Descubra o que estudar para{" "}
           <span className="text-gradient">chegar na renda que você quer.</span>
         </h1>
         {/* text-foreground/85 e não text-muted-foreground: sob o halo do hero o secundário cai
@@ -119,8 +119,9 @@ function Hero() {
           className={cn(fadeUp, "mx-auto mt-4 max-w-2xl text-base text-foreground/85")}
           style={{ animationDelay: "160ms" }}
         >
-          Você responde onde está e onde quer chegar. A Pathly monta a sequência de habilidades e os
-          projetos de portfólio que levam até lá, e acompanha seu progresso etapa a etapa.
+          Se você quer entrar ou crescer em tecnologia mas não sabe por onde começar: responda onde
+          está e onde quer chegar, e receba a sequência de habilidades e os projetos de portfólio
+          que levam até lá — na ordem, com prazo calculado no seu tempo livre.
         </p>
         <div className={cn(fadeUp, "mt-6")} style={{ animationDelay: "240ms" }}>
           <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
@@ -136,7 +137,10 @@ function Hero() {
             </a>
           </div>
           <p className="mt-3.5 text-xs text-foreground/70">
-            Até 14 perguntas · 2 minutos · sem cartão de crédito
+            Cerca de 2 minutos · sem cartão de crédito · dá para ajustar depois
+          </p>
+          <p className="mt-1.5 text-xs text-muted-foreground">
+            Sem promessa de emprego ou renda garantida — clareza sobre o próximo passo.
           </p>
         </div>
       </div>
@@ -218,14 +222,17 @@ function MobileHome() {
     <div className="halo flex min-h-svh flex-col px-6 pt-[calc(2.5rem+env(safe-area-inset-top))] pb-[calc(2rem+env(safe-area-inset-bottom))] lg:hidden">
       <Logo />
 
-      <div className="flex flex-1 flex-col justify-center py-10">
+      <div className="flex flex-1 flex-col justify-center py-8">
+        <Chip tone="primary" className="mb-4 self-start">
+          <Sparkles className="size-3.5" /> Para quem quer migrar para tecnologia
+        </Chip>
         <h1 className="font-display text-4xl leading-[1.08] font-semibold text-balance">
-          Descubra exatamente o que aprender para{" "}
+          Descubra o que estudar para{" "}
           <span className="text-gradient">chegar na renda que você quer.</span>
         </h1>
         <p className="mt-4 text-base text-foreground/85">
-          Responda onde você está e onde quer chegar. A Pathly monta a sequência de habilidades e os
-          projetos de portfólio que levam até lá.
+          Responda onde está e onde quer chegar. A Pathly monta a sequência de habilidades e os
+          projetos que levam até lá, no seu tempo livre.
         </p>
 
         <ul className="mt-8 space-y-3">
@@ -254,8 +261,11 @@ function MobileHome() {
             Já tenho conta
           </Btn>
         </Link>
-        <p className="pt-1 text-center text-xs text-muted-foreground">
-          Até 14 perguntas · 2 minutos · sem cartão de crédito
+        <p className="pt-1 text-center text-xs text-foreground/70">
+          Cerca de 2 minutos · sem cartão · dá para ajustar depois
+        </p>
+        <p className="text-center text-xs text-muted-foreground">
+          Sem promessa de emprego ou renda garantida.
         </p>
       </div>
     </div>

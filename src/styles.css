@@ -230,6 +230,22 @@
     display: none;
   }
 
+  /*
+   * Movimento reduzido: quem pediu isso no sistema tem motivo (enjoo, vertigem, distração).
+   * O conteúdo continua aparecendo — só chega sem deslizar. `both` mantém o estado final das
+   * animações de entrada, então ninguém fica com texto invisível.
+   */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
