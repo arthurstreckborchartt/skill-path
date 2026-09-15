@@ -1,50 +1,132 @@
--- Estrutura de dados do Pathly: perfil, catálogo de conteúdo, rota gerada e progresso.
+-- Schema único do Pathly. Rode uma vez no SQL Editor do painel do Supabase.
+-- É idempotente: rodar de novo não quebra nada.
 --
--- Este projeto não usa migrações locais — o schema é gerenciado pelo Supabase/Lovable.
--- Rode este arquivo uma vez no SQL Editor do painel. É idempotente (if not exists), então
--- rodar de novo não quebra nada.
+-- Este arquivo unifica dois desenhos que existiam em paralelo:
+--   - o que veio do Replit (pathly_profiles, pathly_route_progress), já usado por
+--     src/lib/cloud-sync.ts — o prefixo pathly_ e a forma das duas tabelas foram mantidos
+--     exatamente como estavam, para o código que já funciona continuar funcionando;
+--   - o que faltava para o catálogo de conteúdo real e para a rota gerada por IA.
 --
--- Regra que vale para todas as tabelas de usuário: RLS ligada e cada pessoa só enxerga a própria
--- linha, via auth.uid(). O catálogo (resources) é o único com leitura pública, porque é conteúdo,
--- não dado pessoal — e mesmo ele não aceita escrita por quem usa o app.
+-- Regra geral: RLS ligada em tudo, cada pessoa só enxerga a própria linha via auth.uid().
+-- A única exceção é o catálogo, que é conteúdo público e mesmo assim não aceita escrita
+-- pelo app — só pela service role.
 
 -- ---------------------------------------------------------------- perfil
 
-create table if not exists public.profiles (
+create table if not exists public.pathly_profiles (
   user_id uuid primary key references auth.users (id) on delete cascade,
-  -- respostas do onboarding no formato que o app já usa (OnboardingProfile)
-  onboarding jsonb not null default '{}'::jsonb,
-  -- campo livre: o que a pessoa escreve que quer fazer, com as próprias palavras
-  goal_text text check (goal_text is null or char_length(goal_text) <= 2000),
-  completed_at timestamptz,
-  created_at timestamptz not null default now(),
+  onboarding jsonb not null,
   updated_at timestamptz not null default now()
 );
 
-alter table public.profiles enable row level security;
+-- Campo livre: o que a pessoa escreve, com as próprias palavras, que quer fazer.
+-- É o que a geração por IA vai ler além das respostas fechadas.
+alter table public.pathly_profiles
+  add column if not exists goal_text text;
 
-drop policy if exists "profiles_select_own" on public.profiles;
-create policy "profiles_select_own" on public.profiles
-  for select to authenticated using (auth.uid() = user_id);
+alter table public.pathly_profiles
+  drop constraint if exists pathly_profiles_goal_text_len;
+alter table public.pathly_profiles
+  add constraint pathly_profiles_goal_text_len
+  check (goal_text is null or char_length(goal_text) <= 2000);
 
-drop policy if exists "profiles_insert_own" on public.profiles;
-create policy "profiles_insert_own" on public.profiles
-  for insert to authenticated with check (auth.uid() = user_id);
+alter table public.pathly_profiles enable row level security;
 
-drop policy if exists "profiles_update_own" on public.profiles;
-create policy "profiles_update_own" on public.profiles
-  for update to authenticated using (auth.uid() = user_id) with check (auth.uid() = user_id);
+drop policy if exists "pathly_profiles_select_own" on public.pathly_profiles;
+create policy "pathly_profiles_select_own"
+  on public.pathly_profiles for select to authenticated
+  using (auth.uid() = user_id);
 
-drop policy if exists "profiles_delete_own" on public.profiles;
-create policy "profiles_delete_own" on public.profiles
-  for delete to authenticated using (auth.uid() = user_id);
+drop policy if exists "pathly_profiles_insert_own" on public.pathly_profiles;
+create policy "pathly_profiles_insert_own"
+  on public.pathly_profiles for insert to authenticated
+  with check (auth.uid() = user_id);
 
--- ---------------------------------------------------------------- catálogo
+drop policy if exists "pathly_profiles_update_own" on public.pathly_profiles;
+create policy "pathly_profiles_update_own"
+  on public.pathly_profiles for update to authenticated
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
 
--- Conteúdo real que as etapas apontam. `source` e `source_license` existem para auditoria:
--- toda linha precisa saber de onde veio e sob qual licença, porque nem toda fonte gratuita
--- permite redistribuição (ver README ao lado deste arquivo).
-create table if not exists public.resources (
+drop policy if exists "pathly_profiles_delete_own" on public.pathly_profiles;
+create policy "pathly_profiles_delete_own"
+  on public.pathly_profiles for delete to authenticated
+  using (auth.uid() = user_id);
+
+grant select, insert, update, delete on public.pathly_profiles to authenticated;
+
+-- ---------------------------------------------------------------- progresso da rota
+
+create table if not exists public.pathly_route_progress (
+  user_id uuid primary key references auth.users (id) on delete cascade,
+  route_signature text not null,
+  progress jsonb not null,
+  updated_at timestamptz not null default now()
+);
+
+alter table public.pathly_route_progress enable row level security;
+
+drop policy if exists "pathly_route_progress_select_own" on public.pathly_route_progress;
+create policy "pathly_route_progress_select_own"
+  on public.pathly_route_progress for select to authenticated
+  using (auth.uid() = user_id);
+
+drop policy if exists "pathly_route_progress_insert_own" on public.pathly_route_progress;
+create policy "pathly_route_progress_insert_own"
+  on public.pathly_route_progress for insert to authenticated
+  with check (auth.uid() = user_id);
+
+drop policy if exists "pathly_route_progress_update_own" on public.pathly_route_progress;
+create policy "pathly_route_progress_update_own"
+  on public.pathly_route_progress for update to authenticated
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+grant select, insert, update on public.pathly_route_progress to authenticated;
+
+-- ---------------------------------------------------------------- rota gerada
+
+-- Guarda a rota que a pessoa recebeu. Necessário quando a geração passar a ser por IA:
+-- a chamada acontece uma vez, no fim do onboarding, e o resultado precisa sobreviver.
+-- `signature` casa com pathly_route_progress.route_signature.
+create table if not exists public.pathly_routes (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users (id) on delete cascade,
+  area text not null,
+  generator text not null default 'regras',
+  signature text not null,
+  steps jsonb not null,
+  created_at timestamptz not null default now()
+);
+
+alter table public.pathly_routes enable row level security;
+
+drop policy if exists "pathly_routes_select_own" on public.pathly_routes;
+create policy "pathly_routes_select_own"
+  on public.pathly_routes for select to authenticated
+  using (auth.uid() = user_id);
+
+drop policy if exists "pathly_routes_insert_own" on public.pathly_routes;
+create policy "pathly_routes_insert_own"
+  on public.pathly_routes for insert to authenticated
+  with check (auth.uid() = user_id);
+
+drop policy if exists "pathly_routes_delete_own" on public.pathly_routes;
+create policy "pathly_routes_delete_own"
+  on public.pathly_routes for delete to authenticated
+  using (auth.uid() = user_id);
+
+grant select, insert, delete on public.pathly_routes to authenticated;
+
+create index if not exists pathly_routes_user_idx
+  on public.pathly_routes (user_id, created_at desc);
+
+-- ---------------------------------------------------------------- catálogo de conteúdo
+
+-- Conteúdo real para onde as etapas apontam (ver src/lib/catalog.ts).
+-- `source` e `source_license` são obrigatórios de propósito: nem toda fonte gratuita permite
+-- redistribuição, e cada linha precisa ser auditável. Ver supabase/FONTES-DE-CONTEUDO.md.
+create table if not exists public.pathly_resources (
   id uuid primary key default gen_random_uuid(),
   slug text unique not null,
   title text not null,
@@ -53,78 +135,51 @@ create table if not exists public.resources (
   provider text,
   language text not null default 'pt',
   is_free boolean not null default true,
-  -- assuntos ("python", "sql") e áreas do onboarding ("tech", "data")
   topics text[] not null default '{}',
   areas text[] not null default '{}',
   level text check (level is null or level in ('iniciante', 'intermediário', 'avançado')),
+  summary text not null,
   source text not null,
   source_license text not null,
   created_at timestamptz not null default now()
 );
 
-alter table public.resources enable row level security;
+alter table public.pathly_resources enable row level security;
 
 -- Leitura para todo mundo, inclusive quem não entrou: o catálogo aparece na rota de exemplo.
-drop policy if exists "resources_read_all" on public.resources;
-create policy "resources_read_all" on public.resources
-  for select to anon, authenticated using (true);
--- Sem policy de escrita: só a service role (importador) grava.
+drop policy if exists "pathly_resources_read_all" on public.pathly_resources;
+create policy "pathly_resources_read_all"
+  on public.pathly_resources for select to anon, authenticated
+  using (true);
+-- Sem policy de escrita: só a service role popula o catálogo.
 
-create index if not exists resources_areas_idx on public.resources using gin (areas);
-create index if not exists resources_topics_idx on public.resources using gin (topics);
+grant select on public.pathly_resources to anon, authenticated;
 
--- ---------------------------------------------------------------- rota gerada
+create index if not exists pathly_resources_areas_idx
+  on public.pathly_resources using gin (areas);
+create index if not exists pathly_resources_topics_idx
+  on public.pathly_resources using gin (topics);
 
-create table if not exists public.routes (
+-- ---------------------------------------------------------------- feedback
+
+-- Mantido igual ao supabase/feedback.sql, que pode já ter sido aplicado.
+create table if not exists public.feedback (
   id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references auth.users (id) on delete cascade,
-  area text not null,
-  -- como a rota foi montada: 'regras' (determinístico) ou 'claude' (gerada)
-  generator text not null default 'regras',
-  -- muda quando as respostas mudam; serve para saber que o progresso antigo não vale mais
-  signature text not null,
-  steps jsonb not null,
+  user_id uuid references auth.users (id) on delete set null,
+  kind text not null check (kind in ('bug', 'ideia', 'outro')),
+  message text not null check (char_length(message) between 1 and 2000),
+  page text,
   created_at timestamptz not null default now()
 );
 
-alter table public.routes enable row level security;
+alter table public.feedback enable row level security;
 
-drop policy if exists "routes_select_own" on public.routes;
-create policy "routes_select_own" on public.routes
-  for select to authenticated using (auth.uid() = user_id);
+drop policy if exists "feedback_insert_own" on public.feedback;
+create policy "feedback_insert_own"
+  on public.feedback for insert to authenticated
+  with check (auth.uid() = user_id);
+-- Sem policy de SELECT: ninguém lê o feedback de outra pessoa pelo app. Você lê pelo painel.
 
-drop policy if exists "routes_insert_own" on public.routes;
-create policy "routes_insert_own" on public.routes
-  for insert to authenticated with check (auth.uid() = user_id);
+grant insert on public.feedback to authenticated;
 
-drop policy if exists "routes_delete_own" on public.routes;
-create policy "routes_delete_own" on public.routes
-  for delete to authenticated using (auth.uid() = user_id);
-
-create index if not exists routes_user_idx on public.routes (user_id, created_at desc);
-
--- ---------------------------------------------------------------- progresso
-
-create table if not exists public.route_progress (
-  route_id uuid primary key references public.routes (id) on delete cascade,
-  user_id uuid not null references auth.users (id) on delete cascade,
-  done text[] not null default '{}',
-  checks text[] not null default '{}',
-  streak integer not null default 0,
-  last_active_date date,
-  updated_at timestamptz not null default now()
-);
-
-alter table public.route_progress enable row level security;
-
-drop policy if exists "route_progress_select_own" on public.route_progress;
-create policy "route_progress_select_own" on public.route_progress
-  for select to authenticated using (auth.uid() = user_id);
-
-drop policy if exists "route_progress_insert_own" on public.route_progress;
-create policy "route_progress_insert_own" on public.route_progress
-  for insert to authenticated with check (auth.uid() = user_id);
-
-drop policy if exists "route_progress_update_own" on public.route_progress;
-create policy "route_progress_update_own" on public.route_progress
-  for update to authenticated using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create index if not exists feedback_created_at_idx on public.feedback (created_at desc);
