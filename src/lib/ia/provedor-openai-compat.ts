@@ -19,8 +19,12 @@ export type ServicoCompat = {
   url: string;
   /** Nome da variável de ambiente com a chave. Sem ela, o serviço é simplesmente pulado. */
   envChave: string;
-  /** Modelo padrão; sobrescrevível pela env em `envModelo`. */
-  modelo: string;
+  /**
+   * Modelos a tentar, em ordem. É lista e não string pela mesma razão do Gemini: nome de modelo
+   * é a parte que envelhece mais rápido, e catálogo gratuito muda sem aviso. `envModelo`
+   * sobrescreve a lista inteira por um só.
+   */
+  modelos: string[];
   envModelo: string;
   /** Alguns exigem cabeçalhos próprios (o OpenRouter pede identificação do app). */
   cabecalhosExtra?: Record<string, string>;
@@ -36,14 +40,21 @@ export const SERVICOS_COMPAT: ServicoCompat[] = [
     id: "groq",
     url: "https://api.groq.com/openai/v1/chat/completions",
     envChave: "GROQ_API_KEY",
-    modelo: "llama-3.3-70b-versatile",
+    modelos: ["llama-3.3-70b-versatile", "llama-3.1-8b-instant"],
     envModelo: "GROQ_MODELO",
   },
   {
     id: "openrouter",
     url: "https://openrouter.ai/api/v1/chat/completions",
     envChave: "OPENROUTER_API_KEY",
-    modelo: "meta-llama/llama-3.3-70b-instruct:free",
+    // Conferidos na lista pública do OpenRouter em 15/09/2026 — o nome que eu tinha escrito de
+    // memória (`meta-llama/llama-3.3-70b-instruct:free`) simplesmente não existe lá.
+    // Preferidos os de uso geral; ficam de fora os especializados (código, visão, saúde).
+    modelos: [
+      "nvidia/nemotron-3-super-120b-a12b:free",
+      "google/gemma-4-31b-it:free",
+      "z-ai/glm-5.2:free",
+    ],
     envModelo: "OPENROUTER_MODELO",
     cabecalhosExtra: {
       "HTTP-Referer": "https://pathlyapp.app",
@@ -54,14 +65,14 @@ export const SERVICOS_COMPAT: ServicoCompat[] = [
     id: "cerebras",
     url: "https://api.cerebras.ai/v1/chat/completions",
     envChave: "CEREBRAS_API_KEY",
-    modelo: "llama-3.3-70b",
+    modelos: ["llama-3.3-70b"],
     envModelo: "CEREBRAS_MODELO",
   },
   {
     id: "mistral",
     url: "https://api.mistral.ai/v1/chat/completions",
     envChave: "MISTRAL_API_KEY",
-    modelo: "mistral-small-latest",
+    modelos: ["mistral-small-latest"],
     envModelo: "MISTRAL_MODELO",
   },
 ];
@@ -123,8 +134,41 @@ export async function gerarComCompat(
   perfil: OnboardingProfile,
   servico: ServicoCompat,
   apiKey: string,
-  modelo: string,
+  modelos: string[],
   tetoMs: number = TETO_MS,
+): Promise<SaidaProvedor> {
+  const limite = Date.now() + tetoMs;
+  let ultima: SaidaProvedor = {
+    ok: false,
+    motivo: "erro",
+    detalhe: `${servico.id}: sem tentativa`,
+  };
+
+  for (const modelo of modelos) {
+    const restante = limite - Date.now();
+    // Menos que isto não dá para uma geração completa; parar aqui deixa tempo para o próximo
+    // serviço da cadeia, que vale mais do que uma tentativa fadada a estourar.
+    if (restante < 8000) break;
+
+    ultima = await umaChamada(perfil, servico, apiKey, modelo, Math.min(restante, TETO_MS));
+    if (ultima.ok) return ultima;
+
+    // Modelo que não existe ou foi aposentado: tenta o próximo da lista. Erro permanente de
+    // outra natureza (chave inválida) afeta o serviço inteiro, então não adianta trocar.
+    const trocarModeloAjuda =
+      ultima.transitorio === true || ultima.status === 404 || ultima.status === 400;
+    if (!trocarModeloAjuda) return ultima;
+  }
+
+  return ultima;
+}
+
+async function umaChamada(
+  perfil: OnboardingProfile,
+  servico: ServicoCompat,
+  apiKey: string,
+  modelo: string,
+  tetoMs: number,
 ): Promise<SaidaProvedor> {
   try {
     const r = await fetch(servico.url, {

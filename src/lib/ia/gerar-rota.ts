@@ -70,10 +70,11 @@ function montarCadeia(perfil: OnboardingProfile, plano: Plano, env: LeitorEnv): 
   for (const servico of SERVICOS_COMPAT) {
     const chave = env(servico.envChave);
     if (!chave) continue;
-    const modelo = env(servico.envModelo) || servico.modelo;
+    const escolhido = env(servico.envModelo);
+    const modelos = escolhido ? [escolhido] : servico.modelos;
     cadeia.push({
       nome: servico.id,
-      executar: (teto) => gerarComCompat(perfil, servico, chave, modelo, teto),
+      executar: (teto) => gerarComCompat(perfil, servico, chave, modelos, teto),
     });
   }
 
