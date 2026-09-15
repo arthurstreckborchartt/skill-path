@@ -63,8 +63,14 @@ create policy "pathly_profiles_update_own"
 -- A RLS acima deixa a pessoa editar a própria linha, e `plano` está nessa linha: sem isto ela
 -- se promoveria a Pro com um único PATCH na API pública. O privilégio de coluna é o que fecha —
 -- RLS controla QUAIS linhas, grant de coluna controla QUAIS colunas.
+--
+-- `user_id` PRECISA estar na lista, por mais estranho que pareça. O app salva o perfil com
+-- upsert, que no PostgREST vira INSERT ... ON CONFLICT DO UPDATE com todas as colunas do corpo —
+-- inclusive `user_id`. Sem ele, todo salvamento falha com 42501 e o perfil só sobrevive no
+-- navegador. Conceder é seguro: o `with check (auth.uid() = user_id)` da RLS impede apontar a
+-- linha para outra pessoa. O que fica de fora é o que importa: `plano`.
 revoke update on public.pathly_profiles from authenticated;
-grant update (onboarding, goal_text, updated_at) on public.pathly_profiles to authenticated;
+grant update (user_id, onboarding, goal_text, updated_at) on public.pathly_profiles to authenticated;
 
 drop policy if exists "pathly_profiles_delete_own" on public.pathly_profiles;
 create policy "pathly_profiles_delete_own"
@@ -222,7 +228,7 @@ revoke all on public.feedback              from anon, authenticated;
 -- inteira aqui desfaria a proteção da seção do perfil e deixaria a pessoa se promover a Pro
 -- sozinha, com um PATCH na API pública.
 grant select, insert, delete                     on public.pathly_profiles       to authenticated;
-grant update (onboarding, goal_text, updated_at) on public.pathly_profiles       to authenticated;
+grant update (user_id, onboarding, goal_text, updated_at) on public.pathly_profiles to authenticated;
 grant select, insert, update         on public.pathly_route_progress to authenticated;
 grant select, insert, delete         on public.pathly_routes         to authenticated;
 grant select                         on public.pathly_resources      to anon, authenticated;
