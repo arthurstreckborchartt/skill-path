@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { gerarRotaComIA } from "@/lib/ia/gerar-rota";
 import { paraRouteSteps } from "@/lib/ia/contrato";
 import type { OnboardingProfile } from "@/lib/onboarding";
+import { fontesDe, lerEnv } from "@/lib/server-env";
 
 /**
  * POST /api/rota — gera a rota com IA.
@@ -24,11 +25,6 @@ function erro(status: number, mensagem: string, extra?: Record<string, unknown>)
   });
 }
 
-function env(nome: string): string | undefined {
-  // No Cloudflare o Nitro popula process.env; em dev o Vite expõe as VITE_*.
-  return process.env[nome] ?? (import.meta.env as Record<string, string | undefined>)[nome];
-}
-
 /** Confere o token no Supabase. Decodificar o JWT localmente não prova nada: só a assinatura prova. */
 async function usuarioDoToken(
   token: string,
@@ -48,8 +44,9 @@ export const Route = createFileRoute("/api/rota")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const supabaseUrl = env("SUPABASE_URL") ?? env("VITE_SUPABASE_URL");
-        const anonKey = env("SUPABASE_PUBLISHABLE_KEY") ?? env("VITE_SUPABASE_PUBLISHABLE_KEY");
+        const supabaseUrl = lerEnv("SUPABASE_URL") ?? lerEnv("VITE_SUPABASE_URL");
+        const anonKey =
+          lerEnv("SUPABASE_PUBLISHABLE_KEY") ?? lerEnv("VITE_SUPABASE_PUBLISHABLE_KEY");
         if (!supabaseUrl || !anonKey)
           return erro(500, "Supabase não está configurado no servidor.");
 
@@ -91,12 +88,15 @@ export const Route = createFileRoute("/api/rota")({
           }
         }
 
-        const resultado = await gerarRotaComIA(perfil, env("ANTHROPIC_API_KEY"));
+        const resultado = await gerarRotaComIA(perfil, lerEnv("ANTHROPIC_API_KEY"));
         if (!resultado.ok) {
           // 503 e não 500: a rota por regras assume no cliente, e isto não é erro da pessoa.
           return erro(503, "A geração por IA não está disponível agora.", {
             motivo: resultado.motivo,
             detalhe: resultado.detalhe,
+            // Só booleanos, nunca o valor: é a diferença entre "a variável não foi configurada"
+            // e "foi configurada mas o servidor não enxerga", que sem isto é indistinguível.
+            ...(resultado.motivo === "sem-chave" ? { fontes: fontesDe("ANTHROPIC_API_KEY") } : {}),
           });
         }
 

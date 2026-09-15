@@ -4,6 +4,7 @@ import { captureException, withSentry } from "@sentry/cloudflare";
 
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
+import { registrarEnvCloudflare } from "@/lib/server-env";
 
 type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
@@ -70,6 +71,9 @@ const sentryOptions = (env: unknown) => {
 
 export default withSentry(sentryOptions, {
   async fetch(request: Request, env: unknown, ctx: unknown) {
+    // Este é o único lugar onde os secrets do Worker chegam. Guardar aqui é o que permite que
+    // uma rota de servidor (que não recebe `env`) consiga lê-los — ver src/lib/server-env.ts.
+    registrarEnvCloudflare(env);
     try {
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
