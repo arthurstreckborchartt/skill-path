@@ -121,3 +121,20 @@ export async function saveXpEventCloud(userId: string, routeSignature: string, e
   if (error.code === "23505") return false;
   throw error;
 }
+
+export async function saveProjectCloud(userId: string, routeSignature: string, project: ProjectEvidence) {
+  const { error } = await supabase.from("pathly_project_progress").upsert({
+    user_id: userId,
+    route_signature: routeSignature,
+    project_id: project.projectId,
+    step_id: project.stepId,
+    title: project.title,
+    status: project.status,
+    progress: project.progress,
+    evidence_url: project.evidenceUrl,
+    reflection: project.reflection,
+    completed_at: project.completedAt,
+    updated_at: new Date().toISOString(),
+  }, { onConflict: "user_id,route_signature,project_id" });
+  if (error) throw error;
+}

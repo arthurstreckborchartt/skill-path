@@ -61,7 +61,6 @@ function Dashboard() {
   const nextAction = getNextAction(views, currentIndex);
   const weekPlan = getWeekPlan(views);
   const insights = getInsights(views, stats, profile.hoursPerWeek);
-  const completed = views.filter((s) => s.state === "concluído");
   const routeDone = stats.percent >= 100 && !learning.nextActivity;
   const learningDone = learning.progress.filter((item) => item.status === "completed");
   const minutesStudied = learning.progress.reduce((total, item) => total + item.minutesSpent, 0);

@@ -1,8 +1,9 @@
 ﻿import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowUpRight, Clock, FolderKanban } from "lucide-react";
-import { Chip, PageHeader, Panel, ProgressBar, Reveal } from "@/components/pathly/ui";
+import { ArrowUpRight, Check, Clock, FolderKanban, LinkIcon } from "lucide-react";
+import { Btn, Chip, PageHeader, Panel, ProgressBar, Reveal } from "@/components/pathly/ui";
 import { useRouteProgressContext } from "@/lib/route-progress-context";
+import { useLearningSystem } from "@/lib/learning-context";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/app/projetos")({
@@ -33,28 +34,36 @@ const tabs = ["Todos", "Em andamento", "Concluído", "Sugerido"];
 function ProjectsPage() {
   const [tab, setTab] = useState("Todos");
   const { views } = useRouteProgressContext();
+  const learning = useLearningSystem();
+  const [editing, setEditing] = useState<string | null>(null);
+  const [evidenceUrl, setEvidenceUrl] = useState("");
+  const [reflection, setReflection] = useState("");
 
   const projects = useMemo(
     () =>
       views.flatMap((step) =>
-        step.projects.map((title) => ({
-          id: `${step.id}-${title}`,
+        step.projects.map((title) => {
+          const id = `${step.id}-${title}`;
+          const saved = learning.projects.find((item) => item.projectId === id);
+          return ({
+          id,
           title,
           stepTitle: step.title,
           summary: step.goal,
           stack: step.skills,
           eta: step.eta,
           impact: step.impactLevel,
-          status:
+          status: saved?.status === "completed" ? "Concluído" : saved?.status === "in_progress" || saved?.status === "submitted" ? "Em andamento" :
             step.state === "concluído"
               ? "Concluído"
               : step.state === "atual"
                 ? "Em andamento"
                 : "Sugerido",
-          progress: step.state === "concluído" ? 100 : step.state === "atual" ? step.checkPct : 0,
-        })),
+          progress: saved?.progress ?? (step.state === "concluído" ? 100 : step.state === "atual" ? step.checkPct : 0),
+          evidenceUrl: saved?.evidenceUrl ?? null,
+        });}),
       ),
-    [views],
+    [learning.projects, views],
   );
 
   const list = projects.filter((p) => tab === "Todos" || p.status === tab);
@@ -135,6 +144,7 @@ function ProjectsPage() {
                 >
                   Etapa: {p.stepTitle} <ArrowUpRight className="size-4" />
                 </Link>
+                {p.status !== "Sugerido" && <Btn variant="outline" size="sm" className="mt-3 w-full" onClick={() => { setEditing(p.id); setEvidenceUrl(p.evidenceUrl ?? ""); setReflection(""); }}><LinkIcon className="size-4" /> {p.status === "Concluído" ? "Ver evidência" : "Registrar entrega"}</Btn>}
               </div>
             </article>
           </Reveal>
@@ -150,6 +160,12 @@ function ProjectsPage() {
           </p>
         </Panel>
       )}
+
+      {editing && (() => {
+        const project = projects.find((item) => item.id === editing);
+        if (!project) return null;
+        return <div className="fixed inset-0 z-50 grid place-items-end bg-background/70 p-0 backdrop-blur-sm sm:place-items-center sm:p-6"><Panel className="w-full max-w-xl rounded-b-none sm:rounded-lg"><div className="flex items-start justify-between gap-4"><div><p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">Evidência prática</p><h2 className="mt-2 font-display text-xl font-bold">{project.title}</h2></div><Btn variant="ghost" size="sm" onClick={() => setEditing(null)}>Fechar</Btn></div><label className="mt-6 block text-sm font-medium">Link da entrega<input type="url" value={evidenceUrl} onChange={(event) => setEvidenceUrl(event.target.value)} placeholder="https://github.com/..." className="mt-2 h-12 w-full rounded-lg border border-input bg-background px-4 outline-none focus:ring-2 focus:ring-ring" /></label><label className="mt-4 block text-sm font-medium">O que você conseguiu fazer?<textarea value={reflection} onChange={(event) => setReflection(event.target.value)} rows={4} placeholder="Explique brevemente o que construiu e o que aprendeu." className="mt-2 w-full rounded-lg border border-input bg-background p-4 outline-none focus:ring-2 focus:ring-ring" /></label><Btn className="mt-5 w-full" disabled={!evidenceUrl.trim() || reflection.trim().length < 10} onClick={() => { void learning.saveProject({ projectId: project.id, stepId: views.find((step) => step.title === project.stepTitle)?.id ?? "", title: project.title, status: "completed", progress: 100, evidenceUrl: evidenceUrl.trim(), reflection: reflection.trim(), completedAt: new Date().toISOString() }); setEditing(null); }}><Check className="size-4" /> Registrar projeto concluído</Btn><p className="mt-3 text-xs text-muted-foreground">A entrega vira evidência do seu progresso. A Pathly não publica este link.</p></Panel></div>;
+      })()}
     </div>
   );
 }

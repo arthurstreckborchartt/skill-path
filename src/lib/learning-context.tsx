@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useSession } from "@/lib/auth";
-import { loadLearningCloud, saveActivityCloud, saveMasteryCloud, saveXpEventCloud } from "@/lib/learning-cloud";
+import { loadLearningCloud, saveActivityCloud, saveMasteryCloud, saveProjectCloud, saveXpEventCloud } from "@/lib/learning-cloud";
 import {
   activitiesFromRoute,
   isReviewDue,
@@ -34,6 +34,7 @@ type LearningValue = {
   error: string | null;
   progressFor: (activityId: string) => ActivityProgress | undefined;
   completeActivity: (input: CompleteInput) => Promise<{ xp: number; review: boolean }>;
+  saveProject: (project: ProjectEvidence) => Promise<void>;
 };
 
 const LearningContext = createContext<LearningValue | null>(null);
@@ -175,6 +176,19 @@ export function LearningSystemProvider({ children }: { children: ReactNode }) {
     return { xp: !duplicate && passed ? xp : 0, review };
   }, [mastery, progress, route.signature, session?.user.id, xpEvents]);
 
+  const saveProject = useCallback(async (project: ProjectEvidence) => {
+    setProjects((items) => [...items.filter((item) => item.projectId !== project.projectId), project]);
+    if (!session?.user.id) return;
+    try {
+      await saveProjectCloud(session.user.id, route.signature, project);
+      setStatus("synced");
+      setError(null);
+    } catch {
+      setStatus("local");
+      setError("Projeto salvo neste aparelho. A sincronização será tentada novamente depois.");
+    }
+  }, [route.signature, session?.user.id]);
+
   const reviewsDue = useMemo(() => progress.filter((item) => isReviewDue(item)), [progress]);
   const nextActivity = useMemo(() => {
     const due = reviewsDue[0];
@@ -199,7 +213,8 @@ export function LearningSystemProvider({ children }: { children: ReactNode }) {
     error,
     progressFor: (activityId) => progress.find((item) => item.activityId === activityId),
     completeActivity,
-  }), [activities, completeActivity, error, mastery, progress, projects, reviewsDue, status, xpEvents]);
+    saveProject,
+  }), [activities, completeActivity, error, mastery, progress, projects, reviewsDue, saveProject, status, xpEvents]);
 
   return <LearningContext.Provider value={value}>{children}</LearningContext.Provider>;
 }

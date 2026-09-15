@@ -11,6 +11,7 @@ import {
 } from "@/components/pathly/ui";
 import { levelFromXp, type StepView } from "@/lib/route-map";
 import { useRouteProgressContext } from "@/lib/route-progress-context";
+import { useLearningSystem } from "@/lib/learning-context";
 import type { SkillLevel } from "@/lib/onboarding";
 
 export const Route = createFileRoute("/app/perfil")({
@@ -69,16 +70,18 @@ const SKILL_LEVEL_PCT: Record<SkillLevel, number> = {
 
 function ProfilePage() {
   const { views, stats, profile } = useRouteProgressContext();
-  const level = levelFromXp(stats.totalXp);
+  const learning = useLearningSystem();
+  const totalXp = stats.totalXp + learning.xpTotal;
+  const level = levelFromXp(totalXp);
   const badges = buildBadges(views, stats, stats.incomeNow, profile.goalIncome);
 
   // Rota personalizada: mistura o que a pessoa já sabia (onboarding) com o que já dominou
   // completando etapas. Rota demo: mantém os níveis fixos do mock, que existem só pra ilustrar
   // a tela antes de qualquer onboarding real.
   const topSkills = [
-        ...stats.skills.map((name) => ({ name, level: 90 })),
+        ...learning.mastery.map((skill) => ({ name: skill.skillName, level: skill.mastery })),
         ...profile.declaredSkills
-          .filter((s) => !stats.skills.includes(s.name))
+          .filter((s) => !learning.mastery.some((skill) => skill.skillName === s.name))
           .map((s) => ({ name: s.name, level: SKILL_LEVEL_PCT[s.level] })),
       ].slice(0, 4);
   const initials = profile.firstName ? profile.firstName.slice(0, 2).toUpperCase() : null;
@@ -129,7 +132,7 @@ function ProfilePage() {
           // etapa concluída e não representa o que a pessoa ganha hoje).
           { k: "Renda informada", v: profile.currentIncome, prefix: "R$ " },
           { k: "Meta de renda", v: profile.goalIncome, prefix: "R$ " },
-          { k: "XP acumulado", v: stats.totalXp, prefix: "" },
+          { k: "XP acumulado", v: totalXp, prefix: "" },
         ].map((m, i) => (
           <Reveal key={m.k} delay={i * 70}>
             <Panel className="p-5">
