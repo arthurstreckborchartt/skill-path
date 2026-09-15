@@ -26,14 +26,14 @@ import type { RotaIA, SaidaProvedor } from "@/lib/ia/contrato";
 export type Plano = "free" | "pro";
 
 /**
- * Orçamento de relógio para a cadeia INTEIRA.
+ * Orçamento de relógio, o mesmo para todos, porque correm em paralelo.
  *
- * Sem um teto global, cada provedor traria o seu e quatro deles somariam mais de dois minutos
- * com a pessoa parada na tela de "montando sua rota". O teto é aqui, e cada elo recebe apenas o
- * que sobrou — quem chega por último pode não ter tempo de tentar, e isso é o certo: melhor cair
- * na rota por regras do que prender alguém por dois minutos.
+ * 60s é o pior caso, não o esperado: o Gemini entrega em ~20s e é ele quem costuma vencer a
+ * corrida. O número vem do mais lento que ainda vale a pena esperar — o OpenRouter gratuito, que
+ * leva ~49s para uma rota inteira com o prompt real. Cortar antes disso seria abortar geração
+ * boa; esticar muito além seria prender a pessoa na tela de carregamento.
  */
-const ORCAMENTO_TOTAL_MS = 55_000;
+const ORCAMENTO_TOTAL_MS = 60_000;
 
 /** Abaixo disto não vale começar: não daria tempo nem de uma geração completa (~20s). */
 const MINIMO_PARA_TENTAR_MS = 12_000;
@@ -81,6 +81,22 @@ function montarCadeia(perfil: OnboardingProfile, plano: Plano, env: LeitorEnv): 
   return cadeia;
 }
 
+/**
+ * Quantos provedores correm ao mesmo tempo.
+ *
+ * Em paralelo e não em fila, e a medição é o motivo: o Gemini entrega em ~20s e o OpenRouter em
+ * ~49s. Em fila, se o primeiro falha só depois de esgotar o tempo dele, o segundo nunca cabe no
+ * orçamento — foi exatamente o que aconteceu no teste, cadeia com dois fornecedores e só um com
+ * chance real. Em paralelo o custo de relógio é o do MAIS RÁPIDO que responder, não a soma.
+ *
+ * O preço é gastar uma chamada de cada cota por geração. Numa camada gratuita, com isto rodando
+ * uma vez por pessoa no fim do onboarding, é barato perto de deixar alguém sem rota.
+ *
+ * O teto de 3 evita o outro extremo: com cinco serviços configurados, disparar cinco chamadas
+ * simultâneas queimaria as cotas rápido demais sem ganhar latência — as duas primeiras já cobrem.
+ */
+const MAX_SIMULTANEOS = 3;
+
 export async function gerarRota(
   perfil: OnboardingProfile,
   plano: Plano,
@@ -93,25 +109,33 @@ export async function gerarRota(
     return { ok: false, motivo: "sem-chave", tentativas };
   }
 
-  let ultima: SaidaProvedor | null = null;
-  const limite = Date.now() + ORCAMENTO_TOTAL_MS;
+  const correndo = cadeia.slice(0, MAX_SIMULTANEOS);
+  const orcamento = ORCAMENTO_TOTAL_MS;
 
-  for (const elo of cadeia) {
-    const restante = limite - Date.now();
-    if (restante < MINIMO_PARA_TENTAR_MS) {
-      tentativas.push(`${elo.nome}:sem-tempo`);
-      break;
+  // Cada um recebe o orçamento INTEIRO: correndo em paralelo, o tempo de um não tira do outro.
+  // O índice viaja junto com o resultado para dar de baixa na corrida certa quando ela chega.
+  const pendentes = new Map(
+    correndo.map((elo, i) => [
+      i,
+      elo.executar(orcamento).then((saida) => ({ i, nome: elo.nome, saida })),
+    ]),
+  );
+
+  let ultima: SaidaProvedor | null = null;
+
+  while (pendentes.size > 0) {
+    const chegou = await Promise.race(pendentes.values());
+    pendentes.delete(chegou.i);
+
+    tentativas.push(`${chegou.nome}:${chegou.saida.ok ? "ok" : chegou.saida.motivo}`);
+
+    if (chegou.saida.ok) {
+      // As outras continuam em voo e são descartadas: o navegador já tem resposta, e abortar
+      // agora não devolveria a cota que já foi consumida mesmo.
+      return { ok: true, rota: chegou.saida.rota, provedor: chegou.nome, tentativas };
     }
 
-    const saida = await elo.executar(restante);
-    tentativas.push(`${elo.nome}:${saida.ok ? "ok" : saida.motivo}`);
-    if (saida.ok) return { ok: true, rota: saida.rota, provedor: elo.nome, tentativas };
-
-    ultima = saida;
-
-    // Recusa por política não é problema de fornecedor: o prompt ou o perfil dispararam algum
-    // filtro, e o próximo serviço tende a recusar igual. Parar é mais honesto que insistir.
-    if (saida.motivo === "recusa") break;
+    ultima = chegou.saida;
   }
 
   return {

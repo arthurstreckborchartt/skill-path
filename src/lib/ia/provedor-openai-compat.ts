@@ -47,13 +47,22 @@ export const SERVICOS_COMPAT: ServicoCompat[] = [
     id: "openrouter",
     url: "https://openrouter.ai/api/v1/chat/completions",
     envChave: "OPENROUTER_API_KEY",
-    // Conferidos na lista pública do OpenRouter em 15/09/2026 — o nome que eu tinha escrito de
-    // memória (`meta-llama/llama-3.3-70b-instruct:free`) simplesmente não existe lá.
-    // Preferidos os de uso geral; ficam de fora os especializados (código, visão, saúde).
+    /**
+     * Medidos com a chave real em 15/09/2026, não escolhidos por reputação. Dos 20 modelos
+     * `:free` do catálogo, a maioria não serve: `z-ai/glm-5.2` e `google/gemma-4-26b` devolvem
+     * "Provider returned error", `nemotron-3-ultra-550b` e `nemotron-3.5-lightning` estouram 30s
+     * sem responder, e `thinkingmachines/inkling` só existe na API de agentes.
+     *
+     * Os três que sobraram, na ordem: o maior primeiro (120B, para a qualidade da trilha), o
+     * mais rápido em seguida, e um lento como último recurso.
+     *   nemotron-3-super-120b → 1,26s
+     *   gemma-4-31b-it        → 0,93s
+     *   nex-n2.5-pro          → 20,3s
+     */
     modelos: [
       "nvidia/nemotron-3-super-120b-a12b:free",
+      "nex-agi/nex-n2.5-pro:free",
       "google/gemma-4-31b-it:free",
-      "z-ai/glm-5.2:free",
     ],
     envModelo: "OPENROUTER_MODELO",
     cabecalhosExtra: {
@@ -106,7 +115,12 @@ const FORMATO = `Responda SOMENTE com um objeto JSON, sem texto antes ou depois,
 Entre 6 e 10 etapas. Cada etapa com 1 a 4 habilidades, 1 a 3 projetos e 4 a 8 tarefas.
 Cada tarefa começa com verbo no infinitivo e cabe numa sessão de estudo.`;
 
-const TETO_MS = 30_000;
+/**
+ * Teto padrão, usado só quando ninguém passa um. Quem chama normalmente informa o orçamento, e
+ * ele manda: medido com o prompt real, o nemotron do OpenRouter leva ~49s para uma rota inteira.
+ * Um teto fixo de 30s aqui abortava justamente as gerações que iam dar certo.
+ */
+const TETO_MS = 55_000;
 
 type RespostaCompat = {
   choices?: { message?: { content?: string } }[];
@@ -150,7 +164,7 @@ export async function gerarComCompat(
     // serviço da cadeia, que vale mais do que uma tentativa fadada a estourar.
     if (restante < 8000) break;
 
-    ultima = await umaChamada(perfil, servico, apiKey, modelo, Math.min(restante, TETO_MS));
+    ultima = await umaChamada(perfil, servico, apiKey, modelo, restante);
     if (ultima.ok) return ultima;
 
     // Modelo que não existe ou foi aposentado: tenta o próximo da lista. Erro permanente de
@@ -189,6 +203,13 @@ async function umaChamada(
           },
         ],
         response_format: { type: "json_object" },
+        /**
+         * Sem isto, um modelo de raciocínio despeja o pensamento dentro de `content` e gasta o
+         * orçamento inteiro antes de chegar ao JSON. Medido: o nemotron-3-super-120b voltava com
+         * `finish_reason: "length"` e um texto começando em "Okay, the user sent..."; com
+         * `exclude` ele devolve 6 etapas em 11s. Provedores que não raciocinam ignoram o campo.
+         */
+        reasoning: { exclude: true },
         temperature: 0.7,
         max_tokens: 8192,
       }),
