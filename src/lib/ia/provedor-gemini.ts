@@ -120,12 +120,13 @@ export async function gerarComGemini(
   perfil: OnboardingProfile,
   apiKey: string | undefined,
   modelo: string | undefined = undefined,
+  prazoMs: number = PRAZO_TOTAL_MS,
 ): Promise<SaidaProvedor> {
   if (!apiKey) return { ok: false, motivo: "sem-chave" };
 
   const modelos = modelo ? [modelo] : MODELOS_PADRAO;
   const corpoRequisicao = montarCorpo(perfil);
-  const limite = Date.now() + PRAZO_TOTAL_MS;
+  const limite = Date.now() + Math.min(prazoMs, PRAZO_TOTAL_MS);
 
   let ultima: SaidaProvedor = { ok: false, motivo: "erro", detalhe: "nenhuma tentativa" };
 

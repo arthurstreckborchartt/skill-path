@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { gerarRota, type Plano } from "@/lib/ia/gerar-rota";
+import { SERVICOS_COMPAT } from "@/lib/ia/provedor-openai-compat";
 import { paraRouteSteps } from "@/lib/ia/contrato";
 import type { OnboardingProfile } from "@/lib/onboarding";
 import { fontesDe, lerEnv } from "@/lib/server-env";
@@ -105,11 +106,9 @@ export const Route = createFileRoute("/api/rota")({
           if (linhas[0]?.plano === "pro") plano = "pro";
         }
 
-        const resultado = await gerarRota(perfil, plano, {
-          anthropic: lerEnv("ANTHROPIC_API_KEY"),
-          gemini: lerEnv("GEMINI_API_KEY"),
-          geminiModelo: lerEnv("GEMINI_MODELO"),
-        });
+        // `lerEnv` é passado como função porque só o servidor sabe onde os secrets vivem no
+        // Cloudflare — a cadeia não precisa saber disso, só pedir a variável pelo nome.
+        const resultado = await gerarRota(perfil, plano, lerEnv);
         if (!resultado.ok) {
           // 503 e não 500: a rota por regras assume no cliente, e isto não é erro da pessoa.
           return erro(503, "A geração por IA não está disponível agora.", {
@@ -123,9 +122,13 @@ export const Route = createFileRoute("/api/rota")({
             tentativas: resultado.tentativas,
             ...(resultado.motivo === "sem-chave"
               ? {
+                  // Booleanos, nunca valores: diz quais fornecedores estão configurados e onde a
+                  // variável foi vista, que é o que separa "não configurei" de "configurei e o
+                  // servidor não enxerga".
                   fontes: {
                     gemini: fontesDe("GEMINI_API_KEY"),
                     claude: fontesDe("ANTHROPIC_API_KEY"),
+                    ...Object.fromEntries(SERVICOS_COMPAT.map((s) => [s.id, fontesDe(s.envChave)])),
                   },
                 }
               : {}),

@@ -1,20 +1,46 @@
 # Rota gerada por IA
 
-## Dois provedores, um por plano
+## Cadeia de provedores
 
-| Plano | Provedor | Chave | Custo |
-|---|---|---|---|
-| Gratuito | Gemini (`gemini-2.0-flash`) | `GEMINI_API_KEY` | camada gratuita, sem cartão |
-| Pro | Claude Opus 5 | `ANTHROPIC_API_KEY` | por uso |
+O plano gratuito não depende de um fornecedor só. Em 15/09/2026 três modelos do Gemini estavam
+em "high demand" no intervalo de poucos minutos — com um provedor apenas, isso vira falha para a
+pessoa. A cadeia tenta um depois do outro até alguém responder.
 
-No Pro o Gemini entra como segunda tentativa: se o Claude cair, estourar limite ou recusar, é
-melhor entregar uma rota boa do que nenhuma. Quem pagou não pode ficar sem rota por uma
-indisponibilidade que não é dele.
+| Ordem | Serviço | Variável | Modelo padrão | Custo |
+|---|---|---|---|---|
+| Pro, 1º | Claude Opus 5 | `ANTHROPIC_API_KEY` | — | por uso |
+| 1º | Gemini | `GEMINI_API_KEY` | `gemini-3.5-flash`, com `3.6` de reserva | gratuito |
+| 2º | Groq | `GROQ_API_KEY` | `llama-3.3-70b-versatile` | gratuito |
+| 3º | OpenRouter | `OPENROUTER_API_KEY` | `llama-3.3-70b-instruct:free` | gratuito |
+| 4º | Cerebras | `CEREBRAS_API_KEY` | `llama-3.3-70b` | gratuito |
+| 5º | Mistral | `MISTRAL_API_KEY` | `mistral-small-latest` | gratuito |
 
-O prompt é **o mesmo para os dois** (`prompt.ts`). O provedor muda, as regras do produto não —
-e a versão gratuita é justamente a que mais gente vai ver.
+**Serviço sem chave nem entra na fila.** Dá para acrescentar fornecedor sem tocar em código:
+configurou a variável, entrou. Cada um tem também `<NOME>_MODELO` para trocar o modelo por env,
+porque nome de modelo é a parte que mais envelhece.
 
-Chave do Gemini: aistudio.google.com/apikey.
+Groq, OpenRouter, Cerebras e Mistral usam a mesma API de `/chat/completions` da OpenAI, então são
+uma implementação só (`provedor-openai-compat.ts`) parametrizada por URL e chave.
+
+O prompt é **o mesmo para todos** (`prompt.ts`). O fornecedor muda, as regras do produto não.
+
+### Orçamento de tempo
+
+O teto é da cadeia inteira, 55s, e cada elo recebe só o que sobrou. Sem isso, quatro provedores
+com 40s cada somariam mais de dois minutos com a pessoa parada na tela de carregamento. Quem
+chega por último pode não ter tempo de tentar — e isso é o certo: melhor cair na rota por regras
+do que prender alguém.
+
+Os números vêm de medição, não de intuição: uma geração que dá certo leva ~20s, e um modelo
+congestionado responde "high demand" em ~7s. É essa assimetria que faz a cadeia funcionar.
+
+### Onde pegar cada chave
+
+- Gemini: aistudio.google.com/apikey
+- Groq: console.groq.com/keys
+- OpenRouter: openrouter.ai/keys
+- Cerebras: cloud.cerebras.ai
+- Mistral: console.mistral.ai
 
 ## O plano vem do banco, nunca do cliente
 
