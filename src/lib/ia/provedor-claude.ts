@@ -1,6 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import type { OnboardingProfile } from "@/lib/onboarding";
-import { SCHEMA_ROTA, validarRota, type RotaIA } from "@/lib/ia/contrato";
+import { SCHEMA_ROTA, validarRota, type SaidaProvedor } from "@/lib/ia/contrato";
 import { SISTEMA, resumirPerfil } from "@/lib/ia/prompt";
 
 /**
@@ -9,14 +9,6 @@ import { SISTEMA, resumirPerfil } from "@/lib/ia/prompt";
  */
 
 const MODELO = "claude-opus-5";
-
-export type SaidaProvedor =
-  | { ok: true; rota: RotaIA }
-  | {
-      ok: false;
-      motivo: "sem-chave" | "recusa" | "invalida" | "erro";
-      detalhe?: string | undefined;
-    };
 
 export async function gerarComClaude(
   perfil: OnboardingProfile,

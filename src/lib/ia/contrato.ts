@@ -199,3 +199,19 @@ export function paraRouteSteps(
     };
   });
 }
+
+/**
+ * O que um provedor devolve. Vive aqui, e não em cada provedor, porque eram duas cópias do mesmo
+ * tipo com o mesmo nome — a primeira edição em um deles já faria os dois divergirem em silêncio.
+ */
+export type SaidaProvedor =
+  | { ok: true; rota: RotaIA }
+  | {
+      ok: false;
+      motivo: "sem-chave" | "recusa" | "invalida" | "erro";
+      detalhe?: string | undefined;
+      /** HTTP da tentativa, quando houve resposta. Usado só para decidir se vale repetir. */
+      status?: number | undefined;
+      /** Se esta falha tem chance de passar sozinha numa nova tentativa. */
+      transitorio?: boolean | undefined;
+    };

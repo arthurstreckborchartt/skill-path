@@ -1,6 +1,6 @@
 import type { OnboardingProfile } from "@/lib/onboarding";
-import { gerarComClaude, type SaidaProvedor } from "@/lib/ia/provedor-claude";
-import type { RotaIA } from "@/lib/ia/contrato";
+import { gerarComClaude } from "@/lib/ia/provedor-claude";
+import type { RotaIA, SaidaProvedor } from "@/lib/ia/contrato";
 import { gerarComGemini } from "@/lib/ia/provedor-gemini";
 
 /**
