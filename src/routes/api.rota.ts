@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { gerarRotaComIA } from "@/lib/ia/gerar-rota";
+import { gerarRota, type Plano } from "@/lib/ia/gerar-rota";
 import { paraRouteSteps } from "@/lib/ia/contrato";
 import type { OnboardingProfile } from "@/lib/onboarding";
 import { fontesDe, lerEnv } from "@/lib/server-env";
@@ -88,7 +88,27 @@ export const Route = createFileRoute("/api/rota")({
           }
         }
 
-        const resultado = await gerarRotaComIA(perfil, lerEnv("ANTHROPIC_API_KEY"));
+        /**
+         * O plano sai do banco, e isso não é preciosismo. O `usePlan()` do cliente guarda o plano
+         * no localStorage — é estado de tela, e qualquer pessoa edita pelo devtools. Se o plano
+         * viesse no corpo desta requisição, marcar "pro" no navegador passaria a gastar a conta
+         * da Anthropic de graça. Enquanto a Stripe não existe ninguém tem `plano = 'pro'` no
+         * banco, então todo mundo cai no provedor gratuito — que é exatamente o desejado.
+         */
+        let plano: Plano = "free";
+        const perfilSalvo = await fetch(
+          `${supabaseUrl}/rest/v1/pathly_profiles?select=plano&user_id=eq.${userId}&limit=1`,
+          { headers: comoUsuario },
+        );
+        if (perfilSalvo.ok) {
+          const linhas = (await perfilSalvo.json()) as { plano?: string }[];
+          if (linhas[0]?.plano === "pro") plano = "pro";
+        }
+
+        const resultado = await gerarRota(perfil, plano, {
+          anthropic: lerEnv("ANTHROPIC_API_KEY"),
+          gemini: lerEnv("GEMINI_API_KEY"),
+        });
         if (!resultado.ok) {
           // 503 e não 500: a rota por regras assume no cliente, e isto não é erro da pessoa.
           return erro(503, "A geração por IA não está disponível agora.", {
@@ -96,7 +116,18 @@ export const Route = createFileRoute("/api/rota")({
             detalhe: resultado.detalhe,
             // Só booleanos, nunca o valor: é a diferença entre "a variável não foi configurada"
             // e "foi configurada mas o servidor não enxerga", que sem isto é indistinguível.
-            ...(resultado.motivo === "sem-chave" ? { fontes: fontesDe("ANTHROPIC_API_KEY") } : {}),
+            plano,
+            // Qual provedor foi tentado e como terminou. Sem isto, "gratuito sem chave" e "Pro
+            // com o Claude fora do ar" viram a mesma mensagem opaca.
+            tentativas: resultado.tentativas,
+            ...(resultado.motivo === "sem-chave"
+              ? {
+                  fontes: {
+                    gemini: fontesDe("GEMINI_API_KEY"),
+                    claude: fontesDe("ANTHROPIC_API_KEY"),
+                  },
+                }
+              : {}),
           });
         }
 
@@ -118,13 +149,19 @@ export const Route = createFileRoute("/api/rota")({
           body: JSON.stringify({
             user_id: userId,
             area: perfil.desiredAreas[0] ?? "other",
-            generator: "ia",
+            generator: resultado.provedor,
             signature,
             steps,
           }),
         }).catch(() => undefined);
 
-        return new Response(JSON.stringify({ papel: resultado.rota.papel, signature, steps }), {
+        const corpo = {
+          papel: resultado.rota.papel,
+          signature,
+          steps,
+          provedor: resultado.provedor,
+        };
+        return new Response(JSON.stringify(corpo), {
           headers: JSON_HEADERS,
         });
       },

@@ -1,5 +1,35 @@
 # Rota gerada por IA
 
+## Dois provedores, um por plano
+
+| Plano | Provedor | Chave | Custo |
+|---|---|---|---|
+| Gratuito | Gemini (`gemini-2.0-flash`) | `GEMINI_API_KEY` | camada gratuita, sem cartão |
+| Pro | Claude Opus 5 | `ANTHROPIC_API_KEY` | por uso |
+
+No Pro o Gemini entra como segunda tentativa: se o Claude cair, estourar limite ou recusar, é
+melhor entregar uma rota boa do que nenhuma. Quem pagou não pode ficar sem rota por uma
+indisponibilidade que não é dele.
+
+O prompt é **o mesmo para os dois** (`prompt.ts`). O provedor muda, as regras do produto não —
+e a versão gratuita é justamente a que mais gente vai ver.
+
+Chave do Gemini: aistudio.google.com/apikey.
+
+## O plano vem do banco, nunca do cliente
+
+`usePlan()` guarda o plano no `localStorage`. Isso é estado de tela e qualquer pessoa edita pelo
+devtools. O servidor **ignora** o que o cliente diz e lê a coluna `plano` de `pathly_profiles`.
+
+Duas camadas protegem essa coluna:
+
+1. RLS deixa a pessoa editar só a própria linha — mas `plano` está nessa linha;
+2. por isso o grant de UPDATE é **por coluna**: `onboarding`, `goal_text` e `updated_at`. `plano`
+   fica de fora, então um PATCH na API pública não promove ninguém.
+
+Quem escreve `plano` é a integração de pagamento, com a service role. Enquanto a Stripe não
+existe, ninguém é Pro e todo mundo usa o provedor gratuito — que é o desejado.
+
 ## Onde a chave vai (e onde não vai)
 
 A chamada ao Claude acontece **só no servidor**, em `src/routes/api.rota.ts`. O SDK da Anthropic
@@ -8,13 +38,13 @@ o SDK nem a string `ANTHROPIC_API_KEY`.
 
 | Onde | O que fazer |
 |---|---|
-| Desenvolvimento | `ANTHROPIC_API_KEY=sk-ant-...` em **`.env.local`** (ignorado pelo git) |
+| Desenvolvimento | `GEMINI_API_KEY=...` e `ANTHROPIC_API_KEY=sk-ant-...` em **`.env.local`** (ignorado pelo git) |
 | Produção | painel de variáveis de ambiente do Cloudflare / Lovable, como **secret** |
 
 **Nunca no `.env`.** Esse arquivo está versionado e vai para o GitHub.
 
-Sem a chave o app não quebra: a geração devolve `sem-chave`, o endpoint responde 503 e o cliente
-cai na rota por regras (`generateRoute`), que é completa.
+Sem chave nenhuma o app não quebra: a geração devolve `sem-chave`, o endpoint responde 503 e o
+cliente cai na rota por regras (`generateRoute`), que é completa.
 
 ## Divisão de responsabilidade
 

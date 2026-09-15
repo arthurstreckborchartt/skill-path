@@ -30,6 +30,18 @@ alter table public.pathly_profiles
   add constraint pathly_profiles_goal_text_len
   check (goal_text is null or char_length(goal_text) <= 2000);
 
+-- Plano da pessoa. Fica no banco, e não só no navegador, porque é o servidor que decide qual
+-- provedor de IA usar: o gratuito chama um modelo gratuito, o Pro chama o Claude. Se essa
+-- decisão saísse do localStorage, marcar "pro" pelo devtools passaria a gastar a conta da
+-- Anthropic. Quem escreve esta coluna é a integração de pagamento — nunca o app.
+alter table public.pathly_profiles
+  add column if not exists plano text not null default 'free';
+
+alter table public.pathly_profiles
+  drop constraint if exists pathly_profiles_plano_valido;
+alter table public.pathly_profiles
+  add constraint pathly_profiles_plano_valido check (plano in ('free', 'pro'));
+
 alter table public.pathly_profiles enable row level security;
 
 drop policy if exists "pathly_profiles_select_own" on public.pathly_profiles;
@@ -47,6 +59,12 @@ create policy "pathly_profiles_update_own"
   on public.pathly_profiles for update to authenticated
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
+
+-- A RLS acima deixa a pessoa editar a própria linha, e `plano` está nessa linha: sem isto ela
+-- se promoveria a Pro com um único PATCH na API pública. O privilégio de coluna é o que fecha —
+-- RLS controla QUAIS linhas, grant de coluna controla QUAIS colunas.
+revoke update on public.pathly_profiles from authenticated;
+grant update (onboarding, goal_text, updated_at) on public.pathly_profiles to authenticated;
 
 drop policy if exists "pathly_profiles_delete_own" on public.pathly_profiles;
 create policy "pathly_profiles_delete_own"
@@ -200,7 +218,11 @@ revoke all on public.pathly_routes         from anon, authenticated;
 revoke all on public.pathly_resources      from anon, authenticated;
 revoke all on public.feedback              from anon, authenticated;
 
-grant select, insert, update, delete on public.pathly_profiles       to authenticated;
+-- Note o update por COLUNA: `plano` fica de fora de propósito. Um `grant update` na tabela
+-- inteira aqui desfaria a proteção da seção do perfil e deixaria a pessoa se promover a Pro
+-- sozinha, com um PATCH na API pública.
+grant select, insert, delete                     on public.pathly_profiles       to authenticated;
+grant update (onboarding, goal_text, updated_at) on public.pathly_profiles       to authenticated;
 grant select, insert, update         on public.pathly_route_progress to authenticated;
 grant select, insert, delete         on public.pathly_routes         to authenticated;
 grant select                         on public.pathly_resources      to anon, authenticated;
