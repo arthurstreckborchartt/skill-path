@@ -164,6 +164,15 @@ function ProfilePage() {
                 </div>
               ))}
             </dl>
+
+            {/* O texto livre não cabe na lista de pares: fica embaixo, com as aspas, para a
+                pessoa reconhecer o que ela mesma escreveu. */}
+            {profile.goalText && (
+              <div className="mt-4 rounded-2xl bg-surface-2/40 p-4">
+                <p className="text-xs text-muted-foreground">Nas suas palavras</p>
+                <p className="mt-1.5 text-sm text-balance">“{profile.goalText}”</p>
+              </div>
+            )}
           </Panel>
         </Reveal>
 

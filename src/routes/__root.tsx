@@ -137,7 +137,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="pt-BR">
+    // suppressHydrationWarning: o script de tema abaixo escreve class e color-scheme no <html>
+    // antes do React hidratar, então o HTML do servidor difere do cliente de propósito. Sem isso
+    // o React avisa a cada carregamento. Vale só para os atributos deste elemento.
+    <html lang="pt-BR" suppressHydrationWarning>
       <head>
         <HeadContent />
         {/* Antes da primeira pintura: sem isto a tela pisca clara antes de virar escura. */}

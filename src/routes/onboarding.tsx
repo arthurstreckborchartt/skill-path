@@ -8,6 +8,7 @@ import {
   CardSelect,
   FieldGroup,
   HoursSlider,
+  LongTextField,
   MoneyField,
   SearchField,
   SkillLevelList,
@@ -65,6 +66,7 @@ type ScreenId =
   | "situation"
   | "profession"
   | "areas"
+  | "goal_text"
   | "experience"
   | "skills"
   | "skill_levels"
@@ -125,6 +127,13 @@ const screens: Screen[] = [
     title: "Em qual área você gostaria de trabalhar?",
     hint: "Escolha uma. É ela que define o conteúdo da sua rota.",
     valid: (p) => p.desiredAreas.length > 0,
+  },
+  {
+    id: "goal_text",
+    chapter: "Onde você quer chegar",
+    title: "Conta com as suas palavras: o que você quer fazer?",
+    hint: "Opcional, mas é o que mais personaliza a rota. Pode pular se preferir.",
+    valid: () => true,
   },
   {
     id: "experience",
@@ -396,6 +405,19 @@ function Onboarding() {
                 options={areas}
                 value={profile.desiredAreas}
                 onChange={(area) => patch({ desiredAreas: [area] })}
+              />
+            )}
+
+            {screen.id === "goal_text" && (
+              <LongTextField
+                value={profile.goalText}
+                onChange={(goalText) => patch({ goalText })}
+                placeholder="Ex.: quero sair do atendimento e trabalhar com dados na empresa onde já estou"
+                examples={[
+                  "Quero migrar para programação e conseguir meu primeiro emprego júnior",
+                  "Quero continuar na minha área, mas aprender dados para ganhar mais",
+                  "Quero pegar freelas no fim de semana sem largar o emprego",
+                ]}
               />
             )}
 

@@ -155,6 +155,8 @@ export type ActiveProfile = {
   experienceLabel: string | null;
   /** Habilidades que a pessoa declarou já ter no onboarding — vazio na rota demo. */
   declaredSkills: { name: string; level: SkillLevel }[];
+  /** O que a pessoa escreveu com as próprias palavras. Vazio quando pulou ou na rota demo. */
+  goalText: string;
   isPersonalized: boolean;
 };
 
@@ -170,6 +172,7 @@ const DEMO_PROFILE: ActiveProfile = {
   situationLabel: null,
   experienceLabel: null,
   declaredSkills: [],
+  goalText: "",
   isPersonalized: false,
 };
 
@@ -198,6 +201,7 @@ function resolveActiveRoute(): { steps: RouteStep[]; profile: ActiveProfile } {
     situationLabel: situations.find((s) => s.id === onboarding.situation)?.label ?? null,
     experienceLabel: experiences.find((e) => e.id === onboarding.experience)?.label ?? null,
     declaredSkills: onboarding.skills.map((s) => ({ name: s.name, level: s.level })),
+    goalText: onboarding.goalText?.trim() ?? "",
     isPersonalized: true,
   };
   return { steps, profile };

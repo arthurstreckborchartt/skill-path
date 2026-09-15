@@ -215,6 +215,13 @@ export type OnboardingProfile = {
   };
   situation: SituationId | null;
   currentProfession: string;
+  /**
+   * O que a pessoa quer fazer, com as próprias palavras. Opcional de propósito — quem não quiser
+   * escrever segue sem. É a entrada mais rica que temos para a geração por IA, porque as
+   * perguntas fechadas não capturam intenção ("quero sair do suporte e mexer com dados da
+   * empresa onde já trabalho" diz muito mais que "área: dados").
+   */
+  goalText: string;
   desiredAreas: AreaId[];
   experience: ExperienceId | null;
   skills: SkillEntry[];
@@ -236,6 +243,7 @@ export function emptyProfile(): OnboardingProfile {
     income: { current: null, noIncome: false, target: null, horizon: null },
     situation: null,
     currentProfession: "",
+    goalText: "",
     desiredAreas: [],
     experience: null,
     skills: [],

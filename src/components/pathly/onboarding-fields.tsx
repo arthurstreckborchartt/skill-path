@@ -152,6 +152,65 @@ export function ToggleRow({
   );
 }
 
+/* ---------- texto livre ---------- */
+
+export function LongTextField({
+  value,
+  onChange,
+  placeholder,
+  examples,
+  maxLength = 600,
+}: {
+  value: string;
+  onChange: (next: string) => void;
+  placeholder?: string;
+  /** Exemplos clicáveis: quem trava no campo em branco geralmente destrava vendo um modelo. */
+  examples?: string[];
+  maxLength?: number;
+}) {
+  return (
+    <div className="space-y-3">
+      <textarea
+        value={value}
+        onChange={(e) => onChange(e.target.value.slice(0, maxLength))}
+        placeholder={placeholder}
+        rows={5}
+        // text-base no celular: abaixo de 16px o Safari do iPhone dá zoom ao focar.
+        className="w-full resize-none rounded-2xl border border-input bg-surface/60 px-4 py-3.5 text-base outline-none transition-all placeholder:text-muted-foreground focus:border-primary/50 focus:ring-4 focus:ring-primary/10 sm:text-sm"
+      />
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-xs text-muted-foreground">
+          {value.trim() ? `${value.trim().length}/${maxLength}` : "Opcional"}
+        </span>
+        {value.trim().length > 0 && (
+          <button
+            type="button"
+            onClick={() => onChange("")}
+            className="tap text-xs text-muted-foreground hover:text-foreground"
+          >
+            Limpar
+          </button>
+        )}
+      </div>
+      {examples && examples.length > 0 && value.trim().length === 0 && (
+        <div className="space-y-2">
+          <p className="text-xs text-muted-foreground">Sem ideia do que escrever? Comece por um:</p>
+          {examples.map((ex) => (
+            <button
+              key={ex}
+              type="button"
+              onClick={() => onChange(ex)}
+              className="tap block w-full rounded-xl border border-border bg-surface/40 px-4 py-3 text-left text-sm text-muted-foreground transition-colors hover:border-primary/30 hover:text-foreground"
+            >
+              “{ex}”
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ---------- searchable field ---------- */
 
 export function SearchField({
