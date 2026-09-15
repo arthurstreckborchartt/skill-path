@@ -183,3 +183,25 @@ create policy "feedback_insert_own"
 grant insert on public.feedback to authenticated;
 
 create index if not exists feedback_created_at_idx on public.feedback (created_at desc);
+
+-- ---------------------------------------------------------------- privilégio mínimo
+
+-- O Supabase concede TODOS os privilégios por padrão nas tabelas de `public` para `anon` e
+-- `authenticated` — inclusive TRUNCATE. E TRUNCATE **não passa por RLS**: quem tem esse
+-- privilégio esvazia a tabela inteira, independente de qualquer política. Como a chave `anon`
+-- é pública (vai no JavaScript do navegador), isso é um buraco real.
+--
+-- Os grants acima são aditivos e não corrigem isso sozinhos. Este bloco zera e devolve só o
+-- necessário. Rode sempre depois de criar tabela nova em `public`.
+
+revoke all on public.pathly_profiles       from anon, authenticated;
+revoke all on public.pathly_route_progress from anon, authenticated;
+revoke all on public.pathly_routes         from anon, authenticated;
+revoke all on public.pathly_resources      from anon, authenticated;
+revoke all on public.feedback              from anon, authenticated;
+
+grant select, insert, update, delete on public.pathly_profiles       to authenticated;
+grant select, insert, update         on public.pathly_route_progress to authenticated;
+grant select, insert, delete         on public.pathly_routes         to authenticated;
+grant select                         on public.pathly_resources      to anon, authenticated;
+grant insert                         on public.feedback              to authenticated;
