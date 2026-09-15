@@ -252,6 +252,17 @@ function Onboarding() {
     return () => clearTimeout(t);
   }, [profile, index, phase, session?.user.id]);
 
+  /**
+   * Sem esta guarda o onboarding era a porta dos fundos do app: `/onboarding` respondia a
+   * qualquer pessoa, as respostas não iam para lugar nenhum (sem `session.user.id` o
+   * `saveCloudProfile` nem é chamado) e no fim a pessoa era jogada em `/app/rota`, que bounce
+   * para `/login`. Pior: quem voltava da janela do Google caía aqui e ficava preso, sem
+   * caminho de volta para digitar e-mail e senha.
+   */
+  useEffect(() => {
+    if (!sessionLoading && !session) navigate({ to: "/login" });
+  }, [sessionLoading, session, navigate]);
+
   const visible = useMemo(() => screens.filter((s) => !s.skip?.(profile)), [profile]);
   const screen = visible[Math.min(index, visible.length - 1)]!;
   const position = visible.findIndex((s) => s.id === screen.id);
@@ -280,6 +291,16 @@ function Onboarding() {
 
   // Estável: BuildingScreen agenda os timers da animação num efeito que depende dessa referência.
   const goToReady = useCallback(() => setPhase("ready"), []);
+
+  // Mesmo estado neutro de `/app`: no SSR e no primeiro paint a sessão ainda não foi lida, e
+  // decidir antes disso mostraria as perguntas por um instante para quem vai ser redirecionado.
+  if (sessionLoading || !session) {
+    return (
+      <div className="grid min-h-screen place-items-center px-5">
+        <p className="text-sm text-muted-foreground">Carregando…</p>
+      </div>
+    );
+  }
 
   if (phase === "building") {
     return <BuildingScreen onDone={goToReady} />;

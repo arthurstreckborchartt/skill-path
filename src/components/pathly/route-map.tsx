@@ -1,4 +1,5 @@
 ﻿import { useEffect } from "react";
+import { Link } from "@tanstack/react-router";
 import {
   ArrowUpRight,
   BookOpen,
@@ -6,8 +7,11 @@ import {
   Clock,
   Flag,
   Gauge,
+  Gem,
+  GraduationCap,
   Layers,
   Lock,
+  Play,
   Sparkles,
   Target,
   TrendingUp,
@@ -16,6 +20,8 @@ import {
 } from "lucide-react";
 import { Btn, Chip, Panel, ProgressBar } from "@/components/pathly/ui";
 import { resourcesForTopics } from "@/lib/catalog";
+import { buscasParaEtapa } from "@/lib/study-links";
+import { ETAPAS_GRATIS, etapaBloqueadaPorPlano, usePlan } from "@/lib/plan";
 import { difficultyTone, type NodeState, type StepView } from "@/lib/route-map";
 import { cn } from "@/lib/utils";
 
@@ -41,6 +47,10 @@ function NodeDot({ step, active }: { step: StepView; active: boolean }) {
       {s === "atual" && (
         <span className="absolute inline-flex size-12 animate-[pulse_2.4s_cubic-bezier(0.4,0,0.6,1)_infinite] rounded-full bg-primary/20" />
       )}
+      {/* Disco opaco atrás do número. Os fundos dos estados são translúcidos (bg-primary/15,
+          bg-surface-2/60), então sem esta camada a espinha vertical atravessa o algarismo e os
+          dois se misturam — era o que fazia os números parecerem conflitar com a linha. */}
+      <span aria-hidden className="absolute size-11 rounded-2xl bg-background" />
       <span
         className={cn(
           "relative grid size-11 place-items-center rounded-2xl border font-display text-sm font-semibold transition-all duration-300",
@@ -76,6 +86,8 @@ function NodeCard({
   align?: "left" | "right";
 }) {
   const locked = step.state === "bloqueado";
+  const { isPro } = usePlan();
+  const porPlano = etapaBloqueadaPorPlano(step.order, isPro);
   return (
     <button
       onClick={onSelect}
@@ -111,6 +123,11 @@ function NodeCard({
         <Chip tone="xp">
           <Zap className="size-3" /> {step.xp}
         </Chip>
+        {porPlano && (
+          <Chip tone="accent">
+            <Gem className="size-3" /> Pro
+          </Chip>
+        )}
       </div>
       {step.state !== "bloqueado" && step.checksTotal > 0 && (
         <div className="mt-3">
@@ -143,7 +160,7 @@ export function RouteTrack({
       {/* espinha */}
       <span
         aria-hidden
-        className="absolute top-2 bottom-2 left-[21px] w-px bg-gradient-to-b from-primary/60 via-border to-border lg:left-1/2"
+        className="absolute top-2 bottom-2 left-[22px] w-px bg-gradient-to-b from-primary/60 via-border to-border lg:left-1/2"
       />
       {steps.map((step, i) => (
         <li
@@ -217,6 +234,38 @@ function Metric({
   );
 }
 
+/** Uma linha de material. Sempre um link de verdade: a versão anterior caía num `div` quando o
+ *  catálogo não cobria o assunto, e clicar nele não fazia nada. */
+function LinkEstudo({
+  href,
+  icon,
+  title,
+  meta,
+}: {
+  href: string;
+  icon: React.ReactNode;
+  title: string;
+  meta: string;
+}) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="tap flex min-h-14 items-center justify-between gap-3 rounded-xl bg-surface-2/40 px-4 py-3 text-sm transition-colors hover:bg-surface-2"
+    >
+      <span className="flex min-w-0 items-center gap-2">
+        <span className="shrink-0 text-primary">{icon}</span>
+        <span className="min-w-0">
+          <span className="block truncate font-medium">{title}</span>
+          <span className="block truncate text-xs text-muted-foreground">{meta}</span>
+        </span>
+      </span>
+      <ArrowUpRight className="size-4 shrink-0 text-muted-foreground" />
+    </a>
+  );
+}
+
 export function StepDetail({
   step,
   allSteps,
@@ -242,6 +291,13 @@ export function StepDetail({
   const prereqsDone = prereqs.every((p) => p.state === "concluído");
   // Material real do catálogo para as habilidades desta etapa (ver src/lib/catalog.ts).
   const materiais = resourcesForTopics(step.skills);
+  // Piso: o catálogo é curado e pequeno, então nem toda etapa tem item nele. As buscas garantem
+  // que nenhuma etapa fique sem caminho (ver src/lib/study-links.ts).
+  const buscas = buscasParaEtapa(step.skills);
+  const { isPro } = usePlan();
+  const bloqueadaPorPlano = etapaBloqueadaPorPlano(step.order, isPro) && step.state !== "concluído";
+  const gratis = buscas.filter((b) => b.tipo === "grátis");
+  const pagos = buscas.filter((b) => b.tipo === "pago");
 
   return (
     <div className="relative space-y-5">
@@ -270,6 +326,25 @@ export function StepDetail({
         <h2 className="mt-3 font-display text-xl font-semibold text-balance">{step.title}</h2>
         <p className="mt-1.5 text-sm text-muted-foreground">{step.goal}</p>
       </div>
+
+      {bloqueadaPorPlano && (
+        <div className="rounded-2xl border border-accent/40 bg-accent/[0.06] p-4">
+          <p className="flex items-center gap-1.5 text-sm font-semibold">
+            <Gem className="size-4 text-accent" /> Etapa do plano Pro
+          </p>
+          <p className="mt-1.5 text-sm text-muted-foreground">
+            O plano gratuito libera as {ETAPAS_GRATIS} primeiras etapas. O conteúdo desta aqui
+            continua visível — material, checklist e projetos — mas concluí-la e seguir a rota
+            precisa do Pro.
+          </p>
+          <Link
+            to="/app/planos"
+            className="tap mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+          >
+            Ver os planos <ArrowUpRight className="size-3.5" />
+          </Link>
+        </div>
+      )}
 
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         <Metric icon={<TrendingUp className="size-3" />} label="Impacto" value={step.impactLevel} />
@@ -347,45 +422,58 @@ export function StepDetail({
         </div>
       </div>
 
+      {materiais.length > 0 && (
+        <div>
+          <p className="text-xs font-medium text-muted-foreground">Material selecionado</p>
+          <p className="mt-0.5 text-[11px] text-muted-foreground">
+            Conferido um por um pela Pathly. Todos gratuitos.
+          </p>
+          <div className="mt-2 space-y-2">
+            {materiais.map((r) => (
+              <LinkEstudo
+                key={r.slug}
+                href={r.url}
+                icon={<BookOpen className="size-3.5" />}
+                title={r.title}
+                meta={`${r.provider} · ${r.kind}${r.language === "en" ? " · em inglês" : ""}`}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
       <div>
-        <p className="text-xs font-medium text-muted-foreground">Recursos de estudo</p>
+        <p className="text-xs font-medium text-muted-foreground">Estudar de graça</p>
         <div className="mt-2 space-y-2">
-          {materiais.length > 0
-            ? materiais.map((r) => (
-                <a
-                  key={r.slug}
-                  href={r.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="tap flex min-h-14 items-center justify-between gap-3 rounded-xl bg-surface-2/40 px-4 py-3 text-sm transition-colors hover:bg-surface-2"
-                >
-                  <span className="flex min-w-0 items-center gap-2">
-                    <BookOpen className="size-3.5 shrink-0 text-primary" />
-                    <span className="min-w-0">
-                      <span className="block truncate font-medium">{r.title}</span>
-                      <span className="block truncate text-xs text-muted-foreground">
-                        {r.provider} · {r.kind}
-                        {r.language === "en" && " · em inglês"}
-                      </span>
-                    </span>
-                  </span>
-                  <ArrowUpRight className="size-4 shrink-0 text-muted-foreground" />
-                </a>
-              ))
-            : /* Sem material no catálogo para os assuntos desta etapa: mostra o rótulo autoral
-                 em vez de deixar a seção vazia. */
-              step.resources.map((r) => (
-                <div
-                  key={r.label}
-                  className="flex items-center justify-between gap-3 rounded-xl bg-surface-2/40 px-4 py-3 text-sm"
-                >
-                  <span className="flex min-w-0 items-center gap-2">
-                    <BookOpen className="size-3.5 shrink-0 text-primary" />
-                    <span className="truncate">{r.label}</span>
-                  </span>
-                  <span className="shrink-0 text-xs text-muted-foreground">{r.type}</span>
-                </div>
-              ))}
+          {gratis.map((b) => (
+            <LinkEstudo
+              key={b.id}
+              href={b.url}
+              icon={<Play className="size-3.5" />}
+              title={b.label}
+              meta={`${b.provider} · ${b.hint}`}
+            />
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <p className="text-xs font-medium text-muted-foreground">Cursos pagos</p>
+        {/* Dito explicitamente porque a Pathly não recebe nada por estes links e não assistiu a
+            estes cursos: são buscas na plataforma, não indicação de um curso específico. */}
+        <p className="mt-0.5 text-[11px] text-muted-foreground">
+          Buscas nas plataformas. A Pathly não recebe comissão nem indica um curso específico.
+        </p>
+        <div className="mt-2 space-y-2">
+          {pagos.map((b) => (
+            <LinkEstudo
+              key={b.id}
+              href={b.url}
+              icon={<GraduationCap className="size-3.5" />}
+              title={b.label}
+              meta={`${b.provider} · ${b.hint}`}
+            />
+          ))}
         </div>
       </div>
 
@@ -465,6 +553,23 @@ export function StepActions({
   full?: boolean;
 }) {
   const locked = step.state === "bloqueado";
+  const { isPro } = usePlan();
+
+  // O paywall vem antes do cadeado de pré-requisito: quem está no gratuito não precisa descobrir
+  // que cumpriu os pré-requisitos só para esbarrar no plano logo depois.
+  if (etapaBloqueadaPorPlano(step.order, isPro) && step.state !== "concluído") {
+    return (
+      <Link
+        to="/app/planos"
+        className={cn(
+          "tap inline-flex items-center justify-center gap-2 rounded-full bg-signal px-5 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-glow)] hover:brightness-110",
+          full ? "h-12 w-full" : "h-10",
+        )}
+      >
+        <Gem className="size-4" /> Liberar com o Pro
+      </Link>
+    );
+  }
 
   if (step.state === "concluído") {
     return (

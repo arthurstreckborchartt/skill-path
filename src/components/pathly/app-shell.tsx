@@ -4,6 +4,7 @@ import {
   Compass,
   FolderKanban,
   Home,
+  Gem,
   Settings,
   Sparkles,
   User,
@@ -25,6 +26,7 @@ const primaryNav = [
 ];
 
 const secondaryNav = [
+  { to: "/app/planos", label: "Planos", icon: Gem },
   { to: "/app/perfil", label: "Perfil", icon: User },
   { to: "/app/configuracoes", label: "Configurações", icon: Settings },
 ];

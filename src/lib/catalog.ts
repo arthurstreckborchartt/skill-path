@@ -397,9 +397,29 @@ export const CATALOG: CatalogResource[] = [
  * Materiais que cobrem qualquer um dos assuntos. Prioriza a área da rota quando ela é conhecida,
  * e depois português — o público é brasileiro e material em inglês trava quem está começando.
  */
+/** Sem acento e sem caixa: "Lógica" e "logica" são o mesmo assunto para quem está buscando. */
+function normalizar(s: string): string {
+  return s
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
+/**
+ * O casamento é por continência, não por igualdade. A igualdade exata deixava etapas inteiras
+ * sem material por diferenças de rótulo: a etapa pede "Entrevista técnica" e o catálogo tem
+ * "Entrevista", a etapa pede "Git básico" e o catálogo tem "Git". São o mesmo assunto, e o
+ * resultado era uma seção de estudo vazia.
+ */
 export function resourcesForTopics(topics: string[], area?: AreaId, limit = 3): CatalogResource[] {
-  const wanted = topics.map((t) => t.toLowerCase());
-  return CATALOG.filter((r) => r.topics.some((t) => wanted.includes(t.toLowerCase())))
+  const wanted = topics.map(normalizar).filter(Boolean);
+  return CATALOG.filter((r) =>
+    r.topics.some((t) => {
+      const alvo = normalizar(t);
+      return wanted.some((w) => w === alvo || w.includes(alvo) || alvo.includes(w));
+    }),
+  )
     .sort((a, b) => {
       if (area) {
         const areaScore = Number(b.areas.includes(area)) - Number(a.areas.includes(area));
