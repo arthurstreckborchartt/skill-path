@@ -6,6 +6,8 @@
 // You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 import { mcpPlugin } from "@lovable.dev/mcp-js/stacks/tanstack/vite";
+import { loadEnv } from "vite";
+import path from "node:path";
 
 /**
  * O mcpPlugin quebra o build no Windows: ele normaliza o diretório pai para barras normais
@@ -18,11 +20,23 @@ import { mcpPlugin } from "@lovable.dev/mcp-js/stacks/tanstack/vite";
  */
 const isWindows = process.platform === "win32";
 
-export default defineConfig({
-  plugins: isWindows ? [] : [mcpPlugin()],
-  tanstackStart: {
-    // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
-    // nitro/vite builds from this
-    server: { entry: "server" },
-  },
+export default defineConfig(({ mode }) => {
+  const serverEnv = loadEnv(mode, process.cwd(), "");
+  Object.assign(process.env, serverEnv);
+
+  return {
+    plugins: isWindows ? [] : [mcpPlugin()],
+    resolve: {
+      alias: {
+        "entities/lib/decode.js": path.resolve(process.cwd(), "node_modules/entities/lib/decode.js"),
+        "entities/lib/encode.js": path.resolve(process.cwd(), "node_modules/entities/lib/encode.js"),
+        entities: path.resolve(process.cwd(), "node_modules/entities"),
+      },
+    },
+    tanstackStart: {
+      // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
+      // nitro/vite builds from this
+      server: { entry: "server" },
+    },
+  };
 });
