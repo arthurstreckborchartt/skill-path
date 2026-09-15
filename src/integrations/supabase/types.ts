@@ -43,23 +43,32 @@ export type Database = {
       }
       pathly_profiles: {
         Row: {
+          assinatura_ate: string | null
+          assinatura_status: string | null
           goal_text: string | null
           onboarding: Json
           plano: string
+          stripe_customer_id: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          assinatura_ate?: string | null
+          assinatura_status?: string | null
           goal_text?: string | null
           onboarding: Json
           plano?: string
+          stripe_customer_id?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          assinatura_ate?: string | null
+          assinatura_status?: string | null
           goal_text?: string | null
           onboarding?: Json
           plano?: string
+          stripe_customer_id?: string | null
           updated_at?: string
           user_id?: string
         }
