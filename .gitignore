@@ -35,3 +35,11 @@ skills-lock.json
 *.njsproj
 *.sln
 *.sw?
+
+# Segredos locais.
+# ATENÇÃO: o .env deste repositório ESTÁ versionado e vai para o GitHub. Ele só pode conter
+# valores públicos (URL do Supabase, chave publishable, DSN do Sentry). Chave secreta —
+# ANTHROPIC_API_KEY, service role do Supabase, client secret do Google — vai em .env.local
+# no desenvolvimento e no painel de segredos do provedor em produção.
+.env.local
+.env.*.local

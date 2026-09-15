@@ -19,6 +19,7 @@ import { Route as PrivacidadeRouteImport } from './routes/privacidade'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as TermosRouteImport } from './routes/termos'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
+import { Route as ApiRotaRouteImport } from './routes/api.rota'
 import { Route as AppIndexRouteImport } from './routes/app.index'
 import { Route as AppConfiguracoesRouteImport } from './routes/app.configuracoes'
 import { Route as AppHabilidadesRouteImport } from './routes/app.habilidades'
@@ -79,6 +80,11 @@ const Char91DotwellKnownChar93OauthProtectedResourceRoute =
     path: '/.well-known/oauth-protected-resource',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiRotaRoute = ApiRotaRouteImport.update({
+  id: '/api/rota',
+  path: '/api/rota',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppIndexRoute = AppIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -131,6 +137,7 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/termos': typeof TermosRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  '/api/rota': typeof ApiRotaRoute
   '/app/configuracoes': typeof AppConfiguracoesRoute
   '/app/habilidades': typeof AppHabilidadesRoute
   '/app/oportunidades': typeof AppOportunidadesRoute
@@ -150,6 +157,7 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/termos': typeof TermosRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  '/api/rota': typeof ApiRotaRoute
   '/app/configuracoes': typeof AppConfiguracoesRoute
   '/app/habilidades': typeof AppHabilidadesRoute
   '/app/oportunidades': typeof AppOportunidadesRoute
@@ -171,6 +179,7 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/termos': typeof TermosRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  '/api/rota': typeof ApiRotaRoute
   '/app/configuracoes': typeof AppConfiguracoesRoute
   '/app/habilidades': typeof AppHabilidadesRoute
   '/app/oportunidades': typeof AppOportunidadesRoute
@@ -193,6 +202,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/termos'
     | '/.well-known/oauth-protected-resource'
+    | '/api/rota'
     | '/app/configuracoes'
     | '/app/habilidades'
     | '/app/oportunidades'
@@ -212,6 +222,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/termos'
     | '/.well-known/oauth-protected-resource'
+    | '/api/rota'
     | '/app/configuracoes'
     | '/app/habilidades'
     | '/app/oportunidades'
@@ -232,6 +243,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/termos'
     | '/.well-known/oauth-protected-resource'
+    | '/api/rota'
     | '/app/configuracoes'
     | '/app/habilidades'
     | '/app/oportunidades'
@@ -253,6 +265,7 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermosRoute: typeof TermosRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  ApiRotaRoute: typeof ApiRotaRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -325,6 +338,13 @@ declare module '@tanstack/react-router' {
       path: '/.well-known/oauth-protected-resource'
       fullPath: '/.well-known/oauth-protected-resource'
       preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/rota': {
+      id: '/api/rota'
+      path: '/api/rota'
+      fullPath: '/api/rota'
+      preLoaderRoute: typeof ApiRotaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/app/': {
@@ -422,6 +442,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermosRoute: TermosRoute,
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
+  ApiRotaRoute: ApiRotaRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

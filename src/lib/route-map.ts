@@ -3,6 +3,7 @@ import { useSession } from "@/lib/auth";
 import { loadCloudProfile, loadCloudRouteProgress, saveCloudRouteProgress } from "@/lib/cloud-sync";
 import { steps as baseSteps, user, type Difficulty, type Step } from "@/lib/mock";
 import { generateRoute, roleLabelForArea } from "@/lib/route-templates";
+import { lerRotaIA } from "@/lib/ia/cliente";
 import {
   experiences,
   goals,
@@ -187,12 +188,15 @@ function resolveActiveRoute(): { steps: RouteStep[]; profile: ActiveProfile } {
   const onboarding = loadProfile();
   if (!onboarding?.completedAt) return { steps: DEMO_STEPS, profile: DEMO_PROFILE };
 
-  const steps = generateRoute(onboarding);
+  // A rota da IA tem prioridade quando existe. `generateRoute` continua sendo o piso: cobre quem
+  // ainda não gerou, quem gerou antes da IA existir, e todo caso em que a geração falhou.
+  const rotaIA = lerRotaIA();
+  const steps = rotaIA?.steps.length ? rotaIA.steps : generateRoute(onboarding);
   const horizonMonths = horizons.find((h) => h.id === onboarding.income.horizon)?.months ?? 10;
   const profile: ActiveProfile = {
     firstName: null,
     role: onboarding.currentProfession.trim() || "sua profissão atual",
-    target: roleLabelForArea(onboarding.desiredAreas[0]),
+    target: rotaIA?.papel?.trim() || roleLabelForArea(onboarding.desiredAreas[0]),
     currentIncome: onboarding.income.noIncome ? 0 : (onboarding.income.current ?? 0),
     goalIncome: Math.max(onboarding.income.target ?? 0, 500),
     hoursPerWeek: Math.max(2, onboarding.study.hoursPerWeek || 7),

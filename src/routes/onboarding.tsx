@@ -4,6 +4,7 @@ import { ArrowLeft, ArrowRight, Check, Cloud, Sparkles, TrendingUp } from "lucid
 import { Btn, Logo, ProgressBar } from "@/components/pathly/ui";
 import { useSession } from "@/lib/auth";
 import { loadCloudProfile, saveCloudProfile } from "@/lib/cloud-sync";
+import { gerarRotaIA, limparRotaIA } from "@/lib/ia/cliente";
 import {
   CardSelect,
   FieldGroup,
@@ -213,6 +214,9 @@ function Onboarding() {
   const [index, setIndex] = useState(0);
   const [phase, setPhase] = useState<Phase>("questions");
   const [saved, setSaved] = useState(false);
+  // A geração começa junto com a animação de "montando sua rota" e o BuildingScreen espera por
+  // ela. Fica em estado, e não numa variável, para sobreviver aos re-renders da tela.
+  const [trabalho, setTrabalho] = useState<Promise<unknown>>(() => Promise.resolve());
   const hydrated = useRef(false);
 
   // restore local answers first, then prefer the cloud copy when the user is authenticated
@@ -286,6 +290,11 @@ function Onboarding() {
     setProfile(completed);
     const next = saveProfile({ ...completed, lastScreenIndex: total - 1 });
     if (session?.user.id) void saveCloudProfile(session.user.id, next);
+
+    // Rota antiga fora antes de pedir a nova: se a geração falhar, o certo é cair na rota por
+    // regras do perfil novo, e não continuar mostrando a rota de um perfil que já mudou.
+    limparRotaIA();
+    setTrabalho(gerarRotaIA(completed));
     setPhase("building");
   }
 
@@ -303,7 +312,7 @@ function Onboarding() {
   }
 
   if (phase === "building") {
-    return <BuildingScreen onDone={goToReady} />;
+    return <BuildingScreen onDone={goToReady} trabalho={trabalho} />;
   }
 
   if (phase === "ready") {
@@ -575,17 +584,31 @@ function Onboarding() {
 
 /* ---------- building ---------- */
 
-function BuildingScreen({ onDone }: { onDone: () => void }) {
+function BuildingScreen({ onDone, trabalho }: { onDone: () => void; trabalho: Promise<unknown> }) {
   const [done, setDone] = useState(0);
+  const [demorando, setDemorando] = useState(false);
 
   useEffect(() => {
     const timers = analysisSteps.map((_, i) => setTimeout(() => setDone(i + 1), 500 + i * 620));
-    const finish = setTimeout(onDone, 500 + analysisSteps.length * 620 + 700);
+    const aviso = setTimeout(() => setDemorando(true), 9000);
+
+    // A tela avança quando as DUAS coisas terminam: a animação e a geração. Antes ela era só um
+    // relógio, e cortar a chamada da IA no meio desperdiçaria uma requisição já paga. A promessa
+    // nunca rejeita — quem gera já trata a falha e devolve a rota por regras.
+    const animacao = new Promise<void>((r) =>
+      setTimeout(r, 500 + analysisSteps.length * 620 + 700),
+    );
+    let vivo = true;
+    void Promise.all([animacao, trabalho]).then(() => {
+      if (vivo) onDone();
+    });
+
     return () => {
+      vivo = false;
       timers.forEach(clearTimeout);
-      clearTimeout(finish);
+      clearTimeout(aviso);
     };
-  }, [onDone]);
+  }, [onDone, trabalho]);
 
   return (
     <div className="halo grid min-h-screen place-items-center px-5 py-12">
@@ -645,6 +668,11 @@ function BuildingScreen({ onDone }: { onDone: () => void }) {
 
         <div className="mt-7">
           <ProgressBar value={(done / analysisSteps.length) * 100} delay={0} className="h-1" />
+          {demorando && (
+            <p className="mt-3 text-center text-xs text-muted-foreground">
+              Está levando um pouco mais que o normal. Não feche esta tela.
+            </p>
+          )}
         </div>
       </div>
     </div>
