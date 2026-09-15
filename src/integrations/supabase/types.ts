@@ -45,18 +45,21 @@ export type Database = {
         Row: {
           goal_text: string | null
           onboarding: Json
+          plano: string
           updated_at: string
           user_id: string
         }
         Insert: {
           goal_text?: string | null
           onboarding: Json
+          plano?: string
           updated_at?: string
           user_id: string
         }
         Update: {
           goal_text?: string | null
           onboarding?: Json
+          plano?: string
           updated_at?: string
           user_id?: string
         }
