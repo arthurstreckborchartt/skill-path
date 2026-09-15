@@ -496,6 +496,7 @@ export function useRouteProgress() {
   }, [views, currentIndex, progress.streak, steps, profile]);
 
   return {
+    signature,
     views,
     currentIndex,
     stats,

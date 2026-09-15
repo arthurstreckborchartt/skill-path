@@ -12,6 +12,7 @@ import {
 import { Btn, Logo } from "./ui";
 import { levelFromXp } from "@/lib/route-map";
 import { RouteProgressProvider, useRouteProgressContext } from "@/lib/route-progress-context";
+import { LearningSystemProvider } from "@/lib/learning-context";
 import { cn } from "@/lib/utils";
 
 // Oportunidades (vagas) fica fora da navegação por enquanto: a tela ainda usa dados de
@@ -59,7 +60,9 @@ function SideItem({
 export function AppShell() {
   return (
     <RouteProgressProvider>
-      <AppShellInner />
+      <LearningSystemProvider>
+        <AppShellInner />
+      </LearningSystemProvider>
     </RouteProgressProvider>
   );
 }
