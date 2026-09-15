@@ -75,7 +75,6 @@ function CheckoutPathly({
       aria-modal="true"
       aria-labelledby="checkout-title"
     >
-      <div className="pointer-events-none fixed inset-0 bg-[var(--gradient-halo)]" />
       <div className="relative mx-auto flex min-h-screen w-full max-w-6xl flex-col px-4 pb-8 pt-[max(1rem,env(safe-area-inset-top))] sm:px-8 lg:px-10">
         <header className="flex h-16 items-center justify-between border-b border-border/70">
           <Logo />
@@ -120,18 +119,14 @@ function CheckoutPathly({
                 <Sparkles className="size-3" /> 14 dias grátis
               </Chip>
             </div>
-            <div className="overflow-hidden rounded-[var(--radius-xl)] border border-primary/30 bg-card shadow-[var(--shadow-lift)]">
-              <div className="bg-signal p-5 text-primary-foreground sm:p-6">
+            <div className="overflow-hidden rounded-lg border border-primary/30 bg-card shadow-[var(--shadow-lift)]">
+              <div className="bg-foreground p-5 text-background sm:p-6">
                 <div className="flex items-center justify-between gap-4">
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-wider opacity-80">Seu plano</p>
                     <h2 className="mt-1 font-display text-2xl font-semibold">Pathly Pro</h2>
                   </div>
-                  <img
-                    src={logoAsset.url}
-                    alt="Logo da Pathly"
-                    className="size-12 rounded-xl border border-primary-foreground/20 object-cover shadow-lg"
-                  />
+                  <img src={logoAsset.url} alt="Logo da Pathly" className="size-12 rounded-lg border border-background/20 object-cover shadow-lg" />
                 </div>
               </div>
 

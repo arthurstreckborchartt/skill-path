@@ -1,12 +1,11 @@
 import { Link, Outlet, useRouterState } from "@tanstack/react-router";
 import {
   ArrowRight,
+  BookOpen,
   Compass,
   FolderKanban,
   Home,
-  Gem,
   Settings,
-  Sparkles,
   User,
   Zap,
 } from "lucide-react";
@@ -20,22 +19,17 @@ import { cn } from "@/lib/utils";
 // continua existindo (não foi apagada), só não aparece nos menus até ter dado real.
 const primaryNav = [
   { to: "/app", label: "Início", icon: Home, exact: true },
-  { to: "/app/rota", label: "Minha rota", icon: Compass },
-  { to: "/app/habilidades", label: "Habilidades", icon: Zap },
+  { to: "/app/rota", label: "Caminhos", icon: Compass },
+  { to: "/app/habilidades", label: "Aprender", icon: BookOpen },
   { to: "/app/projetos", label: "Projetos", icon: FolderKanban },
-];
-
-const secondaryNav = [
-  { to: "/app/planos", label: "Planos", icon: Gem },
   { to: "/app/perfil", label: "Perfil", icon: User },
-  { to: "/app/configuracoes", label: "Configurações", icon: Settings },
 ];
 
 const mobileNav = [
   { to: "/app", label: "Home", icon: Home, exact: true },
-  { to: "/app/rota", label: "Rota", icon: Compass },
+  { to: "/app/rota", label: "Caminhos", icon: Compass },
+  { to: "/app/habilidades", label: "Aprender", icon: BookOpen },
   { to: "/app/projetos", label: "Projetos", icon: FolderKanban },
-  { to: "/app/habilidades", label: "Skills", icon: Zap },
   { to: "/app/perfil", label: "Perfil", icon: User },
 ];
 
@@ -54,7 +48,7 @@ function SideItem({
     <Link
       to={to}
       activeOptions={{ exact: exact === true }}
-      className="tap group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground data-[status=active]:bg-sidebar-accent data-[status=active]:text-foreground"
+      className="tap group flex items-center gap-3 rounded-lg border border-transparent px-3 py-3 text-sm text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground data-[status=active]:border-sidebar-border data-[status=active]:bg-surface data-[status=active]:font-semibold data-[status=active]:text-foreground"
     >
       <Icon className="size-4.5 shrink-0 transition-transform group-hover:scale-110 group-data-[status=active]:text-primary" />
       <span className="truncate">{label}</span>
@@ -116,8 +110,8 @@ function AppShellInner() {
   return (
     <div className="min-h-screen bg-background">
       {/* Desktop sidebar */}
-      <aside className="fixed top-0 left-0 hidden h-screen w-64 flex-col border-r border-sidebar-border bg-sidebar p-4 lg:flex">
-        <Link to="/" className="tap mb-8 px-2 pt-2">
+      <aside className="fixed top-0 left-0 hidden h-screen w-64 flex-col border-r border-sidebar-border bg-sidebar p-5 lg:flex">
+        <Link to="/" className="tap mb-10 px-2 pt-1">
           <Logo />
         </Link>
 
@@ -127,17 +121,9 @@ function AppShellInner() {
           ))}
         </nav>
 
-        <div className="my-4 h-px bg-sidebar-border" />
-
-        <nav className="flex flex-col gap-1">
-          {secondaryNav.map((item) => (
-            <SideItem key={item.to} {...item} />
-          ))}
-        </nav>
-
-        <div className="mt-auto rounded-2xl bg-surface p-4">
+        <div className="mt-auto rounded-lg border border-sidebar-border bg-surface p-4">
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Sparkles className="size-3.5 text-primary" />
+            <Zap className="size-3.5 text-xp" />
             Nível {level.level} · {level.name}
           </div>
           <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-muted">
@@ -150,16 +136,21 @@ function AppShellInner() {
             {level.maxed ? `${level.xp} XP` : `${level.xp} / ${level.xpToNext} XP`}
           </p>
         </div>
+        <Link
+          to="/app/configuracoes"
+          className="tap mt-3 flex items-center gap-3 rounded-lg px-3 py-2.5 text-xs text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"
+        >
+          <Settings className="size-4" /> Configurações
+        </Link>
       </aside>
 
       {/* Mobile top bar */}
-      <header className="sticky top-0 z-30 flex items-center justify-between border-b border-border bg-background/80 px-4 pt-[calc(0.75rem+env(safe-area-inset-top))] pb-3 backdrop-blur-xl lg:hidden">
+      <header className="sticky top-0 z-30 flex items-center justify-between border-b border-border bg-background/90 px-4 pt-[calc(0.75rem+env(safe-area-inset-top))] pb-3 backdrop-blur-xl lg:hidden">
         <Link to="/" className="tap">
           <Logo />
         </Link>
         <div className="flex items-center gap-2">
-          {/* O sino saiu: era um botão sem função, no canto mais difícil de alcançar com uma mão. */}
-          <span className="flex items-center gap-1.5 rounded-full bg-xp/15 px-2.5 py-1 text-xs font-semibold text-xp">
+          <span className="flex items-center gap-1.5 rounded-md bg-xp/15 px-2.5 py-1 text-xs font-semibold text-xp">
             <Zap className="size-3.5" />
             {stats.totalXp}
           </span>
@@ -173,9 +164,9 @@ function AppShellInner() {
         // e um transform aqui faz o <main> virar o containing block de todo `position: fixed`
         // que estiver dentro dele. Com `backwards` o preenchimento vale só antes de começar, o
         // visual da entrada é idêntico, e o transform some quando a animação termina.
-        className="animate-[fade-up_0.5s_cubic-bezier(0.16,1,0.3,1)_backwards] px-4 pt-6 pb-[calc(8rem+env(safe-area-inset-bottom))] sm:px-6 lg:ml-64 lg:px-10 lg:pt-10 lg:pb-16"
+        className="animate-[fade-up_0.5s_cubic-bezier(0.16,1,0.3,1)_backwards] px-4 pt-6 pb-[calc(8rem+env(safe-area-inset-bottom))] sm:px-6 lg:ml-64 lg:px-12 lg:pt-9 lg:pb-16"
       >
-        <div className="mx-auto w-full max-w-5xl">
+        <div className="mx-auto w-full max-w-6xl">
           {!hydrated ? <RouteLoading /> : needsOnboarding ? <OnboardingGate /> : <Outlet />}
         </div>
       </main>

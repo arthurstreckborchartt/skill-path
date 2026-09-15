@@ -93,10 +93,10 @@ function NodeCard({
     <button
       onClick={onSelect}
       className={cn(
-        "tap group w-full rounded-3xl border p-4 text-left transition-all duration-300",
+        "tap group w-full rounded-lg border p-4 text-left transition-all duration-300",
         "border-border bg-surface/70 hover:-translate-y-0.5 hover:border-primary/30",
         active &&
-          "border-primary/50 bg-primary/[0.06] shadow-[0_18px_50px_-30px_var(--color-primary)]",
+           "border-primary/50 bg-primary/[0.06] shadow-[var(--shadow-soft)]",
         locked && "opacity-70",
         align === "right" && "lg:text-right",
       )}
@@ -304,7 +304,7 @@ export function StepDetail({
     <div className="relative space-y-5">
       {justCompleted && (
         <div className="pointer-events-none absolute inset-0 z-10 grid place-items-center">
-          <div className="animate-[pop_0.4s_cubic-bezier(0.34,1.56,0.64,1)_both] rounded-3xl border border-primary/40 bg-surface/95 px-6 py-5 text-center backdrop-blur">
+          <div className="animate-[pop_0.4s_cubic-bezier(0.34,1.56,0.64,1)_both] rounded-lg border border-primary/40 bg-surface/95 px-6 py-5 text-center backdrop-blur">
             <div className="mx-auto grid size-12 place-items-center rounded-2xl bg-primary text-primary-foreground">
               <Check className="size-6" />
             </div>
@@ -563,7 +563,7 @@ export function StepActions({
       <Link
         to="/app/planos"
         className={cn(
-          "tap inline-flex items-center justify-center gap-2 rounded-full bg-signal px-5 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-glow)] hover:brightness-110",
+            "tap inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-glow)] hover:bg-primary/90",
           full ? "h-12 w-full" : "h-10",
         )}
       >

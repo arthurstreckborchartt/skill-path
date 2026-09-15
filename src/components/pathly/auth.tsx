@@ -13,11 +13,7 @@ export function AuthLayout({
   children: ReactNode;
 }) {
   return (
-    <div className="relative grid min-h-screen lg:grid-cols-[1.05fr_1fr]">
-      <div
-        aria-hidden
-        className="animate-[drift_20s_ease-in-out_infinite_alternate] pointer-events-none absolute -top-40 -left-32 size-[38rem] rounded-full bg-primary/10 blur-[130px]"
-      />
+    <div className="relative grid min-h-screen lg:grid-cols-[0.9fr_1.1fr]">
 
       {/* Form side */}
       <div className="flex flex-col px-5 pt-[calc(2rem+env(safe-area-inset-top))] pb-[calc(2rem+env(safe-area-inset-bottom))] sm:px-10">
@@ -34,12 +30,8 @@ export function AuthLayout({
       </div>
 
       {/* Visual side */}
-      <aside className="relative hidden overflow-hidden border-l border-border bg-surface/40 lg:block">
-        <div
-          aria-hidden
-          className="animate-[drift_22s_ease-in-out_infinite_alternate] absolute top-1/4 left-1/3 size-[32rem] rounded-full bg-accent/12 blur-[120px]"
-        />
-        <div className="relative flex h-full flex-col justify-center gap-4 p-14">
+      <aside className="relative hidden overflow-hidden border-l border-border bg-foreground text-background lg:block">
+        <div className="relative flex h-full flex-col justify-center gap-0 p-14">
           {[
             { label: "R$ 2.600", note: "onde você está" },
             { label: "Habilidades certas", note: "na ordem que faz sentido" },
@@ -49,18 +41,18 @@ export function AuthLayout({
           ].map((row, i) => (
             <div
               key={row.label}
-              className="animate-[fade-up_0.7s_cubic-bezier(0.16,1,0.3,1)_both] flex items-center justify-between rounded-2xl bg-surface/70 px-6 py-5"
+               className="animate-[fade-up_0.7s_cubic-bezier(0.16,1,0.3,1)_both] flex items-center justify-between border-b border-background/10 px-1 py-6"
               style={{ animationDelay: `${i * 110}ms` }}
             >
               <span
                 className={cn(
-                  "font-display text-xl font-semibold",
+                   "font-display text-xl font-semibold text-background",
                   row.highlight && "text-primary",
                 )}
               >
                 {row.label}
               </span>
-              <span className="text-xs text-muted-foreground">{row.note}</span>
+               <span className="text-xs text-background/50">{row.note}</span>
             </div>
           ))}
         </div>

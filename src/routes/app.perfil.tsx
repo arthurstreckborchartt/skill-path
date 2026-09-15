@@ -1,5 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { Flame, Pencil, Sparkles, Trophy, User, Zap } from "lucide-react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { ArrowRight, Flame, Gem, Settings, Sparkles, Trophy, User, Zap } from "lucide-react";
 import {
   AnimatedNumber,
   Btn,
@@ -9,7 +9,6 @@ import {
   ProgressBar,
   Reveal,
 } from "@/components/pathly/ui";
-import { skills, user } from "@/lib/mock";
 import { levelFromXp, type StepView } from "@/lib/route-map";
 import { useRouteProgressContext } from "@/lib/route-progress-context";
 import type { SkillLevel } from "@/lib/onboarding";
@@ -76,14 +75,13 @@ function ProfilePage() {
   // Rota personalizada: mistura o que a pessoa já sabia (onboarding) com o que já dominou
   // completando etapas. Rota demo: mantém os níveis fixos do mock, que existem só pra ilustrar
   // a tela antes de qualquer onboarding real.
-  const topSkills = profile.isPersonalized
-    ? [
+  const topSkills = [
         ...stats.skills.map((name) => ({ name, level: 90 })),
         ...profile.declaredSkills
           .filter((s) => !stats.skills.includes(s.name))
           .map((s) => ({ name: s.name, level: SKILL_LEVEL_PCT[s.level] })),
-      ].slice(0, 4)
-    : [...skills].sort((a, b) => b.level - a.level).slice(0, 4);
+      ].slice(0, 4);
+  const initials = profile.firstName ? profile.firstName.slice(0, 2).toUpperCase() : null;
 
   return (
     <div className="space-y-6">
@@ -91,9 +89,7 @@ function ProfilePage() {
         title="Perfil"
         subtitle="O cenário que gerou a sua rota"
         action={
-          <Btn variant="soft" size="sm">
-            <Pencil className="size-4" /> Editar
-          </Btn>
+          <Link to="/app/configuracoes"><Btn variant="soft" size="sm"><Settings className="size-4" /> Ajustes</Btn></Link>
         }
       />
 
@@ -101,15 +97,14 @@ function ProfilePage() {
         <Panel>
           <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
             <span className="grid size-16 shrink-0 place-items-center rounded-3xl bg-signal font-display text-xl font-semibold text-primary-foreground shadow-[var(--shadow-glow)]">
-              {profile.firstName ? user.initials : <User className="size-6" />}
+              {initials ?? <User className="size-6" />}
             </span>
             <div className="min-w-0 flex-1">
               <h2 className="truncate font-display text-xl font-semibold">
-                {profile.firstName ? user.name : profile.role}
+                {profile.firstName || profile.role}
               </h2>
               <p className="truncate text-sm text-muted-foreground">
-                {profile.firstName ? `${profile.role} → ` : "→ "}
-                {profile.target}
+                 {profile.role} → {profile.target}
               </p>
               <div className="mt-3 flex flex-wrap gap-2">
                 <Chip tone="primary">
@@ -228,6 +223,13 @@ function ProfilePage() {
             ))}
           </div>
         </Panel>
+      </Reveal>
+
+      <Reveal delay={240}>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Link to="/app/planos" className="group flex items-center justify-between rounded-lg border border-border bg-surface p-5 shadow-[var(--shadow-soft)]"><span className="flex items-center gap-3"><Gem className="size-5 text-primary" /><span><span className="block font-display font-semibold">Plano Pathly</span><span className="mt-1 block text-xs text-muted-foreground">Veja seu plano e acesso à rota</span></span></span><ArrowRight className="size-4 text-muted-foreground transition-transform group-hover:translate-x-1" /></Link>
+          <Link to="/app/configuracoes" className="group flex items-center justify-between rounded-lg border border-border bg-surface p-5 shadow-[var(--shadow-soft)]"><span className="flex items-center gap-3"><Settings className="size-5 text-primary" /><span><span className="block font-display font-semibold">Configurações</span><span className="mt-1 block text-xs text-muted-foreground">Conta, aparência e nova rota</span></span></span><ArrowRight className="size-4 text-muted-foreground transition-transform group-hover:translate-x-1" /></Link>
+        </div>
       </Reveal>
     </div>
   );
