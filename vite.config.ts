@@ -7,8 +7,19 @@
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 import { mcpPlugin } from "@lovable.dev/mcp-js/stacks/tanstack/vite";
 
+/**
+ * O mcpPlugin quebra o build no Windows: ele normaliza o diretório pai para barras normais
+ * ("C:/...") e depois compara com `child.startsWith(parent + path.sep)`, onde path.sep é "\".
+ * A comparação nunca casa e ele aborta com "routesDir must resolve under".
+ * Em macOS e Linux path.sep já é "/", então lá passa — e é por isso que o deploy não quebrou.
+ *
+ * Enquanto o @lovable.dev/mcp-js não corrigir, ele fica fora só no Windows. O endpoint MCP
+ * continua funcionando no deploy. Para remover esta condição, teste `bun run build` no Windows.
+ */
+const isWindows = process.platform === "win32";
+
 export default defineConfig({
-  plugins: [mcpPlugin()],
+  plugins: isWindows ? [] : [mcpPlugin()],
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this
