@@ -13,7 +13,6 @@ import * as Sentry from "@sentry/react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
-import { initTelemetry } from "../lib/telemetry";
 import { THEME_INIT_SCRIPT, useSystemThemeSync } from "../lib/theme";
 
 function NotFoundComponent() {
@@ -158,10 +157,6 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
   useSystemThemeSync();
-
-  useEffect(() => {
-    initTelemetry();
-  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>
