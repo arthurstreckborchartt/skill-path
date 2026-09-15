@@ -90,10 +90,11 @@ function ProjectsPage() {
         </div>
       </Reveal>
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="divide-y divide-border border-y border-border">
         {list.map((p, i) => (
           <Reveal key={p.id} delay={i * 70}>
-            <Panel tilt className="flex h-full flex-col">
+            <article className="grid gap-5 py-7 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+              <div>
               <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
                 <h3 className="min-w-0 font-display text-lg font-semibold">{p.title}</h3>
                 <Chip
@@ -126,7 +127,8 @@ function ProjectsPage() {
                 <ProgressBar value={p.progress} delay={220 + i * 90} />
               </div>
 
-              <div className="mt-auto pt-5">
+              </div>
+              <div className="sm:w-48">
                 <Link
                   to="/app/rota"
                   className="tap inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
@@ -134,7 +136,7 @@ function ProjectsPage() {
                   Etapa: {p.stepTitle} <ArrowUpRight className="size-4" />
                 </Link>
               </div>
-            </Panel>
+            </article>
           </Reveal>
         ))}
       </div>

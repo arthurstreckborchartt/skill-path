@@ -108,7 +108,7 @@ function RoutePage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Minha rota"
+        title="Caminhos"
         subtitle={`${profile.firstName ? `${profile.firstName}, ` : ""}${stats.percent}% da rota concluída — de R$ ${profile.currentIncome.toLocaleString("pt-BR")} até R$ ${profile.goalIncome.toLocaleString("pt-BR")}`}
         action={
           <Chip tone="primary">
