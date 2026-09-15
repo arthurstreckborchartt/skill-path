@@ -12,10 +12,10 @@ export const Route = createFileRoute("/app/habilidades")({
         name: "description",
         content: "Seu mapa de habilidades: o que já domina, o que falta e o que o mercado pede.",
       },
-      { property: "og:title", content: "Mapa de habilidades — Pathly" },
+      { property: "og:title", content: "Aprender — Pathly" },
       {
         property: "og:description",
-        content: "Nível atual de cada habilidade e sua demanda no mercado.",
+        content: "Aprenda as habilidades da sua rota na ordem certa para avançar.",
       },
     ],
   }),

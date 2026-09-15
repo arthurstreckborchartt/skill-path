@@ -146,7 +146,7 @@ function Dashboard() {
             <ol className="relative flex justify-between gap-2">
               {views.map((step) => (
                 <li key={step.id} className="flex max-w-24 flex-1 flex-col items-center text-center">
-                  <span className={cn("grid size-8 place-items-center rounded-lg border bg-background text-xs font-semibold", step.state === "concluído" && "border-primary bg-primary text-primary-foreground", step.state === "atual" && "border-primary text-primary shadow-[0_0_0_4px_color-mix(in_oklab,var(--color-primary)_12%,transparent)]", (step.state === "futuro" || step.state === "bloqueado") && "border-border text-muted-foreground")}>{step.state === "concluído" ? <Check className="size-4" /> : step.state === "bloqueado" ? <Lock className="size-3.5" /> : step.order}</span>
+                  <span className={cn("grid size-8 place-items-center rounded-lg border bg-background text-xs font-semibold", step.state === "concluído" && "border-primary bg-primary text-primary-foreground", step.state === "atual" && "border-primary text-primary ring-4 ring-primary/10", (step.state === "futuro" || step.state === "bloqueado") && "border-border text-muted-foreground")}>{step.state === "concluído" ? <Check className="size-4" /> : step.state === "bloqueado" ? <Lock className="size-3.5" /> : step.order}</span>
                   <span className="mt-2 hidden text-[10px] leading-tight text-muted-foreground sm:line-clamp-2">{step.title}</span>
                 </li>
               ))}
