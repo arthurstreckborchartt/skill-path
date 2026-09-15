@@ -8,10 +8,14 @@ import {
   Heading,
   Hr,
   Html,
+  Img,
   Preview,
   Section,
   Text,
 } from '@react-email/components'
+import logoAsset from '@/assets/pathly-email-logo.png.asset.json'
+
+const LOGO_URL = `https://pathlyapp.app${logoAsset.url}`
 
 interface EmailLayoutProps {
   preview: string
@@ -37,7 +41,13 @@ export function EmailLayout({
       <Body style={main}>
         <Container style={container}>
           <Section style={brandRow}>
-            <Text style={brandMark}>P</Text>
+            <Img
+              src={LOGO_URL}
+              width="42"
+              height="42"
+              alt="Pathly"
+              style={brandMark}
+            />
             <Text style={brand}>Pathly</Text>
           </Section>
           <Text style={eyebrowStyle}>{eyebrow}</Text>
@@ -103,16 +113,9 @@ const container = {
 const brandRow = { margin: '0 0 40px' }
 
 const brandMark = {
-  backgroundColor: '#16d3ad',
-  borderRadius: '6px',
-  color: '#073b34',
   display: 'inline-block',
-  fontSize: '16px',
-  fontWeight: '700' as const,
-  lineHeight: '30px',
   margin: '0 10px 0 0',
-  textAlign: 'center' as const,
-  width: '30px',
+  verticalAlign: 'middle',
 }
 
 const brand = {
