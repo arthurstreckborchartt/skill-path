@@ -85,8 +85,8 @@ function CheckoutPathly({
           </div>
         </header>
 
-        <main className="grid flex-1 items-center gap-8 py-8 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16 lg:py-12">
-          <section className="animate-fade-up lg:pr-4">
+        <main className="grid flex-1 items-center gap-8 py-5 sm:py-8 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16 lg:py-12">
+          <section className="order-2 animate-fade-up lg:order-1 lg:pr-4">
             <Btn variant="ghost" size="sm" className="-ml-4 mb-7" onClick={onClose} disabled={ocupado}>
               <ArrowLeft className="size-4" /> Voltar aos planos
             </Btn>
@@ -111,7 +111,15 @@ function CheckoutPathly({
             </div>
           </section>
 
-          <section className="animate-fade-up [animation-delay:100ms]">
+          <section className="order-1 animate-fade-up [animation-delay:100ms] lg:order-2">
+            <div className="mb-4 flex items-center justify-between lg:hidden">
+              <Btn variant="ghost" size="sm" className="-ml-4" onClick={onClose} disabled={ocupado}>
+                <ArrowLeft className="size-4" /> Planos
+              </Btn>
+              <Chip tone="primary">
+                <Sparkles className="size-3" /> 14 dias grátis
+              </Chip>
+            </div>
             <div className="overflow-hidden rounded-[var(--radius-xl)] border border-primary/30 bg-card shadow-[var(--shadow-lift)]">
               <div className="bg-signal p-5 text-primary-foreground sm:p-6">
                 <div className="flex items-center justify-between gap-4">
