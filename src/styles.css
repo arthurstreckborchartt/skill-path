@@ -12,8 +12,8 @@
  */
 
 @theme inline {
-  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
-  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Urbanist", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Epilogue", ui-sans-serif, system-ui, sans-serif;
 
   --radius-sm: calc(var(--radius) - 6px);
   --radius-md: calc(var(--radius) - 3px);
@@ -92,26 +92,26 @@
  */
 :root {
   color-scheme: light;
-  --radius: 1rem;
-  --background: oklch(0.975 0.006 245);
-  --foreground: oklch(0.24 0.025 258);
-  --surface: oklch(0.995 0.003 245);
-  --surface-2: oklch(0.955 0.008 245);
-  --card: oklch(0.995 0.003 245);
-  --card-foreground: oklch(0.24 0.025 258);
-  --popover: oklch(0.995 0.003 245);
-  --popover-foreground: oklch(0.24 0.025 258);
+  --radius: 0.75rem;
+  --background: oklch(0.975 0.006 155);
+  --foreground: oklch(0.19 0.018 158);
+  --surface: oklch(0.995 0.003 155);
+  --surface-2: oklch(0.95 0.01 155);
+  --card: oklch(0.995 0.003 155);
+  --card-foreground: oklch(0.19 0.018 158);
+  --popover: oklch(0.995 0.003 155);
+  --popover-foreground: oklch(0.19 0.018 158);
   /* Estes valores foram escolhidos medindo contraste contra --background, não no olho:
      todos passam 4,5:1 como texto. Ao mexer, meça de novo. */
-  --primary: oklch(0.5 0.115 175);
-  --primary-foreground: oklch(0.99 0.005 180);
-  --secondary: oklch(0.945 0.01 245);
-  --secondary-foreground: oklch(0.26 0.025 258);
-  --muted: oklch(0.945 0.008 245);
-  --muted-foreground: oklch(0.47 0.022 258);
-  --accent: oklch(0.52 0.13 245);
+  --primary: oklch(0.49 0.105 158);
+  --primary-foreground: oklch(0.99 0.004 155);
+  --secondary: oklch(0.94 0.013 155);
+  --secondary-foreground: oklch(0.23 0.02 158);
+  --muted: oklch(0.94 0.009 155);
+  --muted-foreground: oklch(0.48 0.018 158);
+  --accent: oklch(0.73 0.12 87);
   --accent-foreground: oklch(0.99 0.005 245);
-  --xp: oklch(0.52 0.12 68);
+  --xp: oklch(0.65 0.12 82);
   --xp-foreground: oklch(0.99 0.005 80);
   --success: oklch(0.49 0.12 155);
   --success-foreground: oklch(0.99 0.005 160);
@@ -119,38 +119,33 @@
   --warning-foreground: oklch(0.99 0.005 80);
   --destructive: oklch(0.52 0.19 25);
   --destructive-foreground: oklch(0.99 0.005 250);
-  --border: oklch(0.24 0.03 258 / 15%);
-  --input: oklch(0.24 0.03 258 / 30%);
-  --ring: oklch(0.5 0.115 175 / 45%);
+  --border: oklch(0.25 0.025 158 / 13%);
+  --input: oklch(0.25 0.025 158 / 24%);
+  --ring: oklch(0.49 0.105 158 / 42%);
   --chart-1: oklch(0.5 0.115 175);
   --chart-2: oklch(0.52 0.13 245);
   --chart-3: oklch(0.57 0.13 68);
   --chart-4: oklch(0.5 0.13 300);
   --chart-5: oklch(0.55 0.16 20);
-  --sidebar: oklch(0.985 0.005 245);
-  --sidebar-foreground: oklch(0.26 0.025 258);
-  --sidebar-primary: oklch(0.5 0.115 175);
+  --sidebar: oklch(0.955 0.012 155);
+  --sidebar-foreground: oklch(0.23 0.02 158);
+  --sidebar-primary: oklch(0.49 0.105 158);
   --sidebar-primary-foreground: oklch(0.99 0.005 180);
-  --sidebar-accent: oklch(0.945 0.01 245);
-  --sidebar-accent-foreground: oklch(0.24 0.025 258);
-  --sidebar-border: oklch(0.24 0.03 258 / 11%);
-  --sidebar-ring: oklch(0.5 0.115 175 / 40%);
+  --sidebar-accent: oklch(0.91 0.026 155);
+  --sidebar-accent-foreground: oklch(0.2 0.025 158);
+  --sidebar-border: oklch(0.25 0.025 158 / 10%);
+  --sidebar-ring: oklch(0.49 0.105 158 / 40%);
 
   /* No claro o gradiente precisa ser escuro o bastante para carregar texto branco em cima. */
-  --gradient-signal: linear-gradient(
-    135deg,
-    oklch(0.53 0.12 172) 0%,
-    oklch(0.51 0.12 205) 55%,
-    oklch(0.49 0.13 248) 100%
-  );
+  --gradient-signal: linear-gradient(135deg, oklch(0.46 0.105 158), oklch(0.55 0.11 165));
   --gradient-halo: radial-gradient(
     60% 60% at 50% 0%,
     color-mix(in oklab, var(--primary) 12%, transparent) 0%,
     transparent 70%
   );
-  --shadow-soft: 0 1px 2px oklch(0.24 0.03 258 / 0.06), 0 12px 40px -18px oklch(0.24 0.03 258 / 0.18);
-  --shadow-lift: 0 2px 6px oklch(0.24 0.03 258 / 0.08), 0 28px 60px -28px oklch(0.24 0.03 258 / 0.22);
-  --shadow-glow: 0 16px 44px -22px color-mix(in oklab, var(--primary) 55%, transparent);
+  --shadow-soft: 0 1px 2px oklch(0.19 0.02 158 / 0.04), 0 16px 40px -28px oklch(0.19 0.02 158 / 0.2);
+  --shadow-lift: 0 2px 4px oklch(0.19 0.02 158 / 0.05), 0 24px 54px -30px oklch(0.19 0.02 158 / 0.24);
+  --shadow-glow: 0 16px 36px -24px color-mix(in oklab, var(--primary) 45%, transparent);
 }
 
 .dark {
@@ -257,7 +252,7 @@
   h3,
   h4 {
     font-family: var(--font-display);
-    letter-spacing: -0.025em;
+    letter-spacing: 0;
   }
 
   ::selection {
@@ -322,9 +317,9 @@
 
 /* Surfaces: soft, borderless-feeling panels instead of heavy cards */
 @utility panel {
-  background: color-mix(in oklab, var(--surface) 88%, transparent);
+  background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius-2xl);
+  border-radius: var(--radius-lg);
   box-shadow: var(--shadow-soft);
 }
 
@@ -334,7 +329,7 @@
     box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1),
     border-color 0.35s ease;
   &:hover {
-    transform: translateY(-3px);
+    transform: translateY(-2px);
     border-color: color-mix(in oklab, var(--primary) 30%, transparent);
     box-shadow: var(--shadow-lift);
   }

@@ -8,7 +8,7 @@ export function Logo({ className, compact }: { className?: string; compact?: boo
     // coarse:min-h-11 — a logo costuma ser link de volta para o início; em tela de toque
     // precisa dos 44px mesmo sendo visualmente menor.
     <span className={cn("flex items-center gap-2.5 coarse:min-h-11", className)}>
-      <span className="relative grid size-8 shrink-0 place-items-center rounded-xl bg-signal shadow-[var(--shadow-glow)]">
+      <span className="relative grid size-8 shrink-0 place-items-center rounded-lg bg-signal shadow-[var(--shadow-glow)]">
         <svg viewBox="0 0 24 24" className="size-4" fill="none" aria-hidden="true">
           {/* A marca fica sobre o gradiente de ação nos dois temas, então segue o token que
               já é o "texto sobre a cor primária" — sem cor fixa. */}
@@ -38,11 +38,11 @@ type BtnProps = {
 } & React.ButtonHTMLAttributes<HTMLButtonElement>;
 
 const btnBase =
-  "tap inline-flex items-center justify-center gap-2 rounded-full font-medium whitespace-nowrap outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50";
+  "tap inline-flex items-center justify-center gap-2 rounded-lg font-semibold whitespace-nowrap outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50";
 
 export const btnStyles = {
   primary:
-    "bg-signal text-primary-foreground shadow-[var(--shadow-glow)] hover:brightness-110 font-semibold",
+    "bg-primary text-primary-foreground shadow-[var(--shadow-glow)] hover:bg-primary/90",
   soft: "bg-surface-2 text-foreground hover:bg-surface-2/70",
   outline: "border border-border text-foreground hover:border-primary/40 hover:bg-surface/60",
   ghost: "text-muted-foreground hover:text-foreground hover:bg-surface/60",
@@ -118,7 +118,7 @@ export function Chip({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium",
+        "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium",
         tones[tone],
         className,
       )}
@@ -341,7 +341,7 @@ export function Skeleton({ className }: { className?: string }) {
 
 export function SectionLabel({ children }: { children: ReactNode }) {
   return (
-    <span className="text-xs font-semibold tracking-[0.18em] text-primary uppercase">
+    <span className="text-xs font-semibold tracking-[0.12em] text-primary uppercase">
       {children}
     </span>
   );
