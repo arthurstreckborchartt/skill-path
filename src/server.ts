@@ -1,5 +1,7 @@
 import "./lib/error-capture";
 
+import { captureException, withSentry } from "@sentry/cloudflare";
+
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
 
@@ -28,7 +30,9 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
   const body = await response.clone().text();
   if (!isH3SwallowedErrorBody(body)) return response;
 
-  console.error(consumeLastCapturedError() ?? new Error(`h3 swallowed SSR error: ${body}`));
+  const erro = consumeLastCapturedError() ?? new Error(`h3 swallowed SSR error: ${body}`);
+  console.error(erro);
+  captureException(erro);
   return new Response(renderErrorPage(), {
     status: 500,
     headers: { "content-type": "text/html; charset=utf-8" },
@@ -44,18 +48,41 @@ function isH3SwallowedErrorBody(body: string): boolean {
   }
 }
 
-export default {
+/**
+ * O SDK do Cloudflare, e não o de Node que a documentação do TanStack Start sugere: este app
+ * roda em Workers (nitro preset cloudflare-module), onde não existe flag `--import` nem as APIs
+ * de Node que a instrumentação automática usa.
+ *
+ * Sem DSN a função devolve undefined e o SDK não inicializa — mesmo comportamento do cliente.
+ */
+const sentryOptions = (env: unknown) => {
+  const dsn =
+    (env as { VITE_SENTRY_DSN?: string } | undefined)?.VITE_SENTRY_DSN ??
+    import.meta.env["VITE_SENTRY_DSN"];
+  if (!dsn) return undefined;
+  return {
+    dsn,
+    environment: import.meta.env.MODE,
+    sendDefaultPii: false,
+    tracesSampleRate: 0.1,
+  };
+};
+
+export default withSentry(sentryOptions, {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
       return await normalizeCatastrophicSsrResponse(response);
     } catch (error) {
+      // captureException explícito: o try/catch abaixo devolve a página de erro e o erro nunca
+      // sobe, então o wrapper sozinho não veria nada.
       console.error(error);
+      captureException(error);
       return new Response(renderErrorPage(), {
         status: 500,
         headers: { "content-type": "text/html; charset=utf-8" },
       });
     }
   },
-};
+});
