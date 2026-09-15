@@ -3,6 +3,7 @@ import { LegalPage } from "@/components/pathly/legal-page";
 import { TERMS_OF_USE } from "@/lib/legal";
 
 export const Route = createFileRoute("/termos")({
+  staticData: { sitemap: true },
   head: () => ({
     meta: [
       { title: "Termos de Uso — Pathly" },

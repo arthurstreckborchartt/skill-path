@@ -3,6 +3,7 @@ import { LegalPage } from "@/components/pathly/legal-page";
 import { PRIVACY_POLICY } from "@/lib/legal";
 
 export const Route = createFileRoute("/privacidade")({
+  staticData: { sitemap: true },
   head: () => ({
     meta: [
       { title: "Política de Privacidade — Pathly" },

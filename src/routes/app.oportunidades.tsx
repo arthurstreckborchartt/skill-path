@@ -6,6 +6,7 @@ import { opportunities } from "@/lib/mock";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/app/oportunidades")({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [
       { title: "Oportunidades (prévia) — Pathly" },

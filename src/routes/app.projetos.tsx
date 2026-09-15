@@ -6,6 +6,7 @@ import { useRouteProgressContext } from "@/lib/route-progress-context";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/app/projetos")({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [
       { title: "Projetos — Pathly" },

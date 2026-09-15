@@ -15,6 +15,7 @@ import { useRouteProgressContext } from "@/lib/route-progress-context";
 import type { SkillLevel } from "@/lib/onboarding";
 
 export const Route = createFileRoute("/app/perfil")({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [
       { title: "Perfil — Pathly" },

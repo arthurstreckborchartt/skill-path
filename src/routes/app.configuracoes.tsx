@@ -26,6 +26,7 @@ import {
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/app/configuracoes")({
+  staticData: { sitemap: false },
   head: () => ({
     meta: [
       { title: "Configurações — Pathly" },
