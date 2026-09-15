@@ -9,6 +9,15 @@ import type { RouteStep } from "@/lib/route-map";
 
 const CHAVE = "pathly.route.ia.v1";
 
+/**
+ * Avisa que uma rota nova chegou.
+ *
+ * Existe porque a geração pode terminar DEPOIS de a pessoa já estar olhando a rota: a tela de
+ * "montando sua rota" espera só até um teto, e quem não couber nele continua em segundo plano.
+ * Sem este aviso a rota da IA ficaria guardada sem ninguém ler até o próximo carregamento.
+ */
+export const EVENTO_ROTA_IA = "pathly:rota-ia";
+
 export type RotaSalva = { papel: string; signature: string; steps: RouteStep[] };
 
 export function lerRotaIA(): RotaSalva | null {
@@ -30,6 +39,13 @@ function salvarRotaIA(rota: RotaSalva): void {
     window.localStorage.setItem(CHAVE, JSON.stringify(rota));
   } catch {
     // Storage cheio ou bloqueado: a rota continua valendo nesta sessão.
+  }
+  // Depois de gravar, mesmo que a gravação tenha falhado: quem escuta relê do storage, e um
+  // aviso sem storage é melhor que silêncio.
+  try {
+    window.dispatchEvent(new CustomEvent(EVENTO_ROTA_IA));
+  } catch {
+    // Ambiente sem window (não deveria acontecer aqui): nada a fazer.
   }
 }
 

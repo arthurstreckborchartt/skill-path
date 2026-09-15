@@ -3,7 +3,7 @@ import { useSession } from "@/lib/auth";
 import { loadCloudProfile, loadCloudRouteProgress, saveCloudRouteProgress } from "@/lib/cloud-sync";
 import { steps as baseSteps, user, type Difficulty, type Step } from "@/lib/mock";
 import { generateRoute, roleLabelForArea } from "@/lib/route-templates";
-import { lerRotaIA } from "@/lib/ia/cliente";
+import { EVENTO_ROTA_IA, lerRotaIA } from "@/lib/ia/cliente";
 import {
   experiences,
   goals,
@@ -312,6 +312,26 @@ export function useRouteProgress() {
   const [progress, setProgress] = useState<RouteProgress>(() => seedProgress(DEMO_STEPS, false));
   const [hydrated, setHydrated] = useState(false);
   const [celebrating, setCelebrating] = useState<{ id: string; xp: number } | null>(null);
+
+  /**
+   * Troca a rota quando a geração termina depois da tela de carregamento.
+   *
+   * A pessoa pode já estar vendo a rota por regras quando a da IA chega — é o desenho: a tela de
+   * "montando sua rota" espera só até um teto, para ninguém ficar preso um minuto olhando
+   * animação. Quem estourar o teto continua gerando em segundo plano e entra aqui.
+   *
+   * O progresso não é remontado de propósito: a assinatura da rota muda junto, e `seedProgress`
+   * do novo conjunto já começa zerado. Sobrescrever marcações de outra rota seria pior.
+   */
+  useEffect(() => {
+    function aoChegarRotaIA() {
+      const resolved = resolveActiveRoute();
+      setActive(resolved);
+      setProgress(seedProgress(resolved.steps, resolved.profile.isPersonalized));
+    }
+    window.addEventListener(EVENTO_ROTA_IA, aoChegarRotaIA);
+    return () => window.removeEventListener(EVENTO_ROTA_IA, aoChegarRotaIA);
+  }, []);
 
   useEffect(() => {
     if (sessionLoading) return;

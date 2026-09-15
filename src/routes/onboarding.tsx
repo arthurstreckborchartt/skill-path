@@ -584,24 +584,48 @@ function Onboarding() {
 
 /* ---------- building ---------- */
 
+/** Quanto a animação leva para completar os passos. É o piso da espera. */
+const DURACAO_ANIMACAO_MS = 500 + analysisSteps.length * 620 + 700;
+
+/**
+ * Teto da espera. Acima disto a pessoa vai para a rota por regras e a geração segue em segundo
+ * plano. 30s cobre o caminho bom com folga (~20s medidos) sem virar sala de espera.
+ */
+const TETO_ESPERA_MS = 30_000;
+
+/** Quando avisar que está demorando — depois da animação, senão o aviso aparece por nada. */
+const AVISO_MS = DURACAO_ANIMACAO_MS + 3_000;
+
 function BuildingScreen({ onDone, trabalho }: { onDone: () => void; trabalho: Promise<unknown> }) {
   const [done, setDone] = useState(0);
   const [demorando, setDemorando] = useState(false);
 
   useEffect(() => {
     const timers = analysisSteps.map((_, i) => setTimeout(() => setDone(i + 1), 500 + i * 620));
-    const aviso = setTimeout(() => setDemorando(true), 9000);
+    const aviso = setTimeout(() => setDemorando(true), AVISO_MS);
 
-    // A tela avança quando as DUAS coisas terminam: a animação e a geração. Antes ela era só um
-    // relógio, e cortar a chamada da IA no meio desperdiçaria uma requisição já paga. A promessa
-    // nunca rejeita — quem gera já trata a falha e devolve a rota por regras.
-    const animacao = new Promise<void>((r) =>
-      setTimeout(r, 500 + analysisSteps.length * 620 + 700),
-    );
+    /**
+     * A tela espera a geração, mas só até um teto.
+     *
+     * Esperar sem teto seria prender a pessoa: medimos gerações de 20s no caminho bom e mais de
+     * 60s quando o provedor gratuito está congestionado. Um minuto de animação é pior que
+     * qualquer rota.
+     *
+     * Passado o teto, seguimos com a rota por regras — que é completa — e a geração **continua
+     * em segundo plano**. Quando ela termina, a tela da rota troca sozinha (ver EVENTO_ROTA_IA).
+     * Cortar a chamada aqui seria jogar fora uma requisição já consumida da cota.
+     *
+     * O piso é a animação: chegar antes dela deixaria a tela piscar e passar.
+     */
+    const animacao = new Promise<void>((r) => setTimeout(r, DURACAO_ANIMACAO_MS));
+    const teto = new Promise<void>((r) => setTimeout(r, TETO_ESPERA_MS));
+
     let vivo = true;
-    void Promise.all([animacao, trabalho]).then(() => {
-      if (vivo) onDone();
-    });
+    void animacao
+      .then(() => Promise.race([trabalho, teto]))
+      .then(() => {
+        if (vivo) onDone();
+      });
 
     return () => {
       vivo = false;
@@ -670,7 +694,8 @@ function BuildingScreen({ onDone, trabalho }: { onDone: () => void; trabalho: Pr
           <ProgressBar value={(done / analysisSteps.length) * 100} delay={0} className="h-1" />
           {demorando && (
             <p className="mt-3 text-center text-xs text-muted-foreground">
-              Está levando um pouco mais que o normal. Não feche esta tela.
+              Está levando um pouco mais que o normal. Se demorar, sua rota abre mesmo assim e a
+              versão personalizada entra sozinha quando ficar pronta.
             </p>
           )}
         </div>
