@@ -98,6 +98,36 @@ export type Database = {
         }
         Relationships: []
       }
+      pathly_licoes: {
+        Row: {
+          chave: string
+          conteudo: Json
+          created_at: string
+          etapa: string
+          habilidades: string[]
+          modelo: string | null
+          tarefa: string
+        }
+        Insert: {
+          chave: string
+          conteudo: Json
+          created_at?: string
+          etapa: string
+          habilidades?: string[]
+          modelo?: string | null
+          tarefa: string
+        }
+        Update: {
+          chave?: string
+          conteudo?: Json
+          created_at?: string
+          etapa?: string
+          habilidades?: string[]
+          modelo?: string | null
+          tarefa?: string
+        }
+        Relationships: []
+      }
       pathly_profiles: {
         Row: {
           assinatura_ate: string | null
