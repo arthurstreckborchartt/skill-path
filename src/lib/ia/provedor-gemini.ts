@@ -12,7 +12,12 @@ import type { OnboardingProfile } from "@/lib/onboarding";
  * Obtenção da chave: aistudio.google.com/apikey, gratuito e sem cartão.
  */
 
-const MODELO_PADRAO = "gemini-2.0-flash";
+/**
+ * O nome do modelo é a parte mais perecível deste arquivo: o Google aposenta versões e a API
+ * responde com erro dizendo qual é a sucessora. Por isso ele é sobrescrevível por env
+ * (`GEMINI_MODELO`) — quando cair de novo, é variável de ambiente, não deploy de código.
+ */
+const MODELO_PADRAO = "gemini-3.6-flash";
 
 /**
  * O Gemini aceita um subconjunto do OpenAPI, não o JSON Schema completo: os tipos são em
@@ -75,13 +80,13 @@ type RespostaGemini = {
 export async function gerarComGemini(
   perfil: OnboardingProfile,
   apiKey: string | undefined,
-  modelo = MODELO_PADRAO,
+  modelo: string | undefined = MODELO_PADRAO,
 ): Promise<SaidaProvedor> {
   if (!apiKey) return { ok: false, motivo: "sem-chave" };
 
   try {
     const r = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent`,
+      `https://generativelanguage.googleapis.com/v1beta/models/${modelo || MODELO_PADRAO}:generateContent`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },

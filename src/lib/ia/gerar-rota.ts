@@ -20,6 +20,8 @@ export type Plano = "free" | "pro";
 export type ChavesIA = {
   anthropic: string | undefined;
   gemini: string | undefined;
+  /** Sobrescreve o modelo do Gemini sem novo deploy, para quando o Google aposentar o atual. */
+  geminiModelo?: string | undefined;
 };
 
 export type ResultadoGeracao =
@@ -50,7 +52,7 @@ export async function gerarRota(
     const saida =
       provedor.nome === "claude"
         ? await gerarComClaude(perfil, chave)
-        : await gerarComGemini(perfil, chave);
+        : await gerarComGemini(perfil, chave, chaves.geminiModelo);
 
     tentativas.push(`${provedor.nome}:${saida.ok ? "ok" : saida.motivo}`);
     if (saida.ok) return { ok: true, rota: saida.rota, provedor: provedor.nome };
