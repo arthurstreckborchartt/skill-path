@@ -13,11 +13,37 @@ import type { OnboardingProfile } from "@/lib/onboarding";
  */
 
 /**
- * O nome do modelo é a parte mais perecível deste arquivo: o Google aposenta versões e a API
- * responde com erro dizendo qual é a sucessora. Por isso ele é sobrescrevível por env
- * (`GEMINI_MODELO`) — quando cair de novo, é variável de ambiente, não deploy de código.
+ * Cadeia de modelos, em ordem de preferência.
+ *
+ * Medido, não escolhido por intuição: em 15/09/2026, `gemini-3.5-flash` respondeu em 1,1s
+ * enquanto `gemini-3.6-flash`, `gemini-flash-latest` e `gemini-flash-lite-latest` estavam todos
+ * em "high demand". O mais novo não é o mais disponível — modelo recém-lançado é justamente o
+ * mais disputado na camada gratuita.
+ *
+ * Cair para outro modelo vale mais que repetir no mesmo: quando um está congestionado, ele
+ * continua congestionado 4 segundos depois. `GEMINI_MODELO` sobrescreve a cadeia inteira.
  */
-const MODELO_PADRAO = "gemini-3.6-flash";
+const MODELOS_PADRAO = ["gemini-3.5-flash", "gemini-3.6-flash"];
+
+/**
+ * Os dois tetos vêm de medição, e o equilíbrio entre eles é a parte delicada.
+ *
+ * Uma geração que dá certo leva ~20s — é uma rota inteira de resposta. Um modelo congestionado,
+ * por outro lado, responde "high demand" em ~7s. Essa assimetria é o que faz a cadeia funcionar:
+ * o modelo ruim se elimina rápido e sobra tempo para o bom terminar.
+ *
+ * Daí os números: 30s por tentativa (uma geração de 20s cabe com folga — um teto menor mataria
+ * justamente as que iam dar certo, e eu quase cometi esse erro com 13s) e 40s de prazo total,
+ * que acomoda uma falha rápida seguida de um sucesso completo.
+ */
+const PRAZO_TOTAL_MS = 40_000;
+
+/**
+ * Teto por tentativa. Sem isto o prazo total não vale nada: checar o relógio ANTES de cada
+ * tentativa não impede que uma que começou dentro do prazo estoure sozinha — foi o que aconteceu,
+ * 41s numa corrida com teto declarado de 25s. Quem segura uma requisição em voo é o abort.
+ */
+const TETO_POR_TENTATIVA_MS = 30_000;
 
 /**
  * O Gemini aceita um subconjunto do OpenAPI, não o JSON Schema completo: os tipos são em
@@ -87,17 +113,55 @@ function vaiPassarSozinho(status: number, mensagem: string): boolean {
   return /high demand|overload|try again|temporar/i.test(mensagem);
 }
 
-const ESPERAS_MS = [1500, 4000];
+/** Pausa curta entre passadas na cadeia. Curta de propósito: o prazo total é o freio real. */
+const ESPERA_ENTRE_PASSADAS_MS = 1500;
 
 export async function gerarComGemini(
   perfil: OnboardingProfile,
   apiKey: string | undefined,
-  modelo: string | undefined = MODELO_PADRAO,
+  modelo: string | undefined = undefined,
 ): Promise<SaidaProvedor> {
   if (!apiKey) return { ok: false, motivo: "sem-chave" };
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelo || MODELO_PADRAO}:generateContent`;
-  const corpoRequisicao = JSON.stringify({
+  const modelos = modelo ? [modelo] : MODELOS_PADRAO;
+  const corpoRequisicao = montarCorpo(perfil);
+  const limite = Date.now() + PRAZO_TOTAL_MS;
+
+  let ultima: SaidaProvedor = { ok: false, motivo: "erro", detalhe: "nenhuma tentativa" };
+
+  // Duas passadas pela cadeia. A primeira tenta cada modelo uma vez — se o preferido está
+  // congestionado, o seguinte costuma responder na hora. A segunda existe para a falha que é
+  // mesmo momentânea, e só acontece se ainda houver tempo no relógio.
+  for (let passada = 0; passada < 2; passada++) {
+    if (passada > 0) {
+      if (Date.now() >= limite) break;
+      await new Promise((r) => setTimeout(r, ESPERA_ENTRE_PASSADAS_MS));
+    }
+
+    for (const m of modelos) {
+      if (Date.now() >= limite) return ultima;
+
+      // O menor entre o teto da tentativa e o que sobra do prazo total.
+      const restante = Math.min(TETO_POR_TENTATIVA_MS, limite - Date.now());
+      ultima = await umaTentativa(
+        `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent`,
+        apiKey,
+        corpoRequisicao,
+        restante,
+      );
+      if (ultima.ok) return ultima;
+
+      // Erro permanente (400, 403, 404) é problema nosso: não adianta trocar de modelo nem
+      // esperar, e insistir só faz a pessoa esperar o mesmo erro chegar de novo.
+      if (ultima.motivo !== "erro" || ultima.transitorio !== true) return ultima;
+    }
+  }
+
+  return ultima;
+}
+
+function montarCorpo(perfil: OnboardingProfile): string {
+  return JSON.stringify({
     system_instruction: { parts: [{ text: SISTEMA }] },
     contents: [
       {
@@ -117,41 +181,20 @@ ${resumirPerfil(perfil)}`,
       maxOutputTokens: 8192,
     },
   });
-
-  let ultima: SaidaProvedor = { ok: false, motivo: "erro", detalhe: "nenhuma tentativa" };
-
-  // Até 3 tentativas. O teto de espera somado é ~5,5s, escolhido contra a tela de "montando sua
-  // rota": ela já espera a geração terminar, e um minuto de silêncio ali é pior que uma falha.
-  for (let tentativa = 0; tentativa <= ESPERAS_MS.length; tentativa++) {
-    if (tentativa > 0) {
-      await new Promise((r) => setTimeout(r, ESPERAS_MS[tentativa - 1]));
-    }
-
-    ultima = await umaTentativa(url, apiKey, corpoRequisicao);
-    if (ultima.ok) return ultima;
-
-    const podeRepetir = ultima.motivo === "erro" && ultima.transitorio === true;
-    if (!podeRepetir) return ultima;
-
-    // 429 repetido é cota do dia, não congestionamento: parar é mais honesto que insistir.
-    if (ultima.status === 429 && tentativa >= 1) {
-      return { ok: false, motivo: "erro", detalhe: "cota gratuita esgotada" };
-    }
-  }
-
-  return ultima;
 }
 
 async function umaTentativa(
   url: string,
   apiKey: string,
   corpoRequisicao: string,
+  tetoMs: number,
 ): Promise<SaidaProvedor> {
   try {
     const r = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
       body: corpoRequisicao,
+      signal: AbortSignal.timeout(Math.max(1000, tetoMs)),
     });
 
     const corpo = (await r.json()) as RespostaGemini;
@@ -183,11 +226,16 @@ async function umaTentativa(
     if (!rota) return { ok: false, motivo: "invalida" };
     return { ok: true, rota };
   } catch (error) {
-    // Falha de rede: exatamente o tipo de coisa que passa na tentativa seguinte.
+    // Abort conta como transitório: o modelo estava lento, o próximo da cadeia pode não estar.
+    const abortou = error instanceof Error && error.name === "TimeoutError";
     return {
       ok: false,
       motivo: "erro",
-      detalhe: error instanceof Error ? error.message : undefined,
+      detalhe: abortou
+        ? "tempo esgotado nesta tentativa"
+        : error instanceof Error
+          ? error.message
+          : undefined,
       transitorio: true,
     };
   }
