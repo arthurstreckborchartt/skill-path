@@ -86,10 +86,42 @@ export function LearningSystemProvider({ children }: { children: ReactNode }) {
     void loadLearningCloud(session.user.id, route.signature)
       .then((snapshot) => {
         if (!active) return;
-        setProgress(snapshot.activities);
-        setMastery(snapshot.mastery);
-        setXpEvents(snapshot.xpEvents);
-        setProjects(snapshot.projects);
+        const localProgress = local?.progress ?? [];
+        const progressById = new Map(snapshot.activities.map((item) => [item.activityId, item]));
+        for (const item of localProgress) {
+          const cloudItem = progressById.get(item.activityId);
+          if (!cloudItem || new Date(item.updatedAt).getTime() > new Date(cloudItem.updatedAt).getTime()) {
+            progressById.set(item.activityId, item);
+            void saveActivityCloud(session.user.id, route.signature, item).catch(() => undefined);
+          }
+        }
+        const mergedMastery = new Map(snapshot.mastery.map((item) => [item.skillKey, item]));
+        for (const item of local?.mastery ?? []) {
+          const cloudItem = mergedMastery.get(item.skillKey);
+          if (!cloudItem || item.evidenceCount > cloudItem.evidenceCount) mergedMastery.set(item.skillKey, item);
+        }
+        const mergedXp = new Map(snapshot.xpEvents.map((item) => [item.eventKey, item]));
+        for (const item of local?.xpEvents ?? []) {
+          if (!mergedXp.has(item.eventKey)) {
+            mergedXp.set(item.eventKey, item);
+            void saveXpEventCloud(session.user.id, route.signature, item).catch(() => undefined);
+          }
+        }
+        const mergedProjects = new Map(snapshot.projects.map((item) => [item.projectId, item]));
+        for (const item of local?.projects ?? []) {
+          if (!mergedProjects.has(item.projectId)) {
+            mergedProjects.set(item.projectId, item);
+            void saveProjectCloud(session.user.id, route.signature, item).catch(() => undefined);
+          }
+        }
+        const masteryItems = [...mergedMastery.values()];
+        if (masteryItems.length > snapshot.mastery.length) {
+          void saveMasteryCloud(session.user.id, route.signature, masteryItems).catch(() => undefined);
+        }
+        setProgress([...progressById.values()]);
+        setMastery(masteryItems);
+        setXpEvents([...mergedXp.values()]);
+        setProjects([...mergedProjects.values()]);
         setStatus("synced");
         setError(null);
       })

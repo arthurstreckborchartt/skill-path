@@ -17,6 +17,8 @@
 - Projeto com URL e reflexão persistentes.
 - XP e domínio integrados ao Perfil e ao menu.
 - Estados local/sincronizado/erro disponíveis na camada de aprendizado.
+- Reconciliação de avanços offline com o snapshot da nuvem.
+- Paywall aplicado também ao acesso direto de uma sessão.
 - Documentação técnica e de continuidade criada.
 
 ## IN PROGRESS

@@ -100,7 +100,9 @@ Pessoa
 - O estado é lido da nuvem para usuários autenticados.
 - Uma cópia local por `route_signature` mantém a experiência disponível em falhas temporárias.
 - Escritas são otimistas e tentam sincronizar imediatamente.
+- Na hidratação, progresso local mais recente e eventos ainda ausentes são reconciliados com a nuvem antes de compor a tela.
 - O esquema RLS impede acesso ao estado de outra pessoa.
+- Sessões acima do limite gratuito verificam a mesma regra central do plano, inclusive em acesso direto por URL.
 
 ## Gamificação e XP
 - XP legado de etapa permanece preservado.
