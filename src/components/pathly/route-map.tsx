@@ -1,4 +1,5 @@
 ﻿import { useEffect } from "react";
+import { createPortal } from "react-dom";
 import { Link } from "@tanstack/react-router";
 import {
   ArrowUpRight,
@@ -616,7 +617,19 @@ export function DetailSheet({
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
-  return (
+  /**
+   * Portal para o body, e não é preciosismo: o `<main>` do AppShell carrega
+   * `animate-[fade-up_..._both]`, e o `both` mantém o `transform` aplicado depois que a animação
+   * acaba. Um transform — mesmo a matriz identidade — faz o elemento virar o containing block de
+   * todo `position: fixed` dentro dele. O sheet então era posicionado pelo fim da PÁGINA em vez
+   * do fim da TELA e abria a 1468px numa viewport de 812: o fundo escurecia e nada aparecia.
+   *
+   * O `both` do main também foi trocado por `backwards`, o que resolve a causa. O portal fica
+   * porque é o que impede a próxima camada com transform de reabrir o mesmo buraco.
+   */
+  if (typeof document === "undefined") return null;
+
+  return createPortal(
     <div className="fixed inset-0 z-50 lg:hidden">
       <button
         aria-label="Fechar detalhes"
@@ -653,6 +666,7 @@ export function DetailSheet({
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

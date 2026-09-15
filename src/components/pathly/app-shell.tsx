@@ -169,7 +169,11 @@ function AppShellInner() {
       <main
         key={pathname}
         // 8rem + área segura: a barra inferior (56px) nunca cobre o fim do conteúdo no iPhone.
-        className="animate-[fade-up_0.5s_cubic-bezier(0.16,1,0.3,1)_both] px-4 pt-6 pb-[calc(8rem+env(safe-area-inset-bottom))] sm:px-6 lg:ml-64 lg:px-10 lg:pt-10 lg:pb-16"
+        // `backwards` e não `both`: o `both` deixa o transform da animação aplicado para sempre,
+        // e um transform aqui faz o <main> virar o containing block de todo `position: fixed`
+        // que estiver dentro dele. Com `backwards` o preenchimento vale só antes de começar, o
+        // visual da entrada é idêntico, e o transform some quando a animação termina.
+        className="animate-[fade-up_0.5s_cubic-bezier(0.16,1,0.3,1)_backwards] px-4 pt-6 pb-[calc(8rem+env(safe-area-inset-bottom))] sm:px-6 lg:ml-64 lg:px-10 lg:pt-10 lg:pb-16"
       >
         <div className="mx-auto w-full max-w-5xl">
           {!hydrated ? <RouteLoading /> : needsOnboarding ? <OnboardingGate /> : <Outlet />}
