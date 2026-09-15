@@ -64,11 +64,16 @@ function SignupPage() {
   async function handleGoogle() {
     setBusy(true);
     setError(null);
-    const { error: oauthError } = await signInWithGoogle("/onboarding");
-    if (oauthError) {
-      setError(authErrorMessage(oauthError.message));
+    const result = await signInWithGoogle("/onboarding");
+    // "redirecting" significa que o navegador já está saindo desta página: mexer no estado ou
+    // navegar aqui só competiria com a saída.
+    if (result.status === "redirecting") return;
+    if (result.status === "error") {
+      setError(result.message);
       setBusy(false);
+      return;
     }
+    navigate({ to: "/onboarding" });
   }
 
   return (

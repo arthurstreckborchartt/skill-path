@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
+import { lovable } from "@/integrations/lovable";
 import { supabase } from "@/integrations/supabase/client";
 import { setTelemetryUser } from "@/lib/telemetry";
 
@@ -40,11 +41,39 @@ export async function signOut() {
   await supabase.auth.signOut();
 }
 
-export function signInWithGoogle(redirectPath: string) {
-  return supabase.auth.signInWithOAuth({
-    provider: "google",
-    options: { redirectTo: `${window.location.origin}${redirectPath}` },
-  });
+/**
+ * O resultado de entrar com Google, já traduzido para o que a tela precisa decidir.
+ *
+ * `redirecting` existe porque um dos dois caminhos possíveis abandona a página: navegar por cima
+ * dele só atrapalharia o retorno.
+ */
+export type GoogleSignIn =
+  { status: "ok" } | { status: "redirecting" } | { status: "error"; message: string };
+
+/**
+ * O Google **não** está ligado direto no Supabase: o projeto tem o provedor marcado como ativo,
+ * mas sem o OAuth secret — `/auth/v1/authorize?provider=google` responde
+ * `Unsupported provider: missing OAuth secret`. Quem carrega as credenciais é o broker do
+ * Lovable, e só no fim a sessão é gravada no Supabase via `setSession`
+ * (ver src/integrations/lovable/index.ts, que é gerado e não deve ser editado à mão).
+ *
+ * Por isso a forma da resposta mudou em relação ao `signInWithOAuth` do Supabase, que sempre
+ * saía da página. Aqui o caminho normal é um popup que resolve com a sessão já gravada — e aí
+ * quem navega somos nós. Se a tela só olhasse para o erro, como antes, a pessoa entraria de
+ * verdade e continuaria olhando para o botão girando.
+ */
+export async function signInWithGoogle(redirectPath: string): Promise<GoogleSignIn> {
+  try {
+    const result = await lovable.auth.signInWithOAuth("google", {
+      redirect_uri: `${window.location.origin}${redirectPath}`,
+    });
+    if (result.error) return { status: "error", message: authErrorMessage(result.error.message) };
+    if (result.redirected) return { status: "redirecting" };
+    return { status: "ok" };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    return { status: "error", message: authErrorMessage(message) };
+  }
 }
 
 /** Mensagens do Supabase vêm em inglês e técnicas demais para a tela de login. */
@@ -59,5 +88,11 @@ export function authErrorMessage(message: string): string {
     return "E-mail inválido.";
   if (m.includes("rate limit") || m.includes("too many"))
     return "Muitas tentativas. Espere um pouco e tente de novo.";
+  // O fluxo do Google abre uma janela: os dois jeitos de ela morrer não são "erro do servidor"
+  // e merecem um texto que diga o que fazer.
+  if (m.includes("popup") || m.includes("pop-up"))
+    return "O navegador bloqueou a janela do Google. Libere os pop-ups e tente de novo.";
+  if (m.includes("cancel") || m.includes("closed") || m.includes("access_denied"))
+    return "A janela do Google foi fechada antes de concluir.";
   return "Não deu para concluir agora. Tente novamente.";
 }
