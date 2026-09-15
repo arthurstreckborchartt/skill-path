@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { lerEnv } from "@/lib/server-env";
 import { assinaturaValida } from "@/lib/pagamento/stripe";
+import { cabecalhosServico } from "@/lib/supabase-servidor";
 
 /**
  * POST /api/stripe-webhook — é aqui que alguém vira Pro.
@@ -48,12 +49,10 @@ async function atualizarPerfil(
 ): Promise<boolean> {
   const r = await fetch(`${supabaseUrl}/rest/v1/pathly_profiles?user_id=eq.${userId}`, {
     method: "PATCH",
-    headers: {
-      apikey: serviceRole,
-      Authorization: `Bearer ${serviceRole}`,
+    headers: cabecalhosServico(serviceRole, {
       "Content-Type": "application/json",
       Prefer: "return=minimal",
-    },
+    }),
     body: JSON.stringify(campos),
   });
   return r.ok;

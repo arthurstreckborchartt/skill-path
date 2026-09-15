@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { lerEnv } from "@/lib/server-env";
 import { gerarLicao, type ContextoLicao } from "@/lib/ia/gerar-licao";
+import { cabecalhosServico } from "@/lib/supabase-servidor";
 
 /**
  * POST /api/licao — o conteúdo de uma aula, gerado sob demanda e guardado.
@@ -102,12 +103,10 @@ export const Route = createFileRoute("/api/licao")({
         if (serviceRole) {
           await fetch(`${supabaseUrl}/rest/v1/pathly_licoes`, {
             method: "POST",
-            headers: {
-              apikey: serviceRole,
-              Authorization: `Bearer ${serviceRole}`,
+            headers: cabecalhosServico(serviceRole, {
               "Content-Type": "application/json",
               Prefer: "resolution=ignore-duplicates,return=minimal",
-            },
+            }),
             body: JSON.stringify({
               chave,
               tarefa: contexto.tarefa,
