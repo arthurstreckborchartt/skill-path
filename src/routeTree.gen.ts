@@ -20,6 +20,7 @@ import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as TermosRouteImport } from './routes/termos'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as ApiAssinaturaRouteImport } from './routes/api.assinatura'
+import { Route as ApiBlueprintRouteImport } from './routes/api.blueprint'
 import { Route as ApiLicaoRouteImport } from './routes/api.licao'
 import { Route as ApiPraticaRouteImport } from './routes/api.pratica'
 import { Route as ApiRotaRouteImport } from './routes/api.rota'
@@ -91,6 +92,11 @@ const Char91DotwellKnownChar93OauthProtectedResourceRoute =
 const ApiAssinaturaRoute = ApiAssinaturaRouteImport.update({
   id: '/api/assinatura',
   path: '/api/assinatura',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiBlueprintRoute = ApiBlueprintRouteImport.update({
+  id: '/api/blueprint',
+  path: '/api/blueprint',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiLicaoRoute = ApiLicaoRouteImport.update({
@@ -186,6 +192,7 @@ export interface FileRoutesByFullPath {
   '/termos': typeof TermosRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/api/assinatura': typeof ApiAssinaturaRoute
+  '/api/blueprint': typeof ApiBlueprintRoute
   '/api/licao': typeof ApiLicaoRoute
   '/api/pratica': typeof ApiPraticaRoute
   '/api/rota': typeof ApiRotaRoute
@@ -214,6 +221,7 @@ export interface FileRoutesByTo {
   '/termos': typeof TermosRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/api/assinatura': typeof ApiAssinaturaRoute
+  '/api/blueprint': typeof ApiBlueprintRoute
   '/api/licao': typeof ApiLicaoRoute
   '/api/pratica': typeof ApiPraticaRoute
   '/api/rota': typeof ApiRotaRoute
@@ -244,6 +252,7 @@ export interface FileRoutesById {
   '/termos': typeof TermosRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/api/assinatura': typeof ApiAssinaturaRoute
+  '/api/blueprint': typeof ApiBlueprintRoute
   '/api/licao': typeof ApiLicaoRoute
   '/api/pratica': typeof ApiPraticaRoute
   '/api/rota': typeof ApiRotaRoute
@@ -275,6 +284,7 @@ export interface FileRouteTypes {
     | '/termos'
     | '/.well-known/oauth-protected-resource'
     | '/api/assinatura'
+    | '/api/blueprint'
     | '/api/licao'
     | '/api/pratica'
     | '/api/rota'
@@ -303,6 +313,7 @@ export interface FileRouteTypes {
     | '/termos'
     | '/.well-known/oauth-protected-resource'
     | '/api/assinatura'
+    | '/api/blueprint'
     | '/api/licao'
     | '/api/pratica'
     | '/api/rota'
@@ -332,6 +343,7 @@ export interface FileRouteTypes {
     | '/termos'
     | '/.well-known/oauth-protected-resource'
     | '/api/assinatura'
+    | '/api/blueprint'
     | '/api/licao'
     | '/api/pratica'
     | '/api/rota'
@@ -362,6 +374,7 @@ export interface RootRouteChildren {
   TermosRoute: typeof TermosRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   ApiAssinaturaRoute: typeof ApiAssinaturaRoute
+  ApiBlueprintRoute: typeof ApiBlueprintRoute
   ApiLicaoRoute: typeof ApiLicaoRoute
   ApiPraticaRoute: typeof ApiPraticaRoute
   ApiRotaRoute: typeof ApiRotaRoute
@@ -447,6 +460,13 @@ declare module '@tanstack/react-router' {
       path: '/api/assinatura'
       fullPath: '/api/assinatura'
       preLoaderRoute: typeof ApiAssinaturaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/blueprint': {
+      id: '/api/blueprint'
+      path: '/api/blueprint'
+      fullPath: '/api/blueprint'
+      preLoaderRoute: typeof ApiBlueprintRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/licao': {
@@ -605,6 +625,7 @@ const rootRouteChildren: RootRouteChildren = {
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
   ApiAssinaturaRoute: ApiAssinaturaRoute,
+  ApiBlueprintRoute: ApiBlueprintRoute,
   ApiLicaoRoute: ApiLicaoRoute,
   ApiPraticaRoute: ApiPraticaRoute,
   ApiRotaRoute: ApiRotaRoute,

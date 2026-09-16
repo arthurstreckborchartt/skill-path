@@ -72,4 +72,12 @@ export const LIMITES = {
   licao: { limite: 40, janelaMinutos: 60 },
   /** Reenviar a mesma prática para correção várias vezes é normal; 60 por hora não é. */
   pratica: { limite: 60, janelaMinutos: 60 },
+  /**
+   * Um blueprint completo são 4 blocos. 20 por hora = 5 projetos inteiros do zero — mais do que
+   * alguém planeja de verdade num dia, e teto suficiente para o custo não escapar.
+   *
+   * Este é o limite que mais importa em dinheiro: no plano Pro cada bloco vai para o Claude com
+   * `effort: high`, que é a chamada mais cara que o app faz.
+   */
+  blueprint: { limite: 20, janelaMinutos: 60 },
 } as const;

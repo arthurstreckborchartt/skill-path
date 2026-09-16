@@ -70,6 +70,10 @@ export function listaDeTextos(valor: unknown, maxItens: number, maxCada: number)
 
 /** Tetos por campo. Generosos para o uso real, apertados o bastante para não virar carona. */
 export const TETOS = {
+  /** A frase que descreve o projeto. Cabe um parágrafo; nao cabe um documento de requisitos. */
+  ideia: 600,
+  /** Nome do projeto, digitado pela pessoa. */
+  nomeProjeto: 80,
   tarefa: 200,
   etapa: 200,
   objetivo: 500,
