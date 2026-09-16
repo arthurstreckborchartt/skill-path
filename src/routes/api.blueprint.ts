@@ -85,8 +85,8 @@ export const Route = createFileRoute("/api/blueprint")({
 
         const blueprint: Blueprint = projeto.conteudo ?? {};
 
-        // Gerar de novo um bloco que já existe é um pedido legítimo (a pessoa quer outra versão),
-        // mas não pode ser acidental — o cliente precisa dizer que é reescrita.
+        // Regerar um bloco que já existe é permitido: a pessoa pode querer outra versão. Serve
+        // só para não sobrescrever o nome do projeto, que ela pode ter renomeado à mão depois.
         const refazendo = Boolean(blueprint[bloco]);
 
         const uso = await registrarUso(
