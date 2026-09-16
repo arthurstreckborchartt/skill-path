@@ -21,6 +21,7 @@ import { Route as TermosRouteImport } from './routes/termos'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as ApiAssinaturaRouteImport } from './routes/api.assinatura'
 import { Route as ApiLicaoRouteImport } from './routes/api.licao'
+import { Route as ApiPraticaRouteImport } from './routes/api.pratica'
 import { Route as ApiRotaRouteImport } from './routes/api.rota'
 import { Route as ApiStripeWebhookRouteImport } from './routes/api.stripe-webhook'
 import { Route as AppIndexRouteImport } from './routes/app.index'
@@ -94,6 +95,11 @@ const ApiAssinaturaRoute = ApiAssinaturaRouteImport.update({
 const ApiLicaoRoute = ApiLicaoRouteImport.update({
   id: '/api/licao',
   path: '/api/licao',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPraticaRoute = ApiPraticaRouteImport.update({
+  id: '/api/pratica',
+  path: '/api/pratica',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiRotaRoute = ApiRotaRouteImport.update({
@@ -175,6 +181,7 @@ export interface FileRoutesByFullPath {
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/api/assinatura': typeof ApiAssinaturaRoute
   '/api/licao': typeof ApiLicaoRoute
+  '/api/pratica': typeof ApiPraticaRoute
   '/api/rota': typeof ApiRotaRoute
   '/api/stripe-webhook': typeof ApiStripeWebhookRoute
   '/app/configuracoes': typeof AppConfiguracoesRoute
@@ -201,6 +208,7 @@ export interface FileRoutesByTo {
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/api/assinatura': typeof ApiAssinaturaRoute
   '/api/licao': typeof ApiLicaoRoute
+  '/api/pratica': typeof ApiPraticaRoute
   '/api/rota': typeof ApiRotaRoute
   '/api/stripe-webhook': typeof ApiStripeWebhookRoute
   '/app/configuracoes': typeof AppConfiguracoesRoute
@@ -229,6 +237,7 @@ export interface FileRoutesById {
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/api/assinatura': typeof ApiAssinaturaRoute
   '/api/licao': typeof ApiLicaoRoute
+  '/api/pratica': typeof ApiPraticaRoute
   '/api/rota': typeof ApiRotaRoute
   '/api/stripe-webhook': typeof ApiStripeWebhookRoute
   '/app/configuracoes': typeof AppConfiguracoesRoute
@@ -258,6 +267,7 @@ export interface FileRouteTypes {
     | '/.well-known/oauth-protected-resource'
     | '/api/assinatura'
     | '/api/licao'
+    | '/api/pratica'
     | '/api/rota'
     | '/api/stripe-webhook'
     | '/app/configuracoes'
@@ -284,6 +294,7 @@ export interface FileRouteTypes {
     | '/.well-known/oauth-protected-resource'
     | '/api/assinatura'
     | '/api/licao'
+    | '/api/pratica'
     | '/api/rota'
     | '/api/stripe-webhook'
     | '/app/configuracoes'
@@ -311,6 +322,7 @@ export interface FileRouteTypes {
     | '/.well-known/oauth-protected-resource'
     | '/api/assinatura'
     | '/api/licao'
+    | '/api/pratica'
     | '/api/rota'
     | '/api/stripe-webhook'
     | '/app/configuracoes'
@@ -339,6 +351,7 @@ export interface RootRouteChildren {
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   ApiAssinaturaRoute: typeof ApiAssinaturaRoute
   ApiLicaoRoute: typeof ApiLicaoRoute
+  ApiPraticaRoute: typeof ApiPraticaRoute
   ApiRotaRoute: typeof ApiRotaRoute
   ApiStripeWebhookRoute: typeof ApiStripeWebhookRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
@@ -429,6 +442,13 @@ declare module '@tanstack/react-router' {
       path: '/api/licao'
       fullPath: '/api/licao'
       preLoaderRoute: typeof ApiLicaoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/pratica': {
+      id: '/api/pratica'
+      path: '/api/pratica'
+      fullPath: '/api/pratica'
+      preLoaderRoute: typeof ApiPraticaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/rota': {
@@ -565,6 +585,7 @@ const rootRouteChildren: RootRouteChildren = {
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
   ApiAssinaturaRoute: ApiAssinaturaRoute,
   ApiLicaoRoute: ApiLicaoRoute,
+  ApiPraticaRoute: ApiPraticaRoute,
   ApiRotaRoute: ApiRotaRoute,
   ApiStripeWebhookRoute: ApiStripeWebhookRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
