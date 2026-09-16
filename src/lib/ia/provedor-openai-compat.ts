@@ -40,7 +40,21 @@ export const SERVICOS_COMPAT: ServicoCompat[] = [
     id: "groq",
     url: "https://api.groq.com/openai/v1/chat/completions",
     envChave: "GROQ_API_KEY",
-    modelos: ["llama-3.3-70b-versatile", "llama-3.1-8b-instant"],
+    /**
+     * Conferidos na documentação do Groq em 16/09/2026 — os dois Llama continuam ativos, ao
+     * contrário do que aconteceu com os nomes do Gemini e do OpenRouter que escrevi de memória.
+     *
+     * Os `gpt-oss` vêm logo atrás de propósito: os Llama aparecem como "enterprise pricing" na
+     * tabela deles, e se a camada gratuita não os liberar o Groq falharia sem dizer por quê —
+     * numa corrida em paralelo, um provedor que erra apenas perde, sem alarme. Os `gpt-oss` têm
+     * preço por token normal e servem de piso.
+     */
+    modelos: [
+      "llama-3.3-70b-versatile",
+      "openai/gpt-oss-120b",
+      "openai/gpt-oss-20b",
+      "llama-3.1-8b-instant",
+    ],
     envModelo: "GROQ_MODELO",
   },
   {
