@@ -19,11 +19,16 @@ import { cn } from "@/lib/utils";
 // Oportunidades (vagas) fica fora da navegação por enquanto: a tela ainda usa dados de
 // exemplo (mock), e mostrar vaga fictícia pra usuário real derruba confiança. A rota
 // continua existindo (não foi apagada), só não aparece nos menus até ter dado real.
+//
+// "Projetos" aponta para /app/blueprints, a tela nova. A antiga (/app/projetos) segue
+// existindo e funcionando, só saiu do menu — mesmo tratamento dado a oportunidades. Ela
+// lista projetos de portfólio derivados das etapas da rota, e será removida junto com o
+// resto do domínio de estudo, não antes.
 const primaryNav = [
   { to: "/app", label: "Início", icon: Home, exact: true },
   { to: "/app/rota", label: "Caminhos", icon: Compass },
   { to: "/app/habilidades", label: "Aprender", icon: BookOpen },
-  { to: "/app/projetos", label: "Projetos", icon: FolderKanban },
+  { to: "/app/blueprints", label: "Projetos", icon: FolderKanban },
   { to: "/app/perfil", label: "Perfil", icon: User },
 ];
 
@@ -31,7 +36,7 @@ const mobileNav = [
   { to: "/app", label: "Home", icon: Home, exact: true },
   { to: "/app/rota", label: "Caminhos", icon: Compass },
   { to: "/app/habilidades", label: "Aprender", icon: BookOpen },
-  { to: "/app/projetos", label: "Projetos", icon: FolderKanban },
+  { to: "/app/blueprints", label: "Projetos", icon: FolderKanban },
   { to: "/app/perfil", label: "Perfil", icon: User },
 ];
 

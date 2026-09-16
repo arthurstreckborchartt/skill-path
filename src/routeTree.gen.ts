@@ -26,6 +26,7 @@ import { Route as ApiPraticaRouteImport } from './routes/api.pratica'
 import { Route as ApiRotaRouteImport } from './routes/api.rota'
 import { Route as ApiStripeWebhookRouteImport } from './routes/api.stripe-webhook'
 import { Route as AppIndexRouteImport } from './routes/app.index'
+import { Route as AppBlueprintsRouteImport } from './routes/app.blueprints'
 import { Route as AppConfiguracoesRouteImport } from './routes/app.configuracoes'
 import { Route as AppHabilidadesRouteImport } from './routes/app.habilidades'
 import { Route as AppOportunidadesRouteImport } from './routes/app.oportunidades'
@@ -35,6 +36,7 @@ import { Route as AppProjetosRouteImport } from './routes/app.projetos'
 import { Route as AppRevisarRouteImport } from './routes/app.revisar'
 import { Route as AppRotaRouteImport } from './routes/app.rota'
 import { Route as AppAprenderActivityIdRouteImport } from './routes/app.aprender.$activityId'
+import { Route as AppBlueprintIdRouteImport } from './routes/app.blueprint.$id'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 
@@ -124,6 +126,11 @@ const AppIndexRoute = AppIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppRoute,
 } as any)
+const AppBlueprintsRoute = AppBlueprintsRouteImport.update({
+  id: '/blueprints',
+  path: '/blueprints',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppConfiguracoesRoute = AppConfiguracoesRouteImport.update({
   id: '/configuracoes',
   path: '/configuracoes',
@@ -169,6 +176,11 @@ const AppAprenderActivityIdRoute = AppAprenderActivityIdRouteImport.update({
   path: '/aprender/$activityId',
   getParentRoute: () => AppRoute,
 } as any)
+const AppBlueprintIdRoute = AppBlueprintIdRouteImport.update({
+  id: '/blueprint/$id',
+  path: '/blueprint/$id',
+  getParentRoute: () => AppRoute,
+} as any)
 const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
   id: '/lovable/email/auth/preview',
   path: '/lovable/email/auth/preview',
@@ -197,6 +209,7 @@ export interface FileRoutesByFullPath {
   '/api/pratica': typeof ApiPraticaRoute
   '/api/rota': typeof ApiRotaRoute
   '/api/stripe-webhook': typeof ApiStripeWebhookRoute
+  '/app/blueprints': typeof AppBlueprintsRoute
   '/app/configuracoes': typeof AppConfiguracoesRoute
   '/app/habilidades': typeof AppHabilidadesRoute
   '/app/oportunidades': typeof AppOportunidadesRoute
@@ -207,6 +220,7 @@ export interface FileRoutesByFullPath {
   '/app/rota': typeof AppRotaRoute
   '/app/': typeof AppIndexRoute
   '/app/aprender/$activityId': typeof AppAprenderActivityIdRoute
+  '/app/blueprint/$id': typeof AppBlueprintIdRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
 }
@@ -226,6 +240,7 @@ export interface FileRoutesByTo {
   '/api/pratica': typeof ApiPraticaRoute
   '/api/rota': typeof ApiRotaRoute
   '/api/stripe-webhook': typeof ApiStripeWebhookRoute
+  '/app/blueprints': typeof AppBlueprintsRoute
   '/app/configuracoes': typeof AppConfiguracoesRoute
   '/app/habilidades': typeof AppHabilidadesRoute
   '/app/oportunidades': typeof AppOportunidadesRoute
@@ -236,6 +251,7 @@ export interface FileRoutesByTo {
   '/app/rota': typeof AppRotaRoute
   '/app': typeof AppIndexRoute
   '/app/aprender/$activityId': typeof AppAprenderActivityIdRoute
+  '/app/blueprint/$id': typeof AppBlueprintIdRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
 }
@@ -257,6 +273,7 @@ export interface FileRoutesById {
   '/api/pratica': typeof ApiPraticaRoute
   '/api/rota': typeof ApiRotaRoute
   '/api/stripe-webhook': typeof ApiStripeWebhookRoute
+  '/app/blueprints': typeof AppBlueprintsRoute
   '/app/configuracoes': typeof AppConfiguracoesRoute
   '/app/habilidades': typeof AppHabilidadesRoute
   '/app/oportunidades': typeof AppOportunidadesRoute
@@ -267,6 +284,7 @@ export interface FileRoutesById {
   '/app/rota': typeof AppRotaRoute
   '/app/': typeof AppIndexRoute
   '/app/aprender/$activityId': typeof AppAprenderActivityIdRoute
+  '/app/blueprint/$id': typeof AppBlueprintIdRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
 }
@@ -289,6 +307,7 @@ export interface FileRouteTypes {
     | '/api/pratica'
     | '/api/rota'
     | '/api/stripe-webhook'
+    | '/app/blueprints'
     | '/app/configuracoes'
     | '/app/habilidades'
     | '/app/oportunidades'
@@ -299,6 +318,7 @@ export interface FileRouteTypes {
     | '/app/rota'
     | '/app/'
     | '/app/aprender/$activityId'
+    | '/app/blueprint/$id'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
   fileRoutesByTo: FileRoutesByTo
@@ -318,6 +338,7 @@ export interface FileRouteTypes {
     | '/api/pratica'
     | '/api/rota'
     | '/api/stripe-webhook'
+    | '/app/blueprints'
     | '/app/configuracoes'
     | '/app/habilidades'
     | '/app/oportunidades'
@@ -328,6 +349,7 @@ export interface FileRouteTypes {
     | '/app/rota'
     | '/app'
     | '/app/aprender/$activityId'
+    | '/app/blueprint/$id'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
   id:
@@ -348,6 +370,7 @@ export interface FileRouteTypes {
     | '/api/pratica'
     | '/api/rota'
     | '/api/stripe-webhook'
+    | '/app/blueprints'
     | '/app/configuracoes'
     | '/app/habilidades'
     | '/app/oportunidades'
@@ -358,6 +381,7 @@ export interface FileRouteTypes {
     | '/app/rota'
     | '/app/'
     | '/app/aprender/$activityId'
+    | '/app/blueprint/$id'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
   fileRoutesById: FileRoutesById
@@ -504,6 +528,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppIndexRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/blueprints': {
+      id: '/app/blueprints'
+      path: '/blueprints'
+      fullPath: '/app/blueprints'
+      preLoaderRoute: typeof AppBlueprintsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/configuracoes': {
       id: '/app/configuracoes'
       path: '/configuracoes'
@@ -567,6 +598,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAprenderActivityIdRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/blueprint/$id': {
+      id: '/app/blueprint/$id'
+      path: '/blueprint/$id'
+      fullPath: '/app/blueprint/$id'
+      preLoaderRoute: typeof AppBlueprintIdRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/lovable/email/auth/preview': {
       id: '/lovable/email/auth/preview'
       path: '/lovable/email/auth/preview'
@@ -585,6 +623,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AppRouteChildren {
+  AppBlueprintsRoute: typeof AppBlueprintsRoute
   AppConfiguracoesRoute: typeof AppConfiguracoesRoute
   AppHabilidadesRoute: typeof AppHabilidadesRoute
   AppOportunidadesRoute: typeof AppOportunidadesRoute
@@ -595,9 +634,11 @@ interface AppRouteChildren {
   AppRotaRoute: typeof AppRotaRoute
   AppIndexRoute: typeof AppIndexRoute
   AppAprenderActivityIdRoute: typeof AppAprenderActivityIdRoute
+  AppBlueprintIdRoute: typeof AppBlueprintIdRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppBlueprintsRoute: AppBlueprintsRoute,
   AppConfiguracoesRoute: AppConfiguracoesRoute,
   AppHabilidadesRoute: AppHabilidadesRoute,
   AppOportunidadesRoute: AppOportunidadesRoute,
@@ -608,6 +649,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppRotaRoute: AppRotaRoute,
   AppIndexRoute: AppIndexRoute,
   AppAprenderActivityIdRoute: AppAprenderActivityIdRoute,
+  AppBlueprintIdRoute: AppBlueprintIdRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
