@@ -182,6 +182,28 @@ export type RespostaBloco =
   | { ok: false; mensagem: string };
 
 /**
+ * Traduz a falha para algo que diga o que fazer a seguir.
+ *
+ * A primeira versão devolvia sempre "Não consegui montar esta parte agora", e isso escondia a
+ * diferença que mais importa: congestionamento passa com uma nova tentativa, limite de uso não.
+ * Medido em 16/09/2026, uma geração em três falhou por 503 dos provedores gratuitos e a
+ * retentativa imediata funcionou — sem a mensagem certa, a pessoa desiste em vez de tentar.
+ */
+function mensagemDeErro(status: number, corpo: { erro?: string; motivo?: string }): string {
+  if (status === 429) {
+    return corpo.erro ?? "Você gerou muitos planos em pouco tempo. Tente de novo mais tarde.";
+  }
+  if (status === 401) return "Sua sessão expirou. Entre de novo.";
+  if (corpo.motivo === "sem-chave") {
+    return "A geração de planos não está configurada neste ambiente.";
+  }
+  if (status === 503) {
+    return "Os serviços de IA estão congestionados agora. Toque em gerar de novo — costuma funcionar na segunda tentativa.";
+  }
+  return corpo.erro ?? "Não consegui montar esta parte agora.";
+}
+
+/**
  * Pede um bloco ao servidor.
  *
  * Sem teto de tempo do lado do cliente: o servidor já corre contra o próprio orçamento e devolve
@@ -206,10 +228,12 @@ export async function gerarBloco(projetoId: string, bloco: Bloco): Promise<Respo
       modelo?: string;
       proximo?: Bloco | null;
       erro?: string;
+      motivo?: string;
+      detalhe?: string;
     };
 
     if (!r.ok || !corpo.dados) {
-      return { ok: false, mensagem: corpo.erro ?? "Não consegui montar esta parte agora." };
+      return { ok: false, mensagem: mensagemDeErro(r.status, corpo) };
     }
     return {
       ok: true,

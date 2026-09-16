@@ -22,6 +22,9 @@ import { gerarBloco, useProjeto } from "@/lib/blueprint/usar-projetos";
 
 export const Route = createFileRoute("/app/blueprint/$id")({
   staticData: { sitemap: false },
+  // Título fixo: o nome do projeto só existe depois da consulta, que é do cliente. Sem isto a
+  // aba herdava o título da raiz, que fala de estudo e não tem nada a ver com esta tela.
+  head: () => ({ meta: [{ title: "Plano do projeto — Pathly" }] }),
   component: TelaBlueprint,
 });
 
@@ -39,12 +42,33 @@ const RESUMO: Record<Bloco, string> = {
   execucao: "A ordem de construir, etapa por etapa",
 };
 
-/** Medido na geração real: fundação sai em ~10s, o bloco técnico passa de 45s. */
+/**
+ * Medido em produção local: fundação em ~10s, produto passou de 30s numa das tentativas.
+ *
+ * As faixas são propositalmente largas e pessimistas. Prometer "20 segundos" e levar 35 faz a
+ * pessoa achar que travou — aconteceu no primeiro teste desta tela.
+ */
 const ESPERA: Record<Bloco, string> = {
-  fundacao: "uns 15 segundos",
-  produto: "uns 20 segundos",
+  fundacao: "de 10 a 30 segundos",
+  produto: "de 20 a 40 segundos",
   tecnico: "até um minuto",
   execucao: "até um minuto",
+};
+
+/**
+ * Por que cada bloco depende dos anteriores.
+ *
+ * Um texto por bloco, e não um genérico: a primeira versão mostrava a explicação sobre escolher
+ * tecnologia cedo demais também no bloco de Produto, onde ela não tem nada a ver com o assunto.
+ */
+const PORQUE_TRANCADO: Record<Bloco, string> = {
+  fundacao: "",
+  produto:
+    "Listar funcionalidades antes de saber quem usa e que dor resolve produz uma lista de desejos, não um produto.",
+  tecnico:
+    "Escolher tecnologia antes de saber que dados existem é o erro mais caro de um projeto — e o mais difícil de desfazer depois.",
+  execucao:
+    "A ordem de construir sai do modelo de dados. Sem ele, a trilha vira uma lista de tarefas soltas que não encaixam.",
 };
 
 function TelaBlueprint() {
@@ -167,7 +191,10 @@ function TelaBlueprint() {
                 )}
 
                 {!estaGerando && !dados && !permissao.pode && (
-                  <BlocoTrancado falta={permissao.falta.map((b) => TITULO[b].toLowerCase())} />
+                  <BlocoTrancado
+                    falta={permissao.falta.map((b) => TITULO[b].toLowerCase())}
+                    porque={PORQUE_TRANCADO[bloco]}
+                  />
                 )}
 
                 {!estaGerando && !dados && permissao.pode && (

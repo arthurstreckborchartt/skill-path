@@ -49,6 +49,19 @@ export type Pedido<T> = {
 const TETO_PADRAO_MS = 55_000;
 const TOKENS_PADRAO = 8192;
 
+/**
+ * Teto de **uma** tentativa, para um modelo lento não engolir a vez dos outros.
+ *
+ * O número saiu das medições, e as duas pontas importam. Precisa ser alto o bastante para o
+ * `nemotron-3-super-120b` caber: ele leva de 32 a 50s no bloco técnico, e cortá-lo antes disso
+ * jogaria fora o provedor de melhor qualidade. E baixo o bastante para sobrar tempo depois de um
+ * modelo travado, já que os 503 do Gemini chegam em ~9s e o `lite` resolve em 3,4s.
+ *
+ * Com 35s e o orçamento de 65s do bloco técnico, a escada inteira do Gemini (quatro modelos,
+ * três recusando rápido) roda em ~23s e ainda sobra tempo.
+ */
+const TETO_TENTATIVA_MS = 35_000;
+
 /** O Gemini aceita um subconjunto do OpenAPI: tipos em MAIÚSCULAS, sem `additionalProperties`. */
 export function paraGemini(schema: unknown): unknown {
   if (Array.isArray(schema)) return schema.map(paraGemini);
@@ -119,9 +132,14 @@ export function extrairJson(bruto: string): string {
  * de pé. Com um modelo só, o Gemini inteiro saía da corrida.
  *
  * O orçamento é do provedor, não de cada tentativa: quatro modelos a 65s cada dariam mais de
- * quatro minutos de espera. Quem falha rápido (503 chega em menos de um segundo) deixa tempo de
- * sobra para o seguinte; quem falha devagar consome o próprio turno e o dos outros, que é o
- * comportamento certo — um provedor lento não merece quatro chances.
+ * quatro minutos de espera.
+ *
+ * Mas cada tentativa tem teto próprio (`TETO_TENTATIVA_MS`), e essa parte custou caro para
+ * descobrir. Sem ela a primeira tentativa recebia o orçamento inteiro, e um modelo que trava
+ * consumia tudo sozinho — os outros da lista nunca chegavam a ser chamados. Medido em
+ * 16/09/2026: o bloco técnico falhava em 65s enquanto o `gemini-3.5-flash-lite`, o último da
+ * fila, resolvia o mesmo pedido em 3,4s. A lista de reserva existia, cabia no tempo, e mesmo
+ * assim não era usada.
  */
 async function porModelo<T>(
   modelos: string[],
@@ -135,7 +153,7 @@ async function porModelo<T>(
     const resta = fim - Date.now();
     // Abaixo disto não dá para gerar nada útil, e a tentativa só atrasaria a resposta de falha.
     if (resta < 5_000) break;
-    const s = await tentar(modelo, resta);
+    const s = await tentar(modelo, Math.min(resta, TETO_TENTATIVA_MS));
     if (s.ok) return s;
     ultima = s;
   }
@@ -165,13 +183,46 @@ export const MODELOS_GEMINI = [
   "gemini-3.5-flash-lite",
 ];
 
-async function viaGemini<T>(
+/**
+ * Conta os nós de um schema — cada objeto que declara um `type`.
+ *
+ * Serve para prever se o Gemini vai aceitar o schema, ver `LIMITE_NOS_GEMINI`.
+ */
+function contarNos(schema: unknown): number {
+  if (Array.isArray(schema)) return schema.reduce<number>((n, x) => n + contarNos(x), 0);
+  if (!schema || typeof schema !== "object") return 0;
+  const s = schema as Record<string, unknown>;
+  let n = s["type"] ? 1 : 0;
+  for (const v of Object.values(s)) n += contarNos(v);
+  return n;
+}
+
+/**
+ * Acima disto o Gemini recusa o `responseSchema` com HTTP 400 "invalid argument".
+ *
+ * Medido em 16/09/2026 por bissecção, não tirado da documentação — ela não menciona este limite.
+ * O schema do bloco técnico tem 33 nós e era recusado por **todos** os modelos do Gemini, o que
+ * derrubava a via inteira e deixava só o OpenRouter na corrida. Com um provedor só, duas de
+ * quatro gerações falharam por tempo.
+ *
+ * Combinações de 22 e 24 nós passaram; 25 já falhou. O teto aqui é conservador de propósito: o
+ * custo de não mandar o schema é pequeno (o formato em texto continua no prompt), e o custo de
+ * errar para cima é perder o provedor inteiro.
+ */
+const LIMITE_NOS_GEMINI = 22;
+
+async function chamarGemini<T>(
   p: Pedido<T>,
   chave: string,
   modelo: string,
   tetoMs: number,
-): Promise<Saida<T>> {
+  comSchema: boolean,
+): Promise<{ saida: Saida<T>; schemaRecusado: boolean }> {
   try {
+    // Sem o schema estruturado, o formato precisa ir no texto — senão o modelo devolve JSON
+    // válido com os campos que ele quiser, e o `validar` recusa tudo.
+    const sistema = comSchema || !p.formato ? p.sistema : `${p.sistema}\n\n${p.formato}`;
+
     const r = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent`,
       {
@@ -179,11 +230,11 @@ async function viaGemini<T>(
         headers: { "Content-Type": "application/json", "x-goog-api-key": chave },
         signal: AbortSignal.timeout(tetoMs),
         body: JSON.stringify({
-          system_instruction: { parts: [{ text: p.sistema }] },
+          system_instruction: { parts: [{ text: sistema }] },
           contents: [{ role: "user", parts: [{ text: p.usuario }] }],
           generationConfig: {
             responseMimeType: "application/json",
-            responseSchema: paraGemini(p.schema),
+            ...(comSchema ? { responseSchema: paraGemini(p.schema) } : {}),
             maxOutputTokens: p.maxTokens ?? TOKENS_PADRAO,
           },
         }),
@@ -193,15 +244,49 @@ async function viaGemini<T>(
       candidates?: { content?: { parts?: { text?: string }[] } }[];
       error?: { message?: string };
     };
-    if (!r.ok) return { ok: false, motivo: "erro", detalhe: corpo.error?.message };
+    if (!r.ok) {
+      return {
+        saida: { ok: false, motivo: "erro", detalhe: corpo.error?.message },
+        // 400 com schema é recusa do schema, não congestionamento: vale tentar sem ele. Outros
+        // status (503, 429) são do serviço, e repetir sem schema não mudaria nada.
+        schemaRecusado: r.status === 400 && comSchema,
+      };
+    }
     const texto = corpo.candidates?.[0]?.content?.parts?.map((x) => x.text ?? "").join("") ?? "";
     const dados = p.validar(JSON.parse(extrairJson(texto)));
-    return dados
-      ? { ok: true, dados, modelo: `gemini/${modelo}` }
-      : { ok: false, motivo: "invalida" };
+    return {
+      saida: dados
+        ? { ok: true, dados, modelo: `gemini/${modelo}${comSchema ? "" : " (sem schema)"}` }
+        : { ok: false, motivo: "invalida" },
+      schemaRecusado: false,
+    };
   } catch (erro) {
-    return falha(erro);
+    return { saida: falha(erro), schemaRecusado: false };
   }
+}
+
+/**
+ * Uma tentativa no Gemini, com o schema quando ele couber.
+ *
+ * A retentativa sem schema existe para o limite não voltar a matar o provedor em silêncio: se o
+ * Google mudar o teto, o pior que acontece é uma chamada perdida — não a perda da via inteira,
+ * que foi o que aconteceu aqui e passou despercebido porque numa corrida quem erra só perde.
+ */
+async function viaGemini<T>(
+  p: Pedido<T>,
+  chave: string,
+  modelo: string,
+  tetoMs: number,
+): Promise<Saida<T>> {
+  const inicio = Date.now();
+  const cabe = contarNos(paraGemini(p.schema)) <= LIMITE_NOS_GEMINI;
+
+  const primeira = await chamarGemini(p, chave, modelo, tetoMs, cabe);
+  if (!primeira.schemaRecusado) return primeira.saida;
+
+  const resta = tetoMs - (Date.now() - inicio);
+  if (resta < 5_000) return primeira.saida;
+  return (await chamarGemini(p, chave, modelo, resta, false)).saida;
 }
 
 async function viaCompat<T>(

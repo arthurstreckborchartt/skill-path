@@ -310,7 +310,7 @@ export function BlocoExecucao({ dados }: { dados: Execucao }) {
  * técnica, ela aparece trancada dizendo exatamente o que falta. A pessoa vê que existe uma ordem
  * e por que ela existe — esconder ensinaria menos e pareceria um recurso pago.
  */
-export function BlocoTrancado({ falta }: { falta: string[] }) {
+export function BlocoTrancado({ falta, porque }: { falta: string[]; porque: string }) {
   return (
     <div className="flex gap-3 rounded-lg border border-dashed border-border p-4">
       <Lock className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
@@ -318,10 +318,7 @@ export function BlocoTrancado({ falta }: { falta: string[] }) {
         <p className="text-sm text-foreground/90">
           Primeiro é preciso definir: <span className="font-medium">{falta.join(" e ")}</span>.
         </p>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Escolher tecnologia antes de saber que dados existem é o erro mais caro de um projeto — e
-          o mais difícil de desfazer depois.
-        </p>
+        <p className="mt-1 text-sm text-muted-foreground">{porque}</p>
       </div>
     </div>
   );
