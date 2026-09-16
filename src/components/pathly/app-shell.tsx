@@ -158,7 +158,7 @@ function AppShellInner() {
         <div className="flex items-center gap-2">
           <span className="flex items-center gap-1.5 rounded-md bg-xp/15 px-2.5 py-1 text-xs font-semibold text-xp">
             <Zap className="size-3.5" />
-             {totalXp}
+            {totalXp}
           </span>
         </div>
       </header>

@@ -4,6 +4,7 @@ import { Btn, Chip, Panel } from "@/components/pathly/ui";
 import { supabase } from "@/integrations/supabase/client";
 import type { Correcao } from "@/lib/ia/avaliar-pratica";
 import type { Licao, Pergunta } from "@/lib/ia/licao-contrato";
+import { registrarResposta } from "@/lib/revisao";
 import { cn } from "@/lib/utils";
 
 /**
@@ -240,10 +241,13 @@ function Pratica({
 export function LicaoConteudo({
   licao,
   tarefa,
+  chave,
   onConcluir,
 }: {
   licao: Licao;
   tarefa: string;
+  /** Identifica a lição no banco. É por ela que a revisão sabe a que pergunta voltar. */
+  chave?: string | undefined;
   onConcluir?: (() => void) | undefined;
 }) {
   const [acertos, setAcertos] = useState(0);
@@ -311,6 +315,16 @@ export function LicaoConteudo({
                   setRespondidas((n) => n + 1);
                   if (acertou) setAcertos((n) => n + 1);
                   else setErradas((lista) => [...lista, i]);
+                  // Agenda a volta desta pergunta específica. Sem await: a tela não espera o
+                  // banco para revelar a resposta, e a função nunca lança.
+                  if (chave) {
+                    void registrarResposta({
+                      chaveLicao: chave,
+                      indicePergunta: i,
+                      tarefa,
+                      acertou,
+                    });
+                  }
                 }}
               />
             ))}

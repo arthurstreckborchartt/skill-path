@@ -31,6 +31,7 @@ import { Route as AppOportunidadesRouteImport } from './routes/app.oportunidades
 import { Route as AppPerfilRouteImport } from './routes/app.perfil'
 import { Route as AppPlanosRouteImport } from './routes/app.planos'
 import { Route as AppProjetosRouteImport } from './routes/app.projetos'
+import { Route as AppRevisarRouteImport } from './routes/app.revisar'
 import { Route as AppRotaRouteImport } from './routes/app.rota'
 import { Route as AppAprenderActivityIdRouteImport } from './routes/app.aprender.$activityId'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
@@ -147,6 +148,11 @@ const AppProjetosRoute = AppProjetosRouteImport.update({
   path: '/projetos',
   getParentRoute: () => AppRoute,
 } as any)
+const AppRevisarRoute = AppRevisarRouteImport.update({
+  id: '/revisar',
+  path: '/revisar',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppRotaRoute = AppRotaRouteImport.update({
   id: '/rota',
   path: '/rota',
@@ -190,6 +196,7 @@ export interface FileRoutesByFullPath {
   '/app/perfil': typeof AppPerfilRoute
   '/app/planos': typeof AppPlanosRoute
   '/app/projetos': typeof AppProjetosRoute
+  '/app/revisar': typeof AppRevisarRoute
   '/app/rota': typeof AppRotaRoute
   '/app/': typeof AppIndexRoute
   '/app/aprender/$activityId': typeof AppAprenderActivityIdRoute
@@ -217,6 +224,7 @@ export interface FileRoutesByTo {
   '/app/perfil': typeof AppPerfilRoute
   '/app/planos': typeof AppPlanosRoute
   '/app/projetos': typeof AppProjetosRoute
+  '/app/revisar': typeof AppRevisarRoute
   '/app/rota': typeof AppRotaRoute
   '/app': typeof AppIndexRoute
   '/app/aprender/$activityId': typeof AppAprenderActivityIdRoute
@@ -246,6 +254,7 @@ export interface FileRoutesById {
   '/app/perfil': typeof AppPerfilRoute
   '/app/planos': typeof AppPlanosRoute
   '/app/projetos': typeof AppProjetosRoute
+  '/app/revisar': typeof AppRevisarRoute
   '/app/rota': typeof AppRotaRoute
   '/app/': typeof AppIndexRoute
   '/app/aprender/$activityId': typeof AppAprenderActivityIdRoute
@@ -276,6 +285,7 @@ export interface FileRouteTypes {
     | '/app/perfil'
     | '/app/planos'
     | '/app/projetos'
+    | '/app/revisar'
     | '/app/rota'
     | '/app/'
     | '/app/aprender/$activityId'
@@ -303,6 +313,7 @@ export interface FileRouteTypes {
     | '/app/perfil'
     | '/app/planos'
     | '/app/projetos'
+    | '/app/revisar'
     | '/app/rota'
     | '/app'
     | '/app/aprender/$activityId'
@@ -331,6 +342,7 @@ export interface FileRouteTypes {
     | '/app/perfil'
     | '/app/planos'
     | '/app/projetos'
+    | '/app/revisar'
     | '/app/rota'
     | '/app/'
     | '/app/aprender/$activityId'
@@ -514,6 +526,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppProjetosRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/revisar': {
+      id: '/app/revisar'
+      path: '/revisar'
+      fullPath: '/app/revisar'
+      preLoaderRoute: typeof AppRevisarRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/rota': {
       id: '/app/rota'
       path: '/rota'
@@ -552,6 +571,7 @@ interface AppRouteChildren {
   AppPerfilRoute: typeof AppPerfilRoute
   AppPlanosRoute: typeof AppPlanosRoute
   AppProjetosRoute: typeof AppProjetosRoute
+  AppRevisarRoute: typeof AppRevisarRoute
   AppRotaRoute: typeof AppRotaRoute
   AppIndexRoute: typeof AppIndexRoute
   AppAprenderActivityIdRoute: typeof AppAprenderActivityIdRoute
@@ -564,6 +584,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppPerfilRoute: AppPerfilRoute,
   AppPlanosRoute: AppPlanosRoute,
   AppProjetosRoute: AppProjetosRoute,
+  AppRevisarRoute: AppRevisarRoute,
   AppRotaRoute: AppRotaRoute,
   AppIndexRoute: AppIndexRoute,
   AppAprenderActivityIdRoute: AppAprenderActivityIdRoute,

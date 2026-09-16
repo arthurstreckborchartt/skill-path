@@ -83,9 +83,12 @@ export const Route = createFileRoute("/api/licao")({
         if (cache.ok) {
           const linhas = (await cache.json()) as { conteudo?: unknown }[];
           if (linhas[0]?.conteudo) {
-            return new Response(JSON.stringify({ licao: linhas[0].conteudo, doCache: true }), {
-              headers: JSON_HEADERS,
-            });
+            return new Response(
+              // A chave volta junto: e por ela que o cliente registra qual PERGUNTA foi errada,
+              // sem precisar recalcular o hash no navegador.
+              JSON.stringify({ licao: linhas[0].conteudo, chave, doCache: true }),
+              { headers: JSON_HEADERS },
+            );
           }
         }
 
@@ -121,7 +124,7 @@ export const Route = createFileRoute("/api/licao")({
         // Sem service role a aula ainda vai para a tela: perder um conteúdo já gerado por causa
         // do cache seria o pior dos dois mundos.
         return new Response(
-          JSON.stringify({ licao: gerada.licao, doCache: false, cacheado: !!serviceRole }),
+          JSON.stringify({ licao: gerada.licao, chave, doCache: false, cacheado: !!serviceRole }),
           { headers: JSON_HEADERS },
         );
       },

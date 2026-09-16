@@ -155,7 +155,7 @@ export function LearningSession({ activity }: { activity: LearningActivity }) {
             {licao.estado === "carregando" && <LicaoCarregando />}
             {licao.estado === "indisponivel" && <LicaoIndisponivel motivo={licao.motivo} />}
             {licao.estado === "pronta" && (
-              <LicaoConteudo licao={licao.licao} tarefa={activity.title} />
+              <LicaoConteudo licao={licao.licao} tarefa={activity.title} chave={licao.chave} />
             )}
           </section>
         )}

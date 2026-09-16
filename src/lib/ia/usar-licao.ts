@@ -11,7 +11,7 @@ import type { Licao } from "@/lib/ia/licao-contrato";
 
 export type EstadoLicao =
   | { estado: "carregando" }
-  | { estado: "pronta"; licao: Licao }
+  | { estado: "pronta"; licao: Licao; chave: string }
   | { estado: "indisponivel"; motivo: string };
 
 export type ContextoDaTarefa = {
@@ -47,13 +47,13 @@ export function useLicao(contexto: ContextoDaTarefa | null): EstadoLicao {
           headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
           body: JSON.stringify(contexto),
         });
-        const corpo = (await r.json()) as { licao?: Licao; motivo?: string };
+        const corpo = (await r.json()) as { licao?: Licao; chave?: string; motivo?: string };
         if (!vivo) return;
         if (!r.ok || !corpo.licao) {
           setEstado({ estado: "indisponivel", motivo: corpo.motivo ?? `http-${r.status}` });
           return;
         }
-        setEstado({ estado: "pronta", licao: corpo.licao });
+        setEstado({ estado: "pronta", licao: corpo.licao, chave: corpo.chave ?? "" });
       } catch {
         if (vivo) setEstado({ estado: "indisponivel", motivo: "rede" });
       }
