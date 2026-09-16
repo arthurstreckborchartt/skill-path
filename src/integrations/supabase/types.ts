@@ -172,6 +172,7 @@ export type Database = {
           id: string
           ideia: string
           nome: string
+          respostas: Json
           status: string
           user_id: string
         }
@@ -185,6 +186,7 @@ export type Database = {
           id?: string
           ideia: string
           nome: string
+          respostas?: Json
           status?: string
           user_id: string
         }
@@ -198,6 +200,7 @@ export type Database = {
           id?: string
           ideia?: string
           nome?: string
+          respostas?: Json
           status?: string
           user_id?: string
         }

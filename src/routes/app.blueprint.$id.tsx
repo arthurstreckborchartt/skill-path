@@ -1,10 +1,13 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, Loader2, RefreshCw, Sparkles } from "lucide-react";
+import { ArrowLeft, Check, Loader2, Pencil, RefreshCw, Sparkles } from "lucide-react";
 import { Btn, Chip, Panel, Reveal } from "@/components/pathly/ui";
+import { Questionario, ResumoRespostas } from "@/components/pathly/questionario";
+import { respostasSuficientes, type Respostas } from "@/lib/blueprint/respostas";
 import {
   BlocoExecucao,
   BlocoFundacao,
+  BlocoOperacao,
   BlocoProduto,
   BlocoTecnico,
   BlocoTrancado,
@@ -15,10 +18,11 @@ import {
   type Bloco,
   type Execucao,
   type Fundacao,
+  type Operacao,
   type Produto,
   type Tecnico,
 } from "@/lib/blueprint/contrato";
-import { gerarBloco, useProjeto } from "@/lib/blueprint/usar-projetos";
+import { gerarBloco, salvarRespostas, useProjeto } from "@/lib/blueprint/usar-projetos";
 
 export const Route = createFileRoute("/app/blueprint/$id")({
   staticData: { sitemap: false },
@@ -32,13 +36,15 @@ const TITULO: Record<Bloco, string> = {
   fundacao: "Fundação",
   produto: "Produto",
   tecnico: "Técnico",
+  operacao: "Operação",
   execucao: "Execução",
 };
 
 const RESUMO: Record<Bloco, string> = {
   fundacao: "Que problema, para quem, e por que pagariam",
   produto: "O que ele faz — e o que fica para depois",
-  tecnico: "Stack, arquitetura, dados e segurança",
+  tecnico: "Stack, arquitetura, dados, autenticação e segurança",
+  operacao: "Requisitos, infraestrutura, deploy e testes",
   execucao: "A ordem de construir, etapa por etapa",
 };
 
@@ -49,10 +55,11 @@ const RESUMO: Record<Bloco, string> = {
  * pessoa achar que travou — aconteceu no primeiro teste desta tela.
  */
 const ESPERA: Record<Bloco, string> = {
-  fundacao: "de 10 a 30 segundos",
-  produto: "de 20 a 40 segundos",
-  tecnico: "até um minuto",
-  execucao: "até um minuto",
+  fundacao: "de 10 a 40 segundos",
+  produto: "de 20 a 60 segundos",
+  tecnico: "até um minuto e meio",
+  operacao: "até um minuto",
+  execucao: "até um minuto e meio",
 };
 
 /**
@@ -67,6 +74,8 @@ const PORQUE_TRANCADO: Record<Bloco, string> = {
     "Listar funcionalidades antes de saber quem usa e que dor resolve produz uma lista de desejos, não um produto.",
   tecnico:
     "Escolher tecnologia antes de saber que dados existem é o erro mais caro de um projeto — e o mais difícil de desfazer depois.",
+  operacao:
+    "Não dá para dimensionar infraestrutura nem escrever testes sem saber o que o sistema faz e como ele é montado.",
   execucao:
     "A ordem de construir sai do modelo de dados. Sem ele, a trilha vira uma lista de tarefas soltas que não encaixam.",
 };
@@ -76,6 +85,37 @@ function TelaBlueprint() {
   const { estado, aplicar } = useProjeto(id);
   const [gerando, setGerando] = useState<Bloco | null>(null);
   const [erro, setErro] = useState<string | null>(null);
+  const [editando, setEditando] = useState(false);
+  const [rascunho, setRascunho] = useState<Respostas | null>(null);
+  const [salvando, setSalvando] = useState(false);
+
+  const projetoPronto = estado.estado === "pronto" ? estado.projeto : null;
+  const respostas = projetoPronto?.respostas ?? null;
+  const faltaQuestionario = respostas ? !respostasSuficientes(respostas) : false;
+
+  /**
+   * Projeto criado antes do questionário existir cai aqui com respostas vazias. Em vez de deixar
+   * a pessoa bater num 409 ao clicar em gerar, o formulário já abre — e ela entende por quê.
+   */
+  useEffect(() => {
+    if (faltaQuestionario && !editando) {
+      setEditando(true);
+      setRascunho(respostas);
+    }
+  }, [faltaQuestionario, editando, respostas]);
+
+  async function salvar() {
+    if (!rascunho || salvando) return;
+    setSalvando(true);
+    const ok = await salvarRespostas(id, rascunho);
+    setSalvando(false);
+    if (!ok) {
+      setErro("Não consegui salvar suas respostas.");
+      return;
+    }
+    // Recarrega para a tela passar a ler as respostas novas em todo lugar.
+    window.location.reload();
+  }
 
   async function gerar(bloco: Bloco) {
     if (gerando) return;
@@ -138,6 +178,72 @@ function TelaBlueprint() {
         </Panel>
       )}
 
+      <Reveal>
+        <Panel>
+          <header className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
+            <div className="min-w-0">
+              <h2 className="font-display text-lg font-semibold">O que você respondeu</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {faltaQuestionario
+                  ? "Este projeto ainda não tem questionário. Responda para poder montar o plano."
+                  : "Estas respostas definem o que o plano inclui — e o que ele deixa de fora."}
+              </p>
+            </div>
+            {!editando && (
+              <Btn
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setRascunho(projeto.respostas);
+                  setEditando(true);
+                }}
+                title="Editar respostas"
+              >
+                <Pencil className="size-4" />
+              </Btn>
+            )}
+          </header>
+
+          <div className="mt-4">
+            {editando && rascunho ? (
+              <>
+                <Questionario respostas={rascunho} aoMudar={setRascunho} />
+                <div className="mt-6 flex flex-wrap gap-2 border-t border-border pt-5">
+                  <Btn
+                    disabled={!respostasSuficientes(rascunho) || salvando}
+                    onClick={() => void salvar()}
+                  >
+                    {salvando ? (
+                      <>
+                        <Loader2 className="size-4 animate-spin" /> Salvando…
+                      </>
+                    ) : (
+                      <>
+                        <Check className="size-4" /> Salvar respostas
+                      </>
+                    )}
+                  </Btn>
+                  {!faltaQuestionario && (
+                    <Btn variant="ghost" onClick={() => setEditando(false)}>
+                      Cancelar
+                    </Btn>
+                  )}
+                </div>
+                {/* Mudar resposta nao apaga o que ja foi escrito: a pessoa decide o que refazer. */}
+                {!faltaQuestionario && (
+                  <p className="mt-3 text-xs text-muted-foreground">
+                    Salvar não apaga o plano já gerado. Use o botão de refazer em cada parte que
+                    você quiser atualizar com as respostas novas.
+                  </p>
+                )}
+              </>
+            ) : (
+              <ResumoRespostas respostas={projeto.respostas} />
+            )}
+          </div>
+        </Panel>
+      </Reveal>
+
       {BLOCOS.map((bloco, i) => {
         const dados = conteudo[bloco];
         const permissao = podeGerar(conteudo, bloco);
@@ -185,6 +291,9 @@ function TelaBlueprint() {
                 )}
                 {!estaGerando && dados && bloco === "tecnico" && (
                   <BlocoTecnico dados={dados as Tecnico} />
+                )}
+                {!estaGerando && dados && bloco === "operacao" && (
+                  <BlocoOperacao dados={dados as Operacao} />
                 )}
                 {!estaGerando && dados && bloco === "execucao" && (
                   <BlocoExecucao dados={dados as Execucao} />

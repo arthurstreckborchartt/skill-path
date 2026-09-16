@@ -50,17 +50,24 @@ const TETO_PADRAO_MS = 55_000;
 const TOKENS_PADRAO = 8192;
 
 /**
- * Teto de **uma** tentativa, para um modelo lento não engolir a vez dos outros.
+ * Teto de **uma** tentativa: uma fatia do que resta, nunca tudo.
  *
- * O número saiu das medições, e as duas pontas importam. Precisa ser alto o bastante para o
- * `nemotron-3-super-120b` caber: ele leva de 32 a 50s no bloco técnico, e cortá-lo antes disso
- * jogaria fora o provedor de melhor qualidade. E baixo o bastante para sobrar tempo depois de um
- * modelo travado, já que os 503 do Gemini chegam em ~9s e o `lite` resolve em 3,4s.
+ * Um número fixo não serve, e testar mostrou os dois lados. Fixo em 35s cortava o
+ * `nemotron-3-super-120b`, que leva de 32 a 50s no bloco técnico e é o de melhor qualidade. Dar o
+ * orçamento inteiro deixava o `gemini-3.6-flash` gastar 38,7s **só para devolver um 503** — uma
+ * falha lenta que consumia a vez dos outros três modelos, incluindo o `lite`, que resolvia o mesmo
+ * pedido em 3,2s.
  *
- * Com 35s e o orçamento de 65s do bloco técnico, a escada inteira do Gemini (quatro modelos,
- * três recusando rápido) roda em ~23s e ainda sobra tempo.
+ * A fração resolve os dois: a primeira tentativa recebe a maior parte (generosa para quem é lento
+ * mas entrega) e, se ela falhar, ainda sobra tempo para duas tentativas rápidas. O piso impede
+ * que as últimas fiquem curtas demais para valer a chamada.
  */
-const TETO_TENTATIVA_MS = 35_000;
+const FATIA_POR_TENTATIVA = 0.55;
+const PISO_TENTATIVA_MS = 20_000;
+
+function tetoDaTentativa(restaMs: number): number {
+  return Math.max(PISO_TENTATIVA_MS, Math.floor(restaMs * FATIA_POR_TENTATIVA));
+}
 
 /** O Gemini aceita um subconjunto do OpenAPI: tipos em MAIÚSCULAS, sem `additionalProperties`. */
 export function paraGemini(schema: unknown): unknown {
@@ -134,7 +141,7 @@ export function extrairJson(bruto: string): string {
  * O orçamento é do provedor, não de cada tentativa: quatro modelos a 65s cada dariam mais de
  * quatro minutos de espera.
  *
- * Mas cada tentativa tem teto próprio (`TETO_TENTATIVA_MS`), e essa parte custou caro para
+ * Mas cada tentativa tem teto próprio (`tetoDaTentativa`), e essa parte custou caro para
  * descobrir. Sem ela a primeira tentativa recebia o orçamento inteiro, e um modelo que trava
  * consumia tudo sozinho — os outros da lista nunca chegavam a ser chamados. Medido em
  * 16/09/2026: o bloco técnico falhava em 65s enquanto o `gemini-3.5-flash-lite`, o último da
@@ -153,7 +160,7 @@ async function porModelo<T>(
     const resta = fim - Date.now();
     // Abaixo disto não dá para gerar nada útil, e a tentativa só atrasaria a resposta de falha.
     if (resta < 5_000) break;
-    const s = await tentar(modelo, Math.min(resta, TETO_TENTATIVA_MS));
+    const s = await tentar(modelo, Math.min(resta, tetoDaTentativa(resta)));
     if (s.ok) return s;
     ultima = s;
   }

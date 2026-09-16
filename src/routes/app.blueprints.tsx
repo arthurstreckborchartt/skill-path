@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { ArrowRight, Blocks, Loader2, Plus } from "lucide-react";
+import { ArrowRight, Blocks, Loader2, Plus, X } from "lucide-react";
 import { Btn, Chip, PageHeader, Panel, Reveal } from "@/components/pathly/ui";
+import { Questionario, ResumoRespostas } from "@/components/pathly/questionario";
 import { BLOCOS, blocosProntos } from "@/lib/blueprint/contrato";
+import { RESPOSTAS_VAZIAS, respostasSuficientes, type Respostas } from "@/lib/blueprint/respostas";
 import { criarProjeto, useProjetos } from "@/lib/blueprint/usar-projetos";
-import { TETOS } from "@/lib/entrada-segura";
 
 export const Route = createFileRoute("/app/blueprints")({
   staticData: { sitemap: false },
@@ -20,24 +21,22 @@ export const Route = createFileRoute("/app/blueprints")({
   component: TelaProjetos,
 });
 
-/** Piso curto de propósito: "um app" não dá para planejar, e a IA inventaria o resto sozinha. */
-const MINIMO_IDEIA = 15;
-
 function TelaProjetos() {
   const navigate = useNavigate();
   const lista = useProjetos();
-  const [ideia, setIdeia] = useState("");
+  const [abrindo, setAbrindo] = useState(false);
+  const [respostas, setRespostas] = useState<Respostas>(RESPOSTAS_VAZIAS);
   const [criando, setCriando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
-  const curta = ideia.trim().length < MINIMO_IDEIA;
+  const pronto = respostasSuficientes(respostas);
 
   async function criar() {
-    if (curta || criando) return;
+    if (!pronto || criando) return;
     setCriando(true);
     setErro(null);
 
-    const r = await criarProjeto(ideia);
+    const r = await criarProjeto(respostas);
     if ("erro" in r) {
       setErro(r.erro);
       setCriando(false);
@@ -54,7 +53,7 @@ function TelaProjetos() {
         title="Seus projetos"
         subtitle="De uma ideia solta a um plano técnico que dá para executar"
         action={
-          lista.estado === "pronta" && lista.projetos.length > 0 ? (
+          lista.estado === "pronta" && lista.projetos.length > 0 && !abrindo ? (
             <Chip tone="primary">
               <Blocks className="size-3.5" /> {lista.projetos.length}
             </Chip>
@@ -62,43 +61,61 @@ function TelaProjetos() {
         }
       />
 
-      <Reveal>
-        <Panel>
-          <label className="block text-sm font-medium" htmlFor="ideia">
-            O que você quer construir?
-          </label>
-          <textarea
-            id="ideia"
-            value={ideia}
-            onChange={(e) => setIdeia(e.target.value.slice(0, TETOS.ideia))}
-            rows={3}
-            placeholder="Quero criar um SaaS para gerenciamento de academias"
-            className="mt-2 w-full resize-none rounded-lg border border-input bg-background p-4 text-sm outline-none focus:ring-2 focus:ring-ring"
-          />
-          <p className="mt-2 text-xs text-muted-foreground">
-            Escreva com suas palavras. Quanto mais específico, melhor o plano — mas uma frase já
-            basta para começar.
-          </p>
-
-          {erro && <p className="mt-3 text-sm text-destructive">{erro}</p>}
-
-          <Btn
-            className="mt-4 w-full sm:w-auto"
-            disabled={curta || criando}
-            onClick={() => void criar()}
-          >
-            {criando ? (
-              <>
-                <Loader2 className="size-4 animate-spin" /> Criando…
-              </>
-            ) : (
-              <>
-                <Plus className="size-4" /> Montar o plano
-              </>
-            )}
+      {!abrindo && (
+        <Reveal>
+          <Btn className="w-full sm:w-auto" onClick={() => setAbrindo(true)}>
+            <Plus className="size-4" /> Novo projeto
           </Btn>
-        </Panel>
-      </Reveal>
+        </Reveal>
+      )}
+
+      {abrindo && (
+        <Reveal>
+          <Panel>
+            <header className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
+              <div className="min-w-0">
+                <h2 className="font-display text-xl font-semibold">Vamos entender o projeto</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  São três minutos. O que você responder aqui define o plano inteiro — inclusive o
+                  que ele NÃO vai incluir.
+                </p>
+              </div>
+              <Btn variant="ghost" size="sm" onClick={() => setAbrindo(false)} title="Fechar">
+                <X className="size-4" />
+              </Btn>
+            </header>
+
+            <div className="mt-6">
+              <Questionario respostas={respostas} aoMudar={setRespostas} />
+            </div>
+
+            {erro && <p className="mt-4 text-sm text-destructive">{erro}</p>}
+
+            <div className="mt-6 border-t border-border pt-5">
+              <Btn
+                className="w-full sm:w-auto"
+                disabled={!pronto || criando}
+                onClick={() => void criar()}
+              >
+                {criando ? (
+                  <>
+                    <Loader2 className="size-4 animate-spin" /> Criando…
+                  </>
+                ) : (
+                  <>
+                    <Plus className="size-4" /> Criar projeto
+                  </>
+                )}
+              </Btn>
+              {!pronto && (
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Responda pelo menos o que quer criar, para quem, e qual problema resolve.
+                </p>
+              )}
+            </div>
+          </Panel>
+        </Reveal>
+      )}
 
       {lista.estado === "carregando" && (
         <p className="text-sm text-muted-foreground">Carregando seus projetos…</p>
@@ -112,10 +129,10 @@ function TelaProjetos() {
         </Panel>
       )}
 
-      {lista.estado === "pronta" && lista.projetos.length === 0 && (
+      {lista.estado === "pronta" && lista.projetos.length === 0 && !abrindo && (
         <Panel className="text-center">
           <p className="text-sm text-muted-foreground">
-            Você ainda não tem projetos. Escreva uma ideia acima para começar.
+            Você ainda não tem projetos. Crie o primeiro acima.
           </p>
         </Panel>
       )}
@@ -143,6 +160,9 @@ function TelaProjetos() {
                           {p.etapasConcluidas} de {p.etapasTotal} etapas
                         </Chip>
                       )}
+                    </div>
+                    <div className="mt-2">
+                      <ResumoRespostas respostas={p.respostas} />
                     </div>
                   </div>
                   <ArrowRight className="size-5 shrink-0 text-muted-foreground" />

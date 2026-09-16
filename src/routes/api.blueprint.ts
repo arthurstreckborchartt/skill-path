@@ -4,6 +4,8 @@ import { LIMITES, registrarUso } from "@/lib/limite-uso";
 import { TETOS, lerJsonLimitado, texto } from "@/lib/entrada-segura";
 import { gerarBloco } from "@/lib/blueprint/gerar";
 import { BLOCOS, blocosProntos, type Bloco, type Blueprint } from "@/lib/blueprint/contrato";
+import { lerRespostas, respostasSuficientes } from "@/lib/blueprint/respostas";
+import { avisos } from "@/lib/blueprint/regras";
 
 /**
  * POST /api/blueprint — gera um bloco do plano técnico de um projeto.
@@ -28,7 +30,12 @@ function erro(status: number, mensagem: string, extra?: Record<string, unknown>)
 
 type Corpo = { projetoId?: unknown; bloco?: unknown };
 
-type LinhaProjeto = { id: string; ideia: string; conteudo: Blueprint | null };
+type LinhaProjeto = {
+  id: string;
+  ideia: string;
+  conteudo: Blueprint | null;
+  respostas: unknown;
+};
 
 export const Route = createFileRoute("/api/blueprint")({
   staticData: { sitemap: false },
@@ -74,7 +81,7 @@ export const Route = createFileRoute("/api/blueprint")({
          */
         const comoUsuario = { Authorization: `Bearer ${token}`, apikey: anonKey };
         const consulta = await fetch(
-          `${supabaseUrl}/rest/v1/pathly_projetos?select=id,ideia,conteudo&id=eq.${encodeURIComponent(projetoId)}&limit=1`,
+          `${supabaseUrl}/rest/v1/pathly_projetos?select=id,ideia,conteudo,respostas&id=eq.${encodeURIComponent(projetoId)}&limit=1`,
           { headers: comoUsuario },
         );
         if (!consulta.ok) return erro(503, "Não consegui ler o projeto agora.");
@@ -84,6 +91,20 @@ export const Route = createFileRoute("/api/blueprint")({
         if (!projeto) return erro(404, "Projeto não encontrado.");
 
         const blueprint: Blueprint = projeto.conteudo ?? {};
+
+        /**
+         * As respostas saem do banco, nunca do corpo da requisição.
+         *
+         * O cliente poderia mandá-las junto e economizar uma leitura, mas aí bastaria enviar
+         * `temPagamentos: true` para forçar arquitetura que a pessoa não pediu. Vindo do banco,
+         * elas passaram pela RLS junto com o projeto.
+         */
+        const respostas = lerRespostas(projeto.respostas);
+        if (!respostasSuficientes(respostas)) {
+          return erro(409, "Responda o questionário do projeto antes de gerar o plano.", {
+            motivo: "questionario-incompleto",
+          });
+        }
 
         // Regerar um bloco que já existe é permitido: a pessoa pode querer outra versão. Serve
         // só para não sobrescrever o nome do projeto, que ela pode ter renomeado à mão depois.
@@ -121,7 +142,7 @@ export const Route = createFileRoute("/api/blueprint")({
           pro = p[0]?.plano === "pro";
         }
 
-        const gerado = await gerarBloco(bloco, projeto.ideia, blueprint, lerEnv, {
+        const gerado = await gerarBloco(bloco, projeto.ideia, blueprint, respostas, lerEnv, {
           comClaude: pro,
         });
 
@@ -170,6 +191,10 @@ export const Route = createFileRoute("/api/blueprint")({
             dados: gerado.dados,
             modelo: gerado.modelo,
             salvo: salvo.ok,
+            // O que escapou das regras. O filtro não mexe em prosa, e esconder isso faria a
+            // pessoa confiar num plano que ainda contraria o que ela respondeu.
+            avisos:
+              bloco === "tecnico" ? avisos(gerado.dados as Record<string, unknown>, respostas) : [],
             prontos: blocosProntos(atualizado),
             proximo: BLOCOS.find((b) => !atualizado[b]) ?? null,
           }),

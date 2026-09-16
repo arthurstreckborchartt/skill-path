@@ -98,7 +98,7 @@ const ESQUEMA_PRODUTO = {
   properties: {
     funcionalidades: {
       type: "array",
-      minItems: 6,
+      minItems: 4,
       maxItems: 14,
       items: {
         type: "object",
@@ -125,6 +125,35 @@ const ESQUEMA_PRODUTO = {
         additionalProperties: false,
       },
     },
+    requisitosFuncionais: {
+      type: "array",
+      minItems: 3,
+      maxItems: 15,
+      description:
+        "Detalhe APENAS as funcionalidades do MVP. Requisito de funcionalidade futura é trabalho jogado fora.",
+      items: {
+        type: "object",
+        properties: {
+          id: { type: "string", description: "RF-01, RF-02, em sequência." },
+          funcionalidade: {
+            type: "string",
+            description: "O nome exato de uma das funcionalidades marcadas como mvp acima.",
+          },
+          descricao: {
+            type: "string",
+            description:
+              "O comportamento observável do sistema, no presente: 'ao fechar o caixa, o sistema soma as vendas por forma de pagamento e trava a edição do dia'.",
+          },
+          criterioAceite: {
+            type: "string",
+            description:
+              "Como saber que está pronto, de forma verificável por quem construiu. É o que vira teste depois.",
+          },
+        },
+        required: ["id", "funcionalidade", "descricao", "criterioAceite"],
+        additionalProperties: false,
+      },
+    },
     foraDoEscopo: {
       type: "array",
       minItems: 2,
@@ -134,7 +163,7 @@ const ESQUEMA_PRODUTO = {
         "O que este produto deliberadamente NÃO faz, e que alguém poderia esperar que fizesse. Isso protege o escopo.",
     },
   },
-  required: ["funcionalidades", "foraDoEscopo"],
+  required: ["funcionalidades", "requisitosFuncionais", "foraDoEscopo"],
   additionalProperties: false,
 };
 
@@ -164,7 +193,9 @@ const ESQUEMA_TECNICO = {
     },
     tabelas: {
       type: "array",
-      minItems: 3,
+      // 1, e nao 3. O minimo anterior obrigava a IA a inventar tabelas: um site de cardapio
+      // precisa de uma so, e o validador reprovava a resposta certa por ser enxuta demais.
+      minItems: 1,
       maxItems: 12,
       items: {
         type: "object",
@@ -173,7 +204,7 @@ const ESQUEMA_TECNICO = {
           descricao: { type: "string" },
           campos: {
             type: "array",
-            minItems: 3,
+            minItems: 2,
             items: {
               type: "object",
               properties: {
@@ -201,7 +232,7 @@ const ESQUEMA_TECNICO = {
     },
     endpoints: {
       type: "array",
-      minItems: 4,
+      minItems: 1,
       maxItems: 16,
       items: {
         type: "object",
@@ -215,9 +246,48 @@ const ESQUEMA_TECNICO = {
         additionalProperties: false,
       },
     },
+    autenticacao: {
+      type: "object",
+      properties: {
+        necessaria: {
+          type: "boolean",
+          description:
+            "false é uma resposta legítima. Um projeto sem contas não deve receber autenticação.",
+        },
+        metodo: {
+          type: "string",
+          description:
+            "Como a pessoa entra: e-mail e senha, link mágico, OAuth com qual provedor. Quando não for necessária, explique por que este projeto não precisa de contas.",
+        },
+        sessao: {
+          type: "string",
+          description: "Onde a sessão fica e por quanto tempo dura. Vazio se não há login.",
+        },
+        papeis: {
+          type: "array",
+          description:
+            "Deixe VAZIO quando houver um único tipo de usuário. Papéis para um usuário só é complexidade pura.",
+          items: {
+            type: "object",
+            properties: {
+              nome: { type: "string" },
+              pode: { type: "array", items: { type: "string" } },
+            },
+            required: ["nome", "pode"],
+            additionalProperties: false,
+          },
+        },
+        protecaoDeRotas: {
+          type: "string",
+          description: "Onde a permissão é conferida: no banco, no servidor, ou nos dois.",
+        },
+      },
+      required: ["necessaria", "metodo", "sessao", "papeis", "protecaoDeRotas"],
+      additionalProperties: false,
+    },
     seguranca: {
       type: "array",
-      minItems: 3,
+      minItems: 2,
       maxItems: 7,
       items: { type: "string" },
       description:
@@ -245,7 +315,123 @@ const ESQUEMA_TECNICO = {
         "Onde IA agrega valor real neste produto. Se não agregar, diga isso claramente — enfiar IA onde não precisa é erro caro.",
     },
   },
-  required: ["stack", "arquitetura", "tabelas", "endpoints", "seguranca", "integracoes", "ia"],
+  required: [
+    "stack",
+    "arquitetura",
+    "tabelas",
+    "endpoints",
+    "autenticacao",
+    "seguranca",
+    "integracoes",
+    "ia",
+  ],
+  additionalProperties: false,
+};
+
+const ESQUEMA_OPERACAO = {
+  type: "object" as const,
+  properties: {
+    requisitosNaoFuncionais: {
+      type: "array",
+      minItems: 3,
+      maxItems: 10,
+      items: {
+        type: "object",
+        properties: {
+          categoria: {
+            type: "string",
+            description:
+              "desempenho, disponibilidade, segurança, usabilidade, manutenibilidade ou custo.",
+          },
+          descricao: { type: "string" },
+          comoMedir: {
+            type: "string",
+            description:
+              "Um número e uma condição. 'A tela de vendas abre em menos de 1s num celular de entrada' vale; 'o sistema deve ser rápido' não vale nada e será rejeitado.",
+          },
+        },
+        required: ["categoria", "descricao", "comoMedir"],
+        additionalProperties: false,
+      },
+    },
+    infraestrutura: {
+      type: "array",
+      minItems: 1,
+      maxItems: 8,
+      description: "Só o que este projeto precisa de verdade para funcionar no ar.",
+      items: {
+        type: "object",
+        properties: {
+          componente: {
+            type: "string",
+            description: "banco de dados, hospedagem da API, arquivos, e-mail, monitoramento.",
+          },
+          servico: { type: "string", description: "O serviço real, com nome." },
+          porque: { type: "string", description: "Por que este e não outro, para ESTE projeto." },
+          custoEstimado: {
+            type: "string",
+            description:
+              "Faixa mensal em reais no começo, com o plano gratuito quando existir. Ex: 'R$ 0 no plano free, ~R$ 120/mês depois de 1.000 usuários'.",
+          },
+        },
+        required: ["componente", "servico", "porque", "custoEstimado"],
+        additionalProperties: false,
+      },
+    },
+    deploy: {
+      type: "object",
+      properties: {
+        estrategia: {
+          type: "string",
+          description:
+            "Como o código sai da máquina de quem programa e chega no ar, em 2 a 4 frases.",
+        },
+        ambientes: {
+          type: "array",
+          items: { type: "string" },
+          description:
+            "Só os que se pagam. Para um projeto de uma pessoa, produção e local costumam bastar.",
+        },
+        passos: {
+          type: "array",
+          minItems: 3,
+          maxItems: 8,
+          items: { type: "string" },
+          description: "O passo a passo do primeiro deploy, na ordem, começando com verbo.",
+        },
+        variaveis: {
+          type: "array",
+          items: { type: "string" },
+          description:
+            "Nomes das variáveis de ambiente necessárias, em MAIÚSCULAS. Nunca invente valores.",
+        },
+      },
+      required: ["estrategia", "ambientes", "passos", "variaveis"],
+      additionalProperties: false,
+    },
+    testes: {
+      type: "array",
+      minItems: 1,
+      maxItems: 6,
+      description:
+        "Nem todo projeto merece todo tipo de teste. Priorize o que quebra o dinheiro ou os dados.",
+      items: {
+        type: "object",
+        properties: {
+          tipo: { type: "string", description: "unitário, integração, ponta a ponta ou manual." },
+          oQueCobre: {
+            type: "string",
+            description: "O caminho específico deste sistema, citando o requisito que ele valida.",
+          },
+          ferramenta: { type: "string" },
+          prioridade: { type: "string", enum: ["alta", "media", "baixa"] },
+        },
+        required: ["tipo", "oQueCobre", "ferramenta", "prioridade"],
+        additionalProperties: false,
+      },
+    },
+  },
+  required: ["requisitosNaoFuncionais", "infraestrutura", "deploy", "testes"],
   additionalProperties: false,
 };
 
@@ -270,7 +456,7 @@ const ESQUEMA_EXECUCAO = {
     },
     etapas: {
       type: "array",
-      minItems: 10,
+      minItems: 6,
       maxItems: 30,
       items: {
         type: "object",
@@ -328,5 +514,6 @@ export const ESQUEMAS: Record<Bloco, Record<string, unknown>> = {
   fundacao: ESQUEMA_FUNDACAO,
   produto: ESQUEMA_PRODUTO,
   tecnico: ESQUEMA_TECNICO,
+  operacao: ESQUEMA_OPERACAO,
   execucao: ESQUEMA_EXECUCAO,
 };

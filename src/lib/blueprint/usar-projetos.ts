@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { BLOCOS, type Bloco, type Blueprint } from "./contrato";
+import { BLOCOS, completarBlueprint, type Bloco, type Blueprint } from "./contrato";
+import { lerRespostas, type Respostas } from "./respostas";
 
 /**
  * Acesso do cliente aos projetos.
@@ -19,6 +20,7 @@ export type Projeto = {
   ideia: string;
   status: string;
   conteudo: Blueprint;
+  respostas: Respostas;
   etapaAtual: number;
   etapasConcluidas: number;
   etapasTotal: number;
@@ -31,6 +33,7 @@ type LinhaProjeto = {
   ideia: string;
   status: string;
   conteudo: Blueprint | null;
+  respostas: unknown;
   etapa_atual: number;
   etapas_concluidas: number;
   etapas_total: number;
@@ -43,7 +46,8 @@ function daLinha(l: LinhaProjeto): Projeto {
     nome: l.nome,
     ideia: l.ideia,
     status: l.status,
-    conteudo: l.conteudo ?? {},
+    conteudo: completarBlueprint(l.conteudo ?? {}),
+    respostas: lerRespostas(l.respostas),
     etapaAtual: l.etapa_atual,
     etapasConcluidas: l.etapas_concluidas,
     etapasTotal: l.etapas_total,
@@ -52,7 +56,7 @@ function daLinha(l: LinhaProjeto): Projeto {
 }
 
 const COLUNAS =
-  "id,nome,ideia,status,conteudo,etapa_atual,etapas_concluidas,etapas_total,atualizado_em";
+  "id,nome,ideia,status,conteudo,respostas,etapa_atual,etapas_concluidas,etapas_total,atualizado_em";
 
 /**
  * Nome provisório, até a IA batizar o produto no bloco de fundação.
@@ -65,19 +69,44 @@ function nomeProvisorio(ideia: string): string {
   return limpo.length <= 48 ? limpo : `${limpo.slice(0, 45)}…`;
 }
 
-export async function criarProjeto(ideia: string): Promise<{ id: string } | { erro: string }> {
+export async function criarProjeto(
+  respostas: Respostas,
+): Promise<{ id: string } | { erro: string }> {
   const { data: sessao } = await supabase.auth.getSession();
   const userId = sessao.session?.user.id;
   if (!userId) return { erro: "Faça login para criar um projeto." };
 
   const { data, error } = await supabase
     .from("pathly_projetos")
-    .insert({ user_id: userId, nome: nomeProvisorio(ideia), ideia: ideia.trim() })
+    .insert({
+      user_id: userId,
+      nome: nomeProvisorio(respostas.oQue),
+      // `ideia` continua sendo a frase solta. Duplica `respostas.oQue` de propósito: é a coluna
+      // que a lista e o endpoint leem, e deixá-la dentro do jsonb obrigaria a desempacotar o
+      // questionário inteiro só para escrever um título.
+      ideia: respostas.oQue,
+      respostas,
+    })
     .select("id")
     .single();
 
   if (error || !data) return { erro: error?.message ?? "Não consegui criar o projeto." };
   return { id: data.id as string };
+}
+
+/**
+ * Atualiza o questionário de um projeto que já existe.
+ *
+ * Não apaga o blueprint: mudar uma resposta não invalida sozinha o que já foi escrito, e jogar
+ * fora um plano inteiro porque a pessoa marcou uma caixa seria hostil. A tela avisa quais blocos
+ * ficaram desatualizados e ela decide o que regerar.
+ */
+export async function salvarRespostas(id: string, respostas: Respostas): Promise<boolean> {
+  const { error } = await supabase
+    .from("pathly_projetos")
+    .update({ respostas, ideia: respostas.oQue, atualizado_em: new Date().toISOString() })
+    .eq("id", id);
+  return !error;
 }
 
 export async function apagarProjeto(id: string): Promise<boolean> {

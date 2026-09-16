@@ -1,6 +1,17 @@
-import { AlertTriangle, Database, Lock, Route as RouteIcon, Server, Shield } from "lucide-react";
+import {
+  AlertTriangle,
+  Cloud,
+  Database,
+  FlaskConical,
+  KeyRound,
+  Lock,
+  Rocket,
+  Route as RouteIcon,
+  Server,
+  Shield,
+} from "lucide-react";
 import { Chip } from "./ui";
-import type { Execucao, Fundacao, Produto, Tecnico } from "@/lib/blueprint/contrato";
+import type { Execucao, Fundacao, Operacao, Produto, Tecnico } from "@/lib/blueprint/contrato";
 
 /**
  * Como cada bloco do blueprint aparece na tela.
@@ -124,6 +135,30 @@ export function BlocoProduto({ dados }: { dados: Produto }) {
         </Secao>
       )}
 
+      {dados.requisitosFuncionais.length > 0 && (
+        <Secao titulo={`Requisitos funcionais — ${dados.requisitosFuncionais.length}`}>
+          <p className="mb-3 text-sm text-muted-foreground">
+            O comportamento exato que o sistema precisa ter. Cada um tem um critério que diz quando
+            está pronto.
+          </p>
+          <div className="space-y-2">
+            {dados.requisitosFuncionais.map((r) => (
+              <div key={r.id} className="rounded-lg border border-border bg-surface/40 p-3">
+                <div className="flex flex-wrap items-baseline gap-2">
+                  <span className="font-mono text-xs font-semibold text-primary">{r.id}</span>
+                  <span className="text-xs text-muted-foreground">{r.funcionalidade}</span>
+                </div>
+                <p className="mt-1.5 text-sm text-foreground/90">{r.descricao}</p>
+                <p className="mt-1.5 text-xs text-muted-foreground">
+                  <span className="font-medium text-foreground/70">Pronto quando:</span>{" "}
+                  {r.criterioAceite}
+                </p>
+              </div>
+            ))}
+          </div>
+        </Secao>
+      )}
+
       {dados.foraDoEscopo.length > 0 && (
         <Secao titulo="Fora do escopo">
           <p className="mb-2 text-sm text-muted-foreground">
@@ -230,9 +265,150 @@ export function BlocoTecnico({ dados }: { dados: Tecnico }) {
         </Secao>
       )}
 
+      <Secao titulo="Autenticação" icone={KeyRound}>
+        {dados.autenticacao.necessaria ? (
+          <>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <div className="rounded-lg border border-border bg-surface/40 p-3">
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">Método</p>
+                <p className="mt-1 text-sm">{dados.autenticacao.metodo}</p>
+              </div>
+              {dados.autenticacao.sessao && (
+                <div className="rounded-lg border border-border bg-surface/40 p-3">
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Sessão</p>
+                  <p className="mt-1 text-sm">{dados.autenticacao.sessao}</p>
+                </div>
+              )}
+            </div>
+
+            {dados.autenticacao.papeis.length > 0 && (
+              <div className="mt-3 space-y-2">
+                {dados.autenticacao.papeis.map((p) => (
+                  <div key={p.nome} className="rounded-lg border border-border bg-surface/40 p-3">
+                    <p className="text-sm font-medium">{p.nome}</p>
+                    <div className="mt-2">
+                      <Lista itens={p.pode} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {dados.autenticacao.protecaoDeRotas && (
+              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                {dados.autenticacao.protecaoDeRotas}
+              </p>
+            )}
+          </>
+        ) : (
+          // Dizer "não precisa, e por quê" é uma entrega, não um vazio. É o oposto de receber
+          // um Auth0 que ninguém pediu.
+          <p className="text-sm leading-relaxed text-foreground/90">
+            {dados.autenticacao.metodo || "Este projeto não precisa de contas de usuário."}
+          </p>
+        )}
+      </Secao>
+
       {dados.ia && (
         <Secao titulo="Onde IA entra">
           <Paragrafo>{dados.ia}</Paragrafo>
+        </Secao>
+      )}
+    </div>
+  );
+}
+
+export function BlocoOperacao({ dados }: { dados: Operacao }) {
+  return (
+    <div>
+      <Secao titulo={`Requisitos não funcionais — ${dados.requisitosNaoFuncionais.length}`}>
+        <div className="space-y-2">
+          {dados.requisitosNaoFuncionais.map((r, i) => (
+            <div key={i} className="rounded-lg border border-border bg-surface/40 p-3">
+              <Chip tone="muted">{r.categoria}</Chip>
+              <p className="mt-2 text-sm text-foreground/90">{r.descricao}</p>
+              <p className="mt-1.5 text-xs text-muted-foreground">
+                <span className="font-medium text-foreground/70">Como medir:</span> {r.comoMedir}
+              </p>
+            </div>
+          ))}
+        </div>
+      </Secao>
+
+      <Secao titulo="Infraestrutura" icone={Cloud}>
+        <div className="space-y-2">
+          {dados.infraestrutura.map((x, i) => (
+            <div key={i} className="rounded-lg border border-border bg-surface/40 p-3">
+              <div className="flex flex-wrap items-baseline gap-2">
+                <span className="text-xs uppercase tracking-wide text-muted-foreground">
+                  {x.componente}
+                </span>
+                <span className="font-medium">{x.servico}</span>
+                {x.custoEstimado && <Chip tone="accent">{x.custoEstimado}</Chip>}
+              </div>
+              <p className="mt-1.5 text-sm text-muted-foreground">{x.porque}</p>
+            </div>
+          ))}
+        </div>
+      </Secao>
+
+      <Secao titulo="Deploy" icone={Rocket}>
+        <Paragrafo>{dados.deploy.estrategia}</Paragrafo>
+
+        {dados.deploy.ambientes.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {dados.deploy.ambientes.map((a) => (
+              <Chip key={a}>{a}</Chip>
+            ))}
+          </div>
+        )}
+
+        {dados.deploy.passos.length > 0 && (
+          <ol className="mt-3 space-y-1.5">
+            {dados.deploy.passos.map((passo, i) => (
+              <li key={i} className="flex gap-2.5 text-sm text-foreground/90">
+                <span className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-primary/15 text-xs font-semibold text-primary">
+                  {i + 1}
+                </span>
+                <span>{passo}</span>
+              </li>
+            ))}
+          </ol>
+        )}
+
+        {dados.deploy.variaveis.length > 0 && (
+          <div className="mt-4">
+            <p className="text-xs uppercase tracking-wide text-muted-foreground">
+              Variáveis de ambiente
+            </p>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {dados.deploy.variaveis.map((v) => (
+                <code
+                  key={v}
+                  className="rounded bg-surface-2 px-2 py-1 font-mono text-xs text-foreground/80"
+                >
+                  {v}
+                </code>
+              ))}
+            </div>
+          </div>
+        )}
+      </Secao>
+
+      {dados.testes.length > 0 && (
+        <Secao titulo="Testes" icone={FlaskConical}>
+          <div className="space-y-2">
+            {dados.testes.map((t, i) => (
+              <div key={i} className="rounded-lg border border-border bg-surface/40 p-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="font-medium">{t.tipo}</span>
+                  <Chip tone={t.prioridade === "alta" ? "primary" : "muted"}>{t.prioridade}</Chip>
+                  {t.ferramenta && <Chip>{t.ferramenta}</Chip>}
+                </div>
+                <p className="mt-1.5 text-sm text-foreground/90">{t.oQueCobre}</p>
+              </div>
+            ))}
+          </div>
         </Secao>
       )}
     </div>

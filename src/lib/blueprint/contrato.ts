@@ -22,16 +22,23 @@
  * A ordem é fundacao -> produto -> tecnico -> execucao, e não pode ser invertida.
  */
 
-/** Os quatro blocos, na ordem obrigatória de geração. */
-export const BLOCOS = ["fundacao", "produto", "tecnico", "execucao"] as const;
+/** Os cinco blocos, na ordem obrigatória de geração. */
+export const BLOCOS = ["fundacao", "produto", "tecnico", "operacao", "execucao"] as const;
 export type Bloco = (typeof BLOCOS)[number];
 
-/** O que cada bloco precisa ter pronto antes de poder ser gerado. */
+/**
+ * O que cada bloco precisa ter pronto antes de poder ser gerado.
+ *
+ * `execucao` depende de `operacao` e isso é de propósito: o roadmap precisa incluir as etapas de
+ * deploy e de teste. Sem elas a trilha termina na última tela e deixa de fora justamente a parte
+ * em que projetos de uma pessoa só costumam travar.
+ */
 export const DEPENDE_DE: Record<Bloco, Bloco[]> = {
   fundacao: [],
   produto: ["fundacao"],
   tecnico: ["fundacao", "produto"],
-  execucao: ["fundacao", "produto", "tecnico"],
+  operacao: ["fundacao", "produto", "tecnico"],
+  execucao: ["fundacao", "produto", "tecnico", "operacao"],
 };
 
 // ---------------------------------------------------------------------------------------------
@@ -84,8 +91,26 @@ export type Funcionalidade = {
   complexidade: "baixa" | "media" | "alta";
 };
 
+/**
+ * Requisito funcional: o comportamento observável que uma funcionalidade precisa ter.
+ *
+ * Existe separado da funcionalidade porque são níveis diferentes. "Fechamento de caixa" é uma
+ * funcionalidade; "ao fechar o caixa o sistema soma as vendas por forma de pagamento e trava
+ * edição do dia" é um requisito. O segundo dá para testar, o primeiro não.
+ */
+export type RequisitoFuncional = {
+  /** RF-01, RF-02… Serve para as etapas e os testes apontarem para cá. */
+  id: string;
+  descricao: string;
+  /** A funcionalidade que ele detalha. */
+  funcionalidade: string;
+  /** Como saber que está pronto. É o que vira teste depois. */
+  criterioAceite: string;
+};
+
 export type Produto = {
   funcionalidades: Funcionalidade[];
+  requisitosFuncionais: RequisitoFuncional[];
   /** O que o produto deliberadamente NÃO faz. Tão importante quanto o que faz. */
   foraDoEscopo: string[];
 };
@@ -109,6 +134,23 @@ export type Endpoint = {
   autenticado: boolean;
 };
 
+/**
+ * Autenticação, como seção própria.
+ *
+ * `necessaria: false` é uma resposta legítima e precisa existir: um projeto sem contas tem que
+ * poder dizer "não preciso disso, e aqui está o porquê" em vez de receber um Auth0 que ninguém
+ * pediu. `papeis` fica vazio quando há um único tipo de usuário — papéis para um usuário só é
+ * complexidade pura.
+ */
+export type Autenticacao = {
+  necessaria: boolean;
+  /** Quando não é necessária, explica por quê. */
+  metodo: string;
+  sessao: string;
+  papeis: { nome: string; pode: string[] }[];
+  protecaoDeRotas: string;
+};
+
 export type Tecnico = {
   stack: {
     frontend: string;
@@ -121,6 +163,7 @@ export type Tecnico = {
   arquitetura: string;
   tabelas: Tabela[];
   endpoints: Endpoint[];
+  autenticacao: Autenticacao;
   seguranca: string[];
   integracoes: { nome: string; para: string; obrigatoria: boolean }[];
   /** Onde IA entra no produto — ou a constatação honesta de que não entra. */
@@ -128,7 +171,55 @@ export type Tecnico = {
 };
 
 // ---------------------------------------------------------------------------------------------
-// Bloco 4 — Execução: a ordem de construir
+// Bloco 4 — Operação: o que sustenta isso depois de pronto
+// ---------------------------------------------------------------------------------------------
+
+/**
+ * Requisito não funcional: como o sistema precisa se comportar, não o que ele faz.
+ *
+ * `comoMedir` é obrigatório porque requisito não funcional sem número é frase de efeito. "O
+ * sistema deve ser rápido" não serve para nada; "a tela de vendas abre em menos de 1s num celular
+ * de entrada" serve.
+ */
+export type RequisitoNaoFuncional = {
+  /** desempenho, disponibilidade, segurança, usabilidade, manutenibilidade, custo */
+  categoria: string;
+  descricao: string;
+  comoMedir: string;
+};
+
+export type ItemInfra = {
+  componente: string;
+  servico: string;
+  /** Por que este e não outro, para ESTE projeto. */
+  porque: string;
+  custoEstimado: string;
+};
+
+export type TesteRecomendado = {
+  /** unitário, integração, ponta a ponta, manual */
+  tipo: string;
+  oQueCobre: string;
+  ferramenta: string;
+  /** Por que vale o esforço aqui. Nem todo projeto merece todo tipo de teste. */
+  prioridade: "alta" | "media" | "baixa";
+};
+
+export type Operacao = {
+  requisitosNaoFuncionais: RequisitoNaoFuncional[];
+  infraestrutura: ItemInfra[];
+  deploy: {
+    estrategia: string;
+    ambientes: string[];
+    passos: string[];
+    /** Variáveis de ambiente necessárias, pelo nome. Sem valores, obviamente. */
+    variaveis: string[];
+  };
+  testes: TesteRecomendado[];
+};
+
+// ---------------------------------------------------------------------------------------------
+// Bloco 5 — Execução: a ordem de construir
 // ---------------------------------------------------------------------------------------------
 
 export type Etapa = {
@@ -168,10 +259,53 @@ export type Blueprint = {
   fundacao?: Fundacao;
   produto?: Produto;
   tecnico?: Tecnico;
+  operacao?: Operacao;
   execucao?: Execucao;
   /** Decisões que a pessoa tomou e que a IA precisa respeitar daqui em diante. */
   decisoes?: { data: string; decisao: string; porque: string }[];
 };
+
+/**
+ * Preenche campos que blueprints antigos não têm.
+ *
+ * O contrato cresce, e o banco guarda o que foi escrito no dia. Quando `requisitosFuncionais`
+ * entrou no bloco de produto, toda tela que lia `.length` quebrou nos projetos gerados antes —
+ * a página inteira caiu no error boundary.
+ *
+ * Corrigir componente por componente com `?? []` seria mais rápido e erraria de novo no próximo
+ * campo: haveria tantos lugares para esquecer quanto renderizadores. Aqui é um lugar só, e é por
+ * onde toda leitura passa. Quando o contrato ganhar um campo novo, ele é acrescentado aqui.
+ */
+export function completarBlueprint(bruto: Blueprint): Blueprint {
+  const bp: Blueprint = { ...bruto };
+
+  if (bp.produto && !Array.isArray(bp.produto.requisitosFuncionais)) {
+    bp.produto = { ...bp.produto, requisitosFuncionais: [] };
+  }
+
+  if (bp.tecnico && !bp.tecnico.autenticacao) {
+    bp.tecnico = {
+      ...bp.tecnico,
+      // `necessaria: false` com texto vazio faz a tela mostrar "este projeto não precisa de
+      // contas", que é enganoso para um plano antigo onde a pergunta nem existia. O texto diz
+      // a verdade: a seção não foi gerada.
+      autenticacao: {
+        necessaria: false,
+        metodo:
+          "Esta parte do plano foi gerada antes da seção de autenticação existir. Refaça o bloco técnico para preenchê-la.",
+        sessao: "",
+        papeis: [],
+        protecaoDeRotas: "",
+      },
+    };
+  }
+
+  if (bp.tecnico && !Array.isArray(bp.tecnico.endpoints)) {
+    bp.tecnico = { ...bp.tecnico, endpoints: [] };
+  }
+
+  return bp;
+}
 
 /** Diz se um bloco pode ser gerado agora, e o que falta se não puder. */
 export function podeGerar(
@@ -269,7 +403,66 @@ export function validarProduto(valor: unknown): Produto | null {
   const mvp = funcionalidades.filter((f) => f.prioridade === "mvp").length;
   if (mvp === 0 || mvp === funcionalidades.length) return null;
 
-  return { funcionalidades, foraDoEscopo: frases(p.foraDoEscopo, 1) ?? [] };
+  // Os requisitos são renumerados aqui: modelos repetem "RF-01" e pulam números, e esses ids são
+  // referenciados pelos testes e pelas etapas — precisam ser únicos para a referência valer.
+  const requisitosFuncionais = (Array.isArray(p.requisitosFuncionais) ? p.requisitosFuncionais : [])
+    .filter(
+      (x): x is RequisitoFuncional =>
+        Boolean(x) && Boolean(frase(x.descricao, 15)) && Boolean(frase(x.criterioAceite, 10)),
+    )
+    .map((x, i) => ({ ...x, id: `RF-${String(i + 1).padStart(2, "0")}` }));
+
+  return {
+    funcionalidades,
+    requisitosFuncionais,
+    foraDoEscopo: frases(p.foraDoEscopo, 1) ?? [],
+  };
+}
+
+export function validarOperacao(valor: unknown): Operacao | null {
+  if (!valor || typeof valor !== "object") return null;
+  const o = valor as Partial<Operacao>;
+
+  const requisitosNaoFuncionais = (
+    Array.isArray(o.requisitosNaoFuncionais) ? o.requisitosNaoFuncionais : []
+  ).filter(
+    (x): x is RequisitoNaoFuncional =>
+      Boolean(x) &&
+      Boolean(frase(x.categoria, 3)) &&
+      Boolean(frase(x.descricao, 10)) &&
+      // Sem forma de medir, requisito não funcional é frase de efeito. Recusar aqui é o que
+      // impede o bloco de virar uma lista de "o sistema deve ser rápido e seguro".
+      Boolean(frase(x.comoMedir, 5)),
+  );
+
+  const infraestrutura = (Array.isArray(o.infraestrutura) ? o.infraestrutura : []).filter(
+    (x): x is ItemInfra =>
+      Boolean(x) && Boolean(frase(x.componente, 3)) && Boolean(frase(x.servico, 2)),
+  );
+
+  const testes = (Array.isArray(o.testes) ? o.testes : []).filter(
+    (x): x is TesteRecomendado =>
+      Boolean(x) &&
+      Boolean(frase(x.tipo, 3)) &&
+      Boolean(frase(x.oQueCobre, 10)) &&
+      ["alta", "media", "baixa"].includes(x.prioridade),
+  );
+
+  const d = o.deploy;
+  if (!d || !frase(d.estrategia, 20)) return null;
+  if (requisitosNaoFuncionais.length < 2 || infraestrutura.length < 1) return null;
+
+  return {
+    requisitosNaoFuncionais,
+    infraestrutura,
+    deploy: {
+      estrategia: d.estrategia.trim(),
+      ambientes: frases(d.ambientes, 1) ?? ["produção"],
+      passos: frases(d.passos, 2) ?? [],
+      variaveis: frases(d.variaveis, 0) ?? [],
+    },
+    testes,
+  };
 }
 
 export function validarTecnico(valor: unknown): Tecnico | null {
@@ -287,12 +480,32 @@ export function validarTecnico(valor: unknown): Tecnico | null {
       Array.isArray(tb.campos) &&
       tb.campos.filter((c) => c && frase(c.nome, 1) && frase(c.tipo, 2)).length >= 2,
   );
-  // Sem modelo de dados não há blueprint técnico — é a seção que tudo o mais referencia.
-  if (tabelas.length < 2) return null;
+  /**
+   * Uma tabela basta.
+   *
+   * O mínimo era 2, e isso reprovava a resposta CERTA: para um site que só mostra o cardápio do
+   * dia, uma tabela é a arquitetura mínima necessária — que é exatamente o que este produto
+   * promete entregar. Um validador que exige complexidade fabrica a complexidade que o produto
+   * existe para evitar.
+   */
+  if (tabelas.length < 1) return null;
 
   const endpoints = (Array.isArray(t.endpoints) ? t.endpoints : []).filter(
     (e): e is Endpoint => Boolean(e) && Boolean(frase(e.metodo, 3)) && Boolean(frase(e.caminho, 2)),
   );
+
+  // A autenticação pode legitimamente não existir, então a ausência do bloco inteiro não invalida
+  // o técnico — vira "não é necessária", que é a resposta certa para um projeto sem contas.
+  const a = t.autenticacao;
+  const autenticacao: Autenticacao = {
+    necessaria: a?.necessaria === true,
+    metodo: frase(a?.metodo, 3) ?? "",
+    sessao: frase(a?.sessao, 3) ?? "",
+    papeis: (Array.isArray(a?.papeis) ? a.papeis : []).filter(
+      (p) => p && frase(p.nome, 2) && Array.isArray(p.pode) && p.pode.length > 0,
+    ),
+    protecaoDeRotas: frase(a?.protecaoDeRotas, 5) ?? "",
+  };
 
   return {
     stack: {
@@ -305,6 +518,7 @@ export function validarTecnico(valor: unknown): Tecnico | null {
     arquitetura: t.arquitetura!.trim(),
     tabelas,
     endpoints,
+    autenticacao,
     seguranca: frases(t.seguranca, 1) ?? [],
     integracoes: (Array.isArray(t.integracoes) ? t.integracoes : []).filter(
       (i) => i && frase(i.nome, 2) && frase(i.para, 5),
@@ -371,5 +585,6 @@ export const VALIDADORES = {
   fundacao: validarFundacao,
   produto: validarProduto,
   tecnico: validarTecnico,
+  operacao: validarOperacao,
   execucao: validarExecucao,
 } as const;
