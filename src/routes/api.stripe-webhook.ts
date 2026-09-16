@@ -35,26 +35,50 @@ type Assinatura = {
 type Evento = {
   id: string;
   type: string;
+  /** Instante em que o Stripe gerou o evento, em segundos. É por ele que a ordem é decidida. */
+  created: number;
   data: { object: Record<string, unknown> };
 };
 
 /** Só estes status dão acesso. `trialing` inclui os 14 dias, que valem como Pro. */
 const STATUS_COM_ACESSO = new Set(["active", "trialing"]);
 
+/**
+ * Aplica a mudança **só se este evento for mais novo** que o último já aplicado.
+ *
+ * O Stripe não garante ordem de entrega, e reenvia eventos quando não recebe 200. Sem esta
+ * guarda, um `subscription.deleted` atrasado — chegando depois de um `created` mais recente —
+ * rebaixaria para o gratuito alguém que está pagando. O prejuízo é do cliente e a causa seria
+ * praticamente impossível de descobrir depois.
+ *
+ * O filtro `or(...)` faz a comparação acontecer no banco, dentro da própria escrita: ler o valor
+ * antes e decidir aqui deixaria a janela entre a leitura e a gravação aberta para o evento
+ * concorrente.
+ */
 async function atualizarPerfil(
   supabaseUrl: string,
   serviceRole: string,
   userId: string,
   campos: Record<string, unknown>,
+  eventoEm?: number,
 ): Promise<boolean> {
-  const r = await fetch(`${supabaseUrl}/rest/v1/pathly_profiles?user_id=eq.${userId}`, {
-    method: "PATCH",
-    headers: cabecalhosServico(serviceRole, {
-      "Content-Type": "application/json",
-      Prefer: "return=minimal",
-    }),
-    body: JSON.stringify(campos),
-  });
+  const marca = eventoEm ? new Date(eventoEm * 1000).toISOString() : null;
+  const filtroOrdem = marca
+    ? `&or=(assinatura_evento_em.is.null,assinatura_evento_em.lte.${encodeURIComponent(marca)})`
+    : "";
+  const corpo = marca ? { ...campos, assinatura_evento_em: marca } : campos;
+
+  const r = await fetch(
+    `${supabaseUrl}/rest/v1/pathly_profiles?user_id=eq.${userId}${filtroOrdem}`,
+    {
+      method: "PATCH",
+      headers: cabecalhosServico(serviceRole, {
+        "Content-Type": "application/json",
+        Prefer: "return=minimal",
+      }),
+      body: JSON.stringify(corpo),
+    },
+  );
   return r.ok;
 }
 

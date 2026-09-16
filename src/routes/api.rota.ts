@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { gerarRota, type Plano } from "@/lib/ia/gerar-rota";
 import { SERVICOS_COMPAT } from "@/lib/ia/provedor-openai-compat";
+import { LIMITES, registrarUso } from "@/lib/limite-uso";
+import { lerJsonLimitado } from "@/lib/entrada-segura";
 import { paraRouteSteps } from "@/lib/ia/contrato";
 import type { OnboardingProfile } from "@/lib/onboarding";
 import { fontesDe, lerEnv } from "@/lib/server-env";
@@ -58,12 +60,16 @@ export const Route = createFileRoute("/api/rota")({
         const userId = await usuarioDoToken(token, supabaseUrl, anonKey);
         if (!userId) return erro(401, "Sessão expirada. Entre de novo.");
 
-        let perfil: OnboardingProfile;
-        try {
-          perfil = (await request.json()) as OnboardingProfile;
-        } catch {
-          return erro(400, "Corpo da requisição inválido.");
+        const corpoLido = await lerJsonLimitado<OnboardingProfile>(request);
+        if (!corpoLido.ok) {
+          return erro(
+            400,
+            corpoLido.motivo === "grande"
+              ? "Requisição grande demais."
+              : "Corpo da requisição inválido.",
+          );
         }
+        const perfil = corpoLido.dados;
         if (!perfil || typeof perfil !== "object" || !Array.isArray(perfil.desiredAreas)) {
           return erro(400, "Perfil do onboarding incompleto.");
         }
@@ -76,7 +82,30 @@ export const Route = createFileRoute("/api/rota")({
           "Content-Type": "application/json",
         };
 
-        // Freio de gasto: uma geração por minuto por pessoa.
+        /**
+         * Teto por hora, contado no banco.
+         *
+         * O freio abaixo (uma por minuto) lê `pathly_routes.created_at` e por isso só enxerga
+         * gerações que DERAM CERTO. Quem fizesse a geração falhar em laço — perfil que dispara
+         * recusa, provedor fora — não era contado por ele e chamava os provedores à vontade.
+         * Este conta toda tentativa.
+         */
+        const uso = await registrarUso(
+          supabaseUrl,
+          anonKey,
+          token,
+          "rota",
+          LIMITES.rota.limite,
+          LIMITES.rota.janelaMinutos,
+        );
+        if (uso.permitido === false) {
+          return erro(429, "Você gerou muitas rotas em pouco tempo. Tente de novo mais tarde.", {
+            usadas: uso.usadas,
+            limite: uso.limite,
+          });
+        }
+
+        // Freio curto, complementar: evita duas gerações seguidas por engano de clique.
         const recente = await fetch(
           `${supabaseUrl}/rest/v1/pathly_routes?select=created_at&order=created_at.desc&limit=1`,
           { headers: comoUsuario },

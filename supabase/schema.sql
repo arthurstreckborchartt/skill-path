@@ -233,3 +233,78 @@ grant select, insert, update         on public.pathly_route_progress to authenti
 grant select, insert, delete         on public.pathly_routes         to authenticated;
 grant select                         on public.pathly_resources      to anon, authenticated;
 grant insert                         on public.feedback              to authenticated;
+
+-- ---------------------------------------------------------------- limite de uso da IA
+
+/*
+  Sem isto, /api/licao e /api/pratica sao um proxy de LLM gratuito e ilimitado: cadastro e
+  aberto, o texto do prompt vem do corpo da requisicao, e nada impede criar uma conta e disparar
+  em laco. No plano gratuito isso esgota a cota e nega servico a quem esta estudando; com a chave
+  da Anthropic ativa, gasta dinheiro.
+
+  A contagem vive aqui, nao em memoria: o Worker nao guarda estado entre requisicoes.
+*/
+create table if not exists public.pathly_uso_ia (
+  user_id uuid not null references auth.users (id) on delete cascade,
+  endpoint text not null,
+  janela timestamptz not null,
+  chamadas int not null default 0,
+  primary key (user_id, endpoint, janela)
+);
+
+alter table public.pathly_uso_ia enable row level security;
+
+-- Sem policy nenhuma e sem grant: se o cliente pudesse escrever aqui, zeraria o proprio contador.
+revoke all on public.pathly_uso_ia from anon, authenticated;
+
+create index if not exists pathly_uso_ia_janela_idx on public.pathly_uso_ia (janela);
+
+/*
+  Incremento ATOMICO.
+
+  INSERT ... ON CONFLICT DO UPDATE ... RETURNING e uma unica instrucao: cem requisicoes
+  simultaneas recebem cem valores diferentes. Ler e depois gravar deixaria todas lerem zero e
+  passarem juntas — exatamente o furo que este limite existe para fechar.
+
+  SECURITY DEFINER com search_path vazio e tudo qualificado: sem isso, um schema malicioso no
+  caminho de busca sequestraria a funcao, que roda com os privilegios do dono.
+*/
+create or replace function public.registrar_uso_ia(p_endpoint text, p_janela_minutos int)
+returns int
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_uid uuid;
+  v_janela timestamptz;
+  v_total int;
+begin
+  v_uid := auth.uid();
+  if v_uid is null then
+    raise exception 'sem sessao';
+  end if;
+
+  v_janela := pg_catalog.to_timestamp(
+    pg_catalog.floor(
+      pg_catalog.date_part('epoch', pg_catalog.now()) / (p_janela_minutos * 60)
+    ) * (p_janela_minutos * 60)
+  );
+
+  insert into public.pathly_uso_ia (user_id, endpoint, janela, chamadas)
+  values (v_uid, p_endpoint, v_janela, 1)
+  on conflict (user_id, endpoint, janela)
+  do update set chamadas = public.pathly_uso_ia.chamadas + 1
+  returning chamadas into v_total;
+
+  return v_total;
+end;
+$$;
+
+revoke all on function public.registrar_uso_ia(text, int) from public, anon;
+grant execute on function public.registrar_uso_ia(text, int) to authenticated;
+
+-- Instante do ultimo evento do Stripe aplicado. O Stripe nao garante ordem de entrega: um
+-- subscription.deleted atrasado rebaixaria um assinante pagante sem esta guarda.
+alter table public.pathly_profiles
+  add column if not exists assinatura_evento_em timestamptz;

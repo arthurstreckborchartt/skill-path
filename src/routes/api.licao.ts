@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { lerEnv } from "@/lib/server-env";
 import { gerarLicao, type ContextoLicao } from "@/lib/ia/gerar-licao";
+import { LIMITES, registrarUso } from "@/lib/limite-uso";
+import { TETOS, lerJsonLimitado, listaDeTextos, texto } from "@/lib/entrada-segura";
 import { cabecalhosServico } from "@/lib/supabase-servidor";
 
 /**
@@ -59,18 +61,31 @@ export const Route = createFileRoute("/api/licao")({
           return erro(401, "Sessão expirada. Entre de novo.");
         }
 
-        let contexto: ContextoLicao;
-        try {
-          contexto = (await request.json()) as ContextoLicao;
-        } catch {
-          return erro(400, "Corpo inválido.");
+        const corpo = await lerJsonLimitado<Partial<ContextoLicao>>(request);
+        if (!corpo.ok) {
+          return erro(
+            400,
+            corpo.motivo === "grande" ? "Requisição grande demais." : "Corpo inválido.",
+          );
         }
-        if (!contexto?.tarefa?.trim() || !contexto?.etapa?.trim()) {
+
+        /**
+         * Todo campo é cortado no teto antes de virar prompt.
+         *
+         * Sem isto, o corpo da requisição é o prompt: qualquer pessoa autenticada mandaria
+         * megabytes de texto como "tarefa" e usaria as chaves de IA do projeto como serviço
+         * próprio. O custo de uma chamada é proporcional ao que se manda.
+         */
+        const contexto: ContextoLicao = {
+          tarefa: texto(corpo.dados.tarefa, TETOS.tarefa),
+          etapa: texto(corpo.dados.etapa, TETOS.etapa),
+          objetivoEtapa: texto(corpo.dados.objetivoEtapa, TETOS.objetivo),
+          habilidades: listaDeTextos(corpo.dados.habilidades, TETOS.habilidades, TETOS.habilidade),
+          area: texto(corpo.dados.area, TETOS.area) || "tecnologia",
+        };
+        if (!contexto.tarefa || !contexto.etapa) {
           return erro(400, "Faltou a tarefa ou a etapa.");
         }
-        contexto.habilidades = Array.isArray(contexto.habilidades) ? contexto.habilidades : [];
-        contexto.area = contexto.area || "tecnologia";
-        contexto.objetivoEtapa = contexto.objetivoEtapa || "";
 
         const chave = await chaveDe(contexto);
         const comoUsuario = { Authorization: `Bearer ${token}`, apikey: anonKey };
@@ -90,6 +105,31 @@ export const Route = createFileRoute("/api/licao")({
               { headers: JSON_HEADERS },
             );
           }
+        }
+
+        /**
+         * O limite é conferido só AQUI, depois do cache.
+         *
+         * Ler do cache não chama provedor nenhum e não custa nada — cobrar cota por isso puniria
+         * justamente o caminho barato, e empurraria a pessoa a evitar reabrir a aula.
+         */
+        const uso = await registrarUso(
+          supabaseUrl,
+          anonKey,
+          token,
+          "licao",
+          LIMITES.licao.limite,
+          LIMITES.licao.janelaMinutos,
+        );
+        if (uso.permitido === false) {
+          return erro(
+            429,
+            "Você abriu muitas aulas novas em pouco tempo. Tente de novo mais tarde.",
+            {
+              usadas: uso.usadas,
+              limite: uso.limite,
+            },
+          );
         }
 
         const gerada = await gerarLicao(contexto, lerEnv);

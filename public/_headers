@@ -1,0 +1,55 @@
+# Cabecalhos de seguranca. Formato do Cloudflare Pages/Workers: caminho, depois os cabecalhos
+# indentados. O Nitro copia este arquivo e acrescenta as regras de cache dele.
+#
+# CSP NAO esta aqui de proposito — ver a nota no fim.
+
+/*
+  # Impede o navegador de adivinhar o tipo do conteudo. Sem isto, um arquivo enviado por alguem
+  # e servido como texto pode ser interpretado como script.
+  X-Content-Type-Options: nosniff
+
+  # Bloqueia o app dentro de um iframe de outro site (clickjacking).
+  X-Frame-Options: DENY
+
+  # Nao vazar a URL completa para terceiros. A URL do app carrega ids de etapa e de atividade.
+  Referrer-Policy: strict-origin-when-cross-origin
+
+  # Nada aqui usa camera, microfone, localizacao ou pagamento pelo navegador.
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()
+
+  # Forca HTTPS por dois anos, incluindo subdominios. So faz efeito depois do primeiro acesso
+  # por HTTPS, que e o caso: o dominio ja e servido por HTTPS.
+  Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
+
+  # O app nao e um site de origem cruzada para ninguem.
+  Cross-Origin-Opener-Policy: same-origin
+
+  # Sem cache compartilhado para HTML: a resposta do app depende de quem esta logado.
+  Cache-Control: no-store
+
+# As rotas de API nunca devem ser guardadas em cache intermediario: carregam dados de conta.
+/api/*
+  Cache-Control: no-store
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+
+# Assets tem hash no nome; podem ser cacheados para sempre.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+  X-Content-Type-Options: nosniff
+
+# ---------------------------------------------------------------------------------------------
+# Sobre a Content-Security-Policy
+#
+# Nao foi adicionada aqui porque nao pude verificar que ela nao quebra o app. O Pathly carrega
+# script inline (o que define o tema antes do primeiro paint, para nao piscar), o SDK do Sentry,
+# o broker de login do Lovable e o checkout do Stripe. Uma CSP escrita no escuro bloquearia algum
+# desses e derrubaria login ou pagamento — pior que nao ter CSP.
+#
+# Para adicionar com seguranca, na ordem:
+#   1. Publicar em modo somente-relato: Content-Security-Policy-Report-Only
+#   2. Navegar o app inteiro (login, Google, onboarding, aula, checkout) coletando as violacoes
+#   3. Liberar exatamente as origens que aparecerem
+#   4. Trocar Report-Only pelo cabecalho real
+#
+# O script inline do tema precisara de hash ou nonce; o hash e estavel porque o script e constante.

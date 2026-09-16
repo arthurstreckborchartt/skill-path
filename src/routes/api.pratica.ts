@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { lerEnv } from "@/lib/server-env";
 import { avaliarPratica, type EnvioPratica } from "@/lib/ia/avaliar-pratica";
+import { LIMITES, registrarUso } from "@/lib/limite-uso";
+import { TETOS, lerJsonLimitado, texto } from "@/lib/entrada-segura";
 
 /**
  * POST /api/pratica — corrige o que a pessoa escreveu.
@@ -37,14 +39,23 @@ export const Route = createFileRoute("/api/pratica")({
         });
         if (!conferido.ok) return erro(401, "Sessão expirada. Entre de novo.");
 
-        let envio: EnvioPratica;
-        try {
-          envio = (await request.json()) as EnvioPratica;
-        } catch {
-          return erro(400, "Corpo inválido.");
+        const corpo = await lerJsonLimitado<Partial<EnvioPratica>>(request);
+        if (!corpo.ok) {
+          return erro(
+            400,
+            corpo.motivo === "grande" ? "Requisição grande demais." : "Corpo inválido.",
+          );
         }
 
-        const resposta = (envio?.resposta ?? "").trim();
+        // Os três campos viram prompt; os três têm teto. `resposta` é o único que a pessoa
+        // escreve de verdade — `tarefa` e `pratica` vêm da lição e são curtos por natureza.
+        const envio: EnvioPratica = {
+          tarefa: texto(corpo.dados.tarefa, TETOS.tarefa),
+          pratica: texto(corpo.dados.pratica, TETOS.pratica),
+          resposta: texto(corpo.dados.resposta, TETOS.resposta),
+        };
+
+        const resposta = envio.resposta;
         if (!resposta) return erro(400, "Escreva sua resposta antes de enviar.");
         // Piso curto de propósito: quem escreveu "fiz" não produziu nada para corrigir, e
         // mandar isso ao modelo gastaria uma chamada para receber "está vago demais".
@@ -64,10 +75,28 @@ export const Route = createFileRoute("/api/pratica")({
           );
         }
 
-        const saida = await avaliarPratica(
-          { tarefa: envio.tarefa ?? "", pratica: envio.pratica ?? "", resposta },
-          lerEnv,
+        // Só depois do piso de 20 caracteres: quem escreveu "fiz" recebe resposta local, sem
+        // chamar provedor nenhum, e por isso não consome cota.
+        const uso = await registrarUso(
+          supabaseUrl,
+          anonKey,
+          token,
+          "pratica",
+          LIMITES.pratica.limite,
+          LIMITES.pratica.janelaMinutos,
         );
+        if (uso.permitido === false) {
+          return erro(
+            429,
+            "Você enviou muitas correções em pouco tempo. Tente de novo mais tarde.",
+            {
+              usadas: uso.usadas,
+              limite: uso.limite,
+            },
+          );
+        }
+
+        const saida = await avaliarPratica(envio, lerEnv);
 
         if (!saida.ok) {
           return erro(503, "A correção não está disponível agora.", {
