@@ -41,6 +41,91 @@ export type Database = {
         }
         Relationships: []
       }
+      pathly_apis: {
+        Row: {
+          atualizado_em: string
+          criado_em: string
+          mapa: Json
+          projeto_id: string
+          testes_feitos: number[]
+          user_id: string
+        }
+        Insert: {
+          atualizado_em?: string
+          criado_em?: string
+          mapa: Json
+          projeto_id: string
+          testes_feitos?: number[]
+          user_id: string
+        }
+        Update: {
+          atualizado_em?: string
+          criado_em?: string
+          mapa?: Json
+          projeto_id?: string
+          testes_feitos?: number[]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pathly_apis_projeto_id_fkey"
+            columns: ["projeto_id"]
+            isOneToOne: true
+            referencedRelation: "pathly_projetos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pathly_etapas: {
+        Row: {
+          anotacoes: string
+          atualizado_em: string
+          checklist_feito: number[]
+          concluida_em: string | null
+          conteudo: Json | null
+          id: string
+          iniciada_em: string | null
+          ordem: number
+          projeto_id: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          anotacoes?: string
+          atualizado_em?: string
+          checklist_feito?: number[]
+          concluida_em?: string | null
+          conteudo?: Json | null
+          id?: string
+          iniciada_em?: string | null
+          ordem: number
+          projeto_id: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          anotacoes?: string
+          atualizado_em?: string
+          checklist_feito?: number[]
+          concluida_em?: string | null
+          conteudo?: Json | null
+          id?: string
+          iniciada_em?: string | null
+          ordem?: number
+          projeto_id?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pathly_etapas_projeto_id_fkey"
+            columns: ["projeto_id"]
+            isOneToOne: false
+            referencedRelation: "pathly_projetos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pathly_learning_activity_progress: {
         Row: {
           activity_id: string
@@ -94,75 +179,6 @@ export type Database = {
           status?: string
           step_id?: string
           updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      pathly_apis: {
-        Row: {
-          atualizado_em: string
-          criado_em: string
-          mapa: Json
-          projeto_id: string
-          testes_feitos: number[]
-          user_id: string
-        }
-        Insert: {
-          atualizado_em?: string
-          criado_em?: string
-          mapa: Json
-          projeto_id: string
-          testes_feitos?: number[]
-          user_id: string
-        }
-        Update: {
-          atualizado_em?: string
-          criado_em?: string
-          mapa?: Json
-          projeto_id?: string
-          testes_feitos?: number[]
-          user_id?: string
-        }
-        Relationships: []
-      }
-      pathly_etapas: {
-        Row: {
-          anotacoes: string
-          atualizado_em: string
-          checklist_feito: number[]
-          concluida_em: string | null
-          conteudo: Json | null
-          id: string
-          iniciada_em: string | null
-          ordem: number
-          projeto_id: string
-          status: string
-          user_id: string
-        }
-        Insert: {
-          anotacoes?: string
-          atualizado_em?: string
-          checklist_feito?: number[]
-          concluida_em?: string | null
-          conteudo?: Json | null
-          id?: string
-          iniciada_em?: string | null
-          ordem: number
-          projeto_id: string
-          status?: string
-          user_id: string
-        }
-        Update: {
-          anotacoes?: string
-          atualizado_em?: string
-          checklist_feito?: number[]
-          concluida_em?: string | null
-          conteudo?: Json | null
-          id?: string
-          iniciada_em?: string | null
-          ordem?: number
-          projeto_id?: string
-          status?: string
           user_id?: string
         }
         Relationships: []
@@ -225,11 +241,20 @@ export type Database = {
           projeto_id?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "pathly_modelos_dados_projeto_id_fkey"
+            columns: ["projeto_id"]
+            isOneToOne: true
+            referencedRelation: "pathly_projetos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       pathly_profiles: {
         Row: {
           assinatura_ate: string | null
+          assinatura_evento_em: string | null
           assinatura_status: string | null
           goal_text: string | null
           onboarding: Json
@@ -240,6 +265,7 @@ export type Database = {
         }
         Insert: {
           assinatura_ate?: string | null
+          assinatura_evento_em?: string | null
           assinatura_status?: string | null
           goal_text?: string | null
           onboarding: Json
@@ -250,6 +276,7 @@ export type Database = {
         }
         Update: {
           assinatura_ate?: string | null
+          assinatura_evento_em?: string | null
           assinatura_status?: string | null
           goal_text?: string | null
           onboarding?: Json
@@ -260,29 +287,44 @@ export type Database = {
         }
         Relationships: []
       }
-      pathly_seguranca: {
+      pathly_project_progress: {
         Row: {
-          atualizado_em: string
-          criado_em: string
-          extras: Json
-          itens_feitos: string[]
-          projeto_id: string
+          completed_at: string | null
+          evidence_url: string | null
+          progress: number
+          project_id: string
+          reflection: string | null
+          route_signature: string
+          status: string
+          step_id: string
+          title: string
+          updated_at: string
           user_id: string
         }
         Insert: {
-          atualizado_em?: string
-          criado_em?: string
-          extras?: Json
-          itens_feitos?: string[]
-          projeto_id: string
+          completed_at?: string | null
+          evidence_url?: string | null
+          progress?: number
+          project_id: string
+          reflection?: string | null
+          route_signature: string
+          status?: string
+          step_id: string
+          title: string
+          updated_at?: string
           user_id: string
         }
         Update: {
-          atualizado_em?: string
-          criado_em?: string
-          extras?: Json
-          itens_feitos?: string[]
-          projeto_id?: string
+          completed_at?: string | null
+          evidence_url?: string | null
+          progress?: number
+          project_id?: string
+          reflection?: string | null
+          route_signature?: string
+          status?: string
+          step_id?: string
+          title?: string
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
@@ -328,48 +370,6 @@ export type Database = {
           nome?: string
           respostas?: Json
           status?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      pathly_project_progress: {
-        Row: {
-          completed_at: string | null
-          evidence_url: string | null
-          progress: number
-          project_id: string
-          reflection: string | null
-          route_signature: string
-          status: string
-          step_id: string
-          title: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          completed_at?: string | null
-          evidence_url?: string | null
-          progress?: number
-          project_id: string
-          reflection?: string | null
-          route_signature: string
-          status?: string
-          step_id: string
-          title: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          completed_at?: string | null
-          evidence_url?: string | null
-          progress?: number
-          project_id?: string
-          reflection?: string | null
-          route_signature?: string
-          status?: string
-          step_id?: string
-          title?: string
-          updated_at?: string
           user_id?: string
         }
         Relationships: []
@@ -428,6 +428,39 @@ export type Database = {
         }
         Relationships: []
       }
+      pathly_revisoes: {
+        Row: {
+          acertos_seguidos: number
+          chave_licao: string
+          indice_pergunta: number
+          proxima_em: string
+          tarefa: string
+          total_erros: number
+          ultima_em: string
+          user_id: string
+        }
+        Insert: {
+          acertos_seguidos?: number
+          chave_licao: string
+          indice_pergunta: number
+          proxima_em: string
+          tarefa: string
+          total_erros?: number
+          ultima_em?: string
+          user_id: string
+        }
+        Update: {
+          acertos_seguidos?: number
+          chave_licao?: string
+          indice_pergunta?: number
+          proxima_em?: string
+          tarefa?: string
+          total_erros?: number
+          ultima_em?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       pathly_route_progress: {
         Row: {
           progress: Json
@@ -479,6 +512,41 @@ export type Database = {
         }
         Relationships: []
       }
+      pathly_seguranca: {
+        Row: {
+          atualizado_em: string
+          criado_em: string
+          extras: Json
+          itens_feitos: string[]
+          projeto_id: string
+          user_id: string
+        }
+        Insert: {
+          atualizado_em?: string
+          criado_em?: string
+          extras?: Json
+          itens_feitos?: string[]
+          projeto_id: string
+          user_id: string
+        }
+        Update: {
+          atualizado_em?: string
+          criado_em?: string
+          extras?: Json
+          itens_feitos?: string[]
+          projeto_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pathly_seguranca_projeto_id_fkey"
+            columns: ["projeto_id"]
+            isOneToOne: true
+            referencedRelation: "pathly_projetos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pathly_skill_mastery: {
         Row: {
           evidence_count: number
@@ -508,6 +576,27 @@ export type Database = {
           skill_key?: string
           skill_name?: string
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      pathly_uso_ia: {
+        Row: {
+          chamadas: number
+          endpoint: string
+          janela: string
+          user_id: string
+        }
+        Insert: {
+          chamadas?: number
+          endpoint: string
+          janela: string
+          user_id: string
+        }
+        Update: {
+          chamadas?: number
+          endpoint?: string
+          janela?: string
           user_id?: string
         }
         Relationships: []
@@ -550,7 +639,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      registrar_uso_ia: {
+        Args: { p_endpoint: string; p_janela_minutos: number }
+        Returns: number
+      }
+      registrar_uso_ia_servidor: {
+        Args: {
+          p_endpoint: string
+          p_janela_minutos: number
+          p_user_id: string
+        }
+        Returns: number
+      }
     }
     Enums: {
       [_ in never]: never

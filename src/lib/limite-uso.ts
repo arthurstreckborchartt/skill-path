@@ -1,3 +1,6 @@
+import { lerEnv } from "@/lib/server-env";
+import { cabecalhosServico } from "@/lib/supabase-servidor";
+
 /**
  * Limite de uso dos endpoints que chamam IA.
  *
@@ -36,15 +39,31 @@ export async function registrarUso(
   janelaMinutos: number,
 ): Promise<ResultadoLimite> {
   try {
-    const r = await fetch(`${supabaseUrl}/rest/v1/rpc/registrar_uso_ia`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        apikey: anonKey,
-        "Content-Type": "application/json",
-      },
+    const serviceRole = lerEnv("SUPABASE_SERVICE_ROLE_KEY");
+    if (!serviceRole) return { permitido: "indeterminado" };
+
+    // A função privilegiada não é mais executável por usuários autenticados. Primeiro obtemos a
+    // identidade diretamente do Auth com o token já validado pela rota; depois o servidor chama
+    // o RPC restrito à service role, sem expor essa credencial ao navegador.
+    const usuario = await fetch(`${supabaseUrl}/auth/v1/user`, {
+      headers: { Authorization: `Bearer ${token}`, apikey: anonKey },
       signal: AbortSignal.timeout(5000),
-      body: JSON.stringify({ p_endpoint: endpoint, p_janela_minutos: janelaMinutos }),
+    });
+    if (!usuario.ok) return { permitido: "indeterminado" };
+    const userId = ((await usuario.json()) as { id?: unknown }).id;
+    if (typeof userId !== "string" || !userId) return { permitido: "indeterminado" };
+
+    const r = await fetch(`${supabaseUrl}/rest/v1/rpc/registrar_uso_ia_servidor`, {
+      method: "POST",
+      headers: cabecalhosServico(serviceRole, {
+        "Content-Type": "application/json",
+      }),
+      signal: AbortSignal.timeout(5000),
+      body: JSON.stringify({
+        p_user_id: userId,
+        p_endpoint: endpoint,
+        p_janela_minutos: janelaMinutos,
+      }),
     });
 
     if (!r.ok) return { permitido: "indeterminado" };

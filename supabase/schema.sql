@@ -267,9 +267,15 @@ create index if not exists pathly_uso_ia_janela_idx on public.pathly_uso_ia (jan
   passarem juntas — exatamente o furo que este limite existe para fechar.
 
   SECURITY DEFINER com search_path vazio e tudo qualificado: sem isso, um schema malicioso no
-  caminho de busca sequestraria a funcao, que roda com os privilegios do dono.
+  caminho de busca sequestraria a funcao, que roda com os privilegios do dono. Esta funcao aceita
+  o id ja validado pelo servidor e so pode ser executada pela service role; usuarios autenticados
+  nao recebem EXECUTE direto sobre nenhuma funcao privilegiada.
 */
-create or replace function public.registrar_uso_ia(p_endpoint text, p_janela_minutos int)
+create or replace function public.registrar_uso_ia_servidor(
+  p_user_id uuid,
+  p_endpoint text,
+  p_janela_minutos int
+)
 returns int
 language plpgsql
 security definer
@@ -280,9 +286,17 @@ declare
   v_janela timestamptz;
   v_total int;
 begin
-  v_uid := auth.uid();
+  v_uid := p_user_id;
   if v_uid is null then
-    raise exception 'sem sessao';
+    raise exception 'usuario ausente';
+  end if;
+
+  if p_endpoint is null or pg_catalog.length(p_endpoint) < 1 or pg_catalog.length(p_endpoint) > 40 then
+    raise exception 'endpoint invalido';
+  end if;
+
+  if p_janela_minutos is null or p_janela_minutos < 1 or p_janela_minutos > 1440 then
+    raise exception 'janela invalida';
   end if;
 
   v_janela := pg_catalog.to_timestamp(
@@ -301,8 +315,11 @@ begin
 end;
 $$;
 
-revoke all on function public.registrar_uso_ia(text, int) from public, anon;
-grant execute on function public.registrar_uso_ia(text, int) to authenticated;
+-- Remove a permissao da funcao legada, caso ela exista em uma instalacao anterior.
+revoke all on function public.registrar_uso_ia(text, int) from public, anon, authenticated;
+revoke all on function public.registrar_uso_ia_servidor(uuid, text, int)
+  from public, anon, authenticated;
+grant execute on function public.registrar_uso_ia_servidor(uuid, text, int) to service_role;
 
 -- Instante do ultimo evento do Stripe aplicado. O Stripe nao garante ordem de entrega: um
 -- subscription.deleted atrasado rebaixaria um assinante pagante sem esta guarda.
