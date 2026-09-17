@@ -6,6 +6,7 @@ import {
   Database,
   Loader2,
   Map as MapIcon,
+  Network,
   Pencil,
   RefreshCw,
   Sparkles,
@@ -234,6 +235,31 @@ function TelaBlueprint() {
               <p className="mt-1 text-sm text-muted-foreground">
                 Projete as tabelas com a explicação de cada decisão, e gere SQL, migration e
                 prompts.
+              </p>
+            </div>
+            <span className="shrink-0 rounded-lg border border-border px-4 py-2.5 text-sm font-medium transition-transform group-hover:translate-x-0.5">
+              Abrir
+            </span>
+          </Link>
+        </Reveal>
+      )}
+
+      {/* A API sai das mesmas funcionalidades do MVP que o banco. Mesma condição, mesmo atalho. */}
+      {conteudo.produto && (
+        <Reveal>
+          <Link
+            to="/app/api/$id"
+            params={{ id }}
+            className="tap group flex items-center justify-between gap-4 rounded-xl border border-border bg-surface/50 p-5 transition-colors hover:border-primary/30"
+          >
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <Network className="size-4 text-primary" />
+                <h2 className="font-display text-lg font-semibold">API</h2>
+              </div>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Cada endpoint com contrato, erros e segurança — e os conceitos de API explicados no
+                seu projeto.
               </p>
             </div>
             <span className="shrink-0 rounded-lg border border-border px-4 py-2.5 text-sm font-medium transition-transform group-hover:translate-x-0.5">

@@ -98,6 +98,33 @@ export type Database = {
         }
         Relationships: []
       }
+      pathly_apis: {
+        Row: {
+          atualizado_em: string
+          criado_em: string
+          mapa: Json
+          projeto_id: string
+          testes_feitos: number[]
+          user_id: string
+        }
+        Insert: {
+          atualizado_em?: string
+          criado_em?: string
+          mapa: Json
+          projeto_id: string
+          testes_feitos?: number[]
+          user_id: string
+        }
+        Update: {
+          atualizado_em?: string
+          criado_em?: string
+          mapa?: Json
+          projeto_id?: string
+          testes_feitos?: number[]
+          user_id?: string
+        }
+        Relationships: []
+      }
       pathly_etapas: {
         Row: {
           anotacoes: string

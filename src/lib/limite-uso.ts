@@ -90,4 +90,6 @@ export const LIMITES = {
    * 8 por hora cobre quem está iterando no schema sem abrir espaço para uso em laço.
    */
   banco: { limite: 8, janelaMinutos: 60 },
+  /** Mesmo raciocínio do banco: um projeto tem um mapa de APIs, e refazer é exceção. */
+  api: { limite: 8, janelaMinutos: 60 },
 } as const;

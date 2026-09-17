@@ -19,6 +19,7 @@ import { Route as PrivacidadeRouteImport } from './routes/privacidade'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as TermosRouteImport } from './routes/termos'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
+import { Route as ApiApisRouteImport } from './routes/api.apis'
 import { Route as ApiAssinaturaRouteImport } from './routes/api.assinatura'
 import { Route as ApiBancoRouteImport } from './routes/api.banco'
 import { Route as ApiBlueprintRouteImport } from './routes/api.blueprint'
@@ -37,6 +38,7 @@ import { Route as AppPlanosRouteImport } from './routes/app.planos'
 import { Route as AppProjetosRouteImport } from './routes/app.projetos'
 import { Route as AppRevisarRouteImport } from './routes/app.revisar'
 import { Route as AppRotaRouteImport } from './routes/app.rota'
+import { Route as AppApiIdRouteImport } from './routes/app.api.$id'
 import { Route as AppAprenderActivityIdRouteImport } from './routes/app.aprender.$activityId'
 import { Route as AppBancoIdRouteImport } from './routes/app.banco.$id'
 import { Route as AppBlueprintIdRouteImport } from './routes/app.blueprint.$id'
@@ -95,6 +97,11 @@ const Char91DotwellKnownChar93OauthProtectedResourceRoute =
     path: '/.well-known/oauth-protected-resource',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiApisRoute = ApiApisRouteImport.update({
+  id: '/api/apis',
+  path: '/api/apis',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAssinaturaRoute = ApiAssinaturaRouteImport.update({
   id: '/api/assinatura',
   path: '/api/assinatura',
@@ -185,6 +192,11 @@ const AppRotaRoute = AppRotaRouteImport.update({
   path: '/rota',
   getParentRoute: () => AppRoute,
 } as any)
+const AppApiIdRoute = AppApiIdRouteImport.update({
+  id: '/api/$id',
+  path: '/api/$id',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAprenderActivityIdRoute = AppAprenderActivityIdRouteImport.update({
   id: '/aprender/$activityId',
   path: '/aprender/$activityId',
@@ -227,6 +239,7 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/termos': typeof TermosRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  '/api/apis': typeof ApiApisRoute
   '/api/assinatura': typeof ApiAssinaturaRoute
   '/api/banco': typeof ApiBancoRoute
   '/api/blueprint': typeof ApiBlueprintRoute
@@ -245,6 +258,7 @@ export interface FileRoutesByFullPath {
   '/app/revisar': typeof AppRevisarRoute
   '/app/rota': typeof AppRotaRoute
   '/app/': typeof AppIndexRoute
+  '/app/api/$id': typeof AppApiIdRoute
   '/app/aprender/$activityId': typeof AppAprenderActivityIdRoute
   '/app/banco/$id': typeof AppBancoIdRoute
   '/app/blueprint/$id': typeof AppBlueprintIdRoute
@@ -262,6 +276,7 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/termos': typeof TermosRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  '/api/apis': typeof ApiApisRoute
   '/api/assinatura': typeof ApiAssinaturaRoute
   '/api/banco': typeof ApiBancoRoute
   '/api/blueprint': typeof ApiBlueprintRoute
@@ -280,6 +295,7 @@ export interface FileRoutesByTo {
   '/app/revisar': typeof AppRevisarRoute
   '/app/rota': typeof AppRotaRoute
   '/app': typeof AppIndexRoute
+  '/app/api/$id': typeof AppApiIdRoute
   '/app/aprender/$activityId': typeof AppAprenderActivityIdRoute
   '/app/banco/$id': typeof AppBancoIdRoute
   '/app/blueprint/$id': typeof AppBlueprintIdRoute
@@ -299,6 +315,7 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/termos': typeof TermosRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  '/api/apis': typeof ApiApisRoute
   '/api/assinatura': typeof ApiAssinaturaRoute
   '/api/banco': typeof ApiBancoRoute
   '/api/blueprint': typeof ApiBlueprintRoute
@@ -317,6 +334,7 @@ export interface FileRoutesById {
   '/app/revisar': typeof AppRevisarRoute
   '/app/rota': typeof AppRotaRoute
   '/app/': typeof AppIndexRoute
+  '/app/api/$id': typeof AppApiIdRoute
   '/app/aprender/$activityId': typeof AppAprenderActivityIdRoute
   '/app/banco/$id': typeof AppBancoIdRoute
   '/app/blueprint/$id': typeof AppBlueprintIdRoute
@@ -337,6 +355,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/termos'
     | '/.well-known/oauth-protected-resource'
+    | '/api/apis'
     | '/api/assinatura'
     | '/api/banco'
     | '/api/blueprint'
@@ -355,6 +374,7 @@ export interface FileRouteTypes {
     | '/app/revisar'
     | '/app/rota'
     | '/app/'
+    | '/app/api/$id'
     | '/app/aprender/$activityId'
     | '/app/banco/$id'
     | '/app/blueprint/$id'
@@ -372,6 +392,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/termos'
     | '/.well-known/oauth-protected-resource'
+    | '/api/apis'
     | '/api/assinatura'
     | '/api/banco'
     | '/api/blueprint'
@@ -390,6 +411,7 @@ export interface FileRouteTypes {
     | '/app/revisar'
     | '/app/rota'
     | '/app'
+    | '/app/api/$id'
     | '/app/aprender/$activityId'
     | '/app/banco/$id'
     | '/app/blueprint/$id'
@@ -408,6 +430,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/termos'
     | '/.well-known/oauth-protected-resource'
+    | '/api/apis'
     | '/api/assinatura'
     | '/api/banco'
     | '/api/blueprint'
@@ -426,6 +449,7 @@ export interface FileRouteTypes {
     | '/app/revisar'
     | '/app/rota'
     | '/app/'
+    | '/app/api/$id'
     | '/app/aprender/$activityId'
     | '/app/banco/$id'
     | '/app/blueprint/$id'
@@ -445,6 +469,7 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermosRoute: typeof TermosRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  ApiApisRoute: typeof ApiApisRoute
   ApiAssinaturaRoute: typeof ApiAssinaturaRoute
   ApiBancoRoute: typeof ApiBancoRoute
   ApiBlueprintRoute: typeof ApiBlueprintRoute
@@ -527,6 +552,13 @@ declare module '@tanstack/react-router' {
       path: '/.well-known/oauth-protected-resource'
       fullPath: '/.well-known/oauth-protected-resource'
       preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/apis': {
+      id: '/api/apis'
+      path: '/api/apis'
+      fullPath: '/api/apis'
+      preLoaderRoute: typeof ApiApisRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/assinatura': {
@@ -655,6 +687,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppRotaRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/api/$id': {
+      id: '/app/api/$id'
+      path: '/api/$id'
+      fullPath: '/app/api/$id'
+      preLoaderRoute: typeof AppApiIdRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/aprender/$activityId': {
       id: '/app/aprender/$activityId'
       path: '/aprender/$activityId'
@@ -711,6 +750,7 @@ interface AppRouteChildren {
   AppRevisarRoute: typeof AppRevisarRoute
   AppRotaRoute: typeof AppRotaRoute
   AppIndexRoute: typeof AppIndexRoute
+  AppApiIdRoute: typeof AppApiIdRoute
   AppAprenderActivityIdRoute: typeof AppAprenderActivityIdRoute
   AppBancoIdRoute: typeof AppBancoIdRoute
   AppBlueprintIdRoute: typeof AppBlueprintIdRoute
@@ -728,6 +768,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppRevisarRoute: AppRevisarRoute,
   AppRotaRoute: AppRotaRoute,
   AppIndexRoute: AppIndexRoute,
+  AppApiIdRoute: AppApiIdRoute,
   AppAprenderActivityIdRoute: AppAprenderActivityIdRoute,
   AppBancoIdRoute: AppBancoIdRoute,
   AppBlueprintIdRoute: AppBlueprintIdRoute,
@@ -748,6 +789,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermosRoute: TermosRoute,
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
+  ApiApisRoute: ApiApisRoute,
   ApiAssinaturaRoute: ApiAssinaturaRoute,
   ApiBancoRoute: ApiBancoRoute,
   ApiBlueprintRoute: ApiBlueprintRoute,
