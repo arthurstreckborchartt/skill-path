@@ -85,4 +85,9 @@ export const LIMITES = {
    * hora cobre um dia inteiro de estudo do plano; quem passa disso não está lendo.
    */
   etapa: { limite: 40, janelaMinutos: 60 },
+  /**
+   * Projetar o banco é caro e raro: um projeto tem um modelo de dados, e refazer é exceção.
+   * 8 por hora cobre quem está iterando no schema sem abrir espaço para uso em laço.
+   */
+  banco: { limite: 8, janelaMinutos: 60 },
 } as const;

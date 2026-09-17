@@ -85,6 +85,77 @@ function falha(erro: unknown): { ok: false; motivo: "erro"; detalhe?: string | u
   return { ok: false, motivo: "erro", detalhe: erro instanceof Error ? erro.message : undefined };
 }
 
+/** Os únicos caracteres que podem vir depois de uma barra invertida em JSON. */
+const ESCAPES_VALIDOS = new Set(['"', "\\", "/", "b", "f", "n", "r", "t", "u"]);
+
+function ehHex(c: string): boolean {
+  const n = c.codePointAt(0) ?? -1;
+  const DIGITO = n >= 0x30 && n <= 0x39;
+  const AF_MIN = n >= 0x61 && n <= 0x66;
+  const AF_MAI = n >= 0x41 && n <= 0x46;
+  return DIGITO || AF_MIN || AF_MAI;
+}
+
+/**
+ * Conserta o que o modelo escreve dentro de string e o `JSON.parse` recusa.
+ *
+ * Dois casos, os dois vistos em produção:
+ *
+ * 1. **Barra invertida solta.** Ao escrever um caminho do Windows, uma expressão regular ou um
+ *    `\_` de markdown, o modelo produz `\d`, que não é escape válido. O parse morre com
+ *    "Unrecognized token" e a geração inteira é jogada fora — depois de 70 segundos pagos.
+ * 2. **Quebra de linha crua.** JSON exige `\n`; um newline literal dentro da string é inválido.
+ *
+ * Consertar é seguro porque a intenção é inequívoca: uma barra que não abre escape era para ser
+ * uma barra, e uma quebra de linha dentro de string era para ser uma quebra de linha. Recusar
+ * seria tecnicamente correto e inútil para quem está esperando.
+ */
+export function repararJson(bruto: string): string {
+  let saida = "";
+  let emString = false;
+
+  for (let i = 0; i < bruto.length; i++) {
+    const c = bruto[i]!;
+
+    if (!emString) {
+      if (c === '"') emString = true;
+      saida += c;
+      continue;
+    }
+
+    if (c === '"') {
+      emString = false;
+      saida += c;
+      continue;
+    }
+
+    if (c === "\\") {
+      const proximo = bruto[i + 1] ?? "";
+      const hexOk = proximo === "u" && [1, 2, 3, 4].every((k) => ehHex(bruto[i + 1 + k] ?? ""));
+
+      if (ESCAPES_VALIDOS.has(proximo) && (proximo !== "u" || hexOk)) {
+        saida += c + proximo;
+        i++;
+      } else {
+        saida += "\\\\";
+      }
+      continue;
+    }
+
+    const n = c.codePointAt(0) ?? 0;
+    if (n < 0x20) {
+      // Controle cru dentro de string: vira o escape correspondente quando existe.
+      const mapa: Record<number, string> = { 8: "\\b", 9: "\\t", 10: "\\n", 12: "\\f", 13: "\\r" };
+      saida += mapa[n] ?? " ";
+      continue;
+    }
+
+    saida += c;
+  }
+
+  return saida;
+}
+
 /**
  * Extrai o objeto JSON de uma resposta que pode vir suja.
  *
@@ -123,11 +194,11 @@ export function extrairJson(bruto: string): string {
     if (emString) continue;
 
     if (c === "{") profundidade++;
-    else if (c === "}" && --profundidade === 0) return limpo.slice(inicio, i + 1);
+    else if (c === "}" && --profundidade === 0) return repararJson(limpo.slice(inicio, i + 1));
   }
 
   // Chaves desbalanceadas: resposta cortada no meio. Devolve o que há para o `validar` recusar.
-  return limpo.slice(inicio).trim();
+  return repararJson(limpo.slice(inicio).trim());
 }
 
 /**

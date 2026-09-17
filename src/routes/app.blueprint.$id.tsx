@@ -3,6 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ArrowLeft,
   Check,
+  Database,
   Loader2,
   Map as MapIcon,
   Pencil,
@@ -208,6 +209,34 @@ function TelaBlueprint() {
               </p>
             </div>
             <span className="shrink-0 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-transform group-hover:translate-x-0.5">
+              Abrir
+            </span>
+          </Link>
+        </Reveal>
+      )}
+
+      {/*
+        O banco só aparece depois do bloco de Produto: o modelo de dados sai do MVP e dos
+        requisitos funcionais. Antes disso o atalho levaria a uma recusa.
+      */}
+      {conteudo.produto && (
+        <Reveal>
+          <Link
+            to="/app/banco/$id"
+            params={{ id }}
+            className="tap group flex items-center justify-between gap-4 rounded-xl border border-border bg-surface/50 p-5 transition-colors hover:border-primary/30"
+          >
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <Database className="size-4 text-primary" />
+                <h2 className="font-display text-lg font-semibold">Banco de dados</h2>
+              </div>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Projete as tabelas com a explicação de cada decisão, e gere SQL, migration e
+                prompts.
+              </p>
+            </div>
+            <span className="shrink-0 rounded-lg border border-border px-4 py-2.5 text-sm font-medium transition-transform group-hover:translate-x-0.5">
               Abrir
             </span>
           </Link>

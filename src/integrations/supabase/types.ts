@@ -170,6 +170,36 @@ export type Database = {
         }
         Relationships: []
       }
+      pathly_modelos_dados: {
+        Row: {
+          atualizado_em: string
+          checklist_feito: number[]
+          criado_em: string
+          dialeto: string
+          modelo: Json
+          projeto_id: string
+          user_id: string
+        }
+        Insert: {
+          atualizado_em?: string
+          checklist_feito?: number[]
+          criado_em?: string
+          dialeto?: string
+          modelo: Json
+          projeto_id: string
+          user_id: string
+        }
+        Update: {
+          atualizado_em?: string
+          checklist_feito?: number[]
+          criado_em?: string
+          dialeto?: string
+          modelo?: Json
+          projeto_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       pathly_profiles: {
         Row: {
           assinatura_ate: string | null
