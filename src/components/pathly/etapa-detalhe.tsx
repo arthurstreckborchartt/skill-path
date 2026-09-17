@@ -245,7 +245,7 @@ export function DetalheEtapa({
           Marque conforme for fazendo. Fica salvo.
         </p>
         <div className="space-y-1">
-          {conteudo.checklist.map((item, i) => {
+          {conteudo.checklist.map((texto, i) => {
             const feito = feitos.has(i);
             return (
               <button
@@ -267,7 +267,7 @@ export function DetalheEtapa({
                     feito ? "text-muted-foreground line-through" : "text-foreground/90",
                   )}
                 >
-                  {item.texto}
+                  {texto}
                 </span>
               </button>
             );

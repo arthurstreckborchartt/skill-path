@@ -22,10 +22,14 @@ export type Tarefa = {
   porque: string;
 };
 
-export type ItemChecklist = {
-  /** Algo verificável por quem fez. Não "entendi o conceito" — "o comando X devolve Y". */
-  texto: string;
-};
+/**
+ * O checklist é uma lista de textos, e não de objetos com um campo `texto`.
+ *
+ * A primeira versão era `{ texto: string }[]`, e todo modelo devolvia `string[]` — o filtro
+ * derrubava os itens um a um e a etapa inteira era recusada com "checklist válido = 0". Envolver
+ * um único campo num objeto não acrescenta nada e dá ao modelo uma forma a mais de errar.
+ */
+export type ItemChecklist = string;
 
 export type DecisaoTecnica = {
   /** A escolha que precisa ser feita nesta etapa. */
@@ -124,18 +128,9 @@ export const SCHEMA_ETAPA = {
       type: "array",
       minItems: 3,
       maxItems: 8,
-      items: {
-        type: "object",
-        properties: {
-          texto: {
-            type: "string",
-            description:
-              "Algo que a pessoa marca depois de fazer, verificável por ela mesma. 'A tabela pedidos existe e tem as 6 colunas' vale; 'entendi modelagem' não vale.",
-          },
-        },
-        required: ["texto"],
-        additionalProperties: false,
-      },
+      items: { type: "string" },
+      description:
+        "Itens que a pessoa marca depois de fazer, verificáveis por ela mesma. 'A tabela pedidos existe e tem as 6 colunas' vale; 'entendi modelagem' não vale.",
     },
     criteriosDeConclusao: {
       type: "array",
@@ -210,7 +205,7 @@ export const SCHEMA_ETAPA = {
 
 /** Formato em texto, para os provedores que não aceitam schema estruturado. */
 export const FORMATO_ETAPA = `Responda SOMENTE com JSON:
-{"objetivo":"","explicacao":["",""],"tarefas":[{"texto":"","porque":""}],"conhecimentoNecessario":[""],"recursos":[{"titulo":"","tipo":"","porque":""}],"checklist":[{"texto":""}],"criteriosDeConclusao":["",""],"riscos":[""],"decisoesTecnicas":[{"decisao":"","recomendacao":"","quandoNaoVale":""}],"prompt":"","modoManual":["","",""],"validacao":""}
+{"objetivo":"","explicacao":["",""],"tarefas":[{"texto":"","porque":""}],"conhecimentoNecessario":[""],"recursos":[{"titulo":"","tipo":"","porque":""}],"checklist":["",""],"criteriosDeConclusao":["",""],"riscos":[""],"decisoesTecnicas":[{"decisao":"","recomendacao":"","quandoNaoVale":""}],"prompt":"","modoManual":["","",""],"validacao":""}
 
 O campo "prompt" e o campo "modoManual" precisam funcionar de forma independente: um para quem
 vai pedir a uma IA, outro para quem vai digitar tudo à mão. Nunca escreva "peça para a IA" dentro
@@ -229,11 +224,17 @@ function textos(v: unknown, minimo: number): string[] | null {
  * derruba a promessa de o produto funcionar sem IA, e passa pelo schema sem problema nenhum.
  */
 export function validarEtapa(valor: unknown): ConteudoEtapa | null {
-  if (!valor || typeof valor !== "object") return null;
+  const recusa = (porque: string) => {
+    if (typeof process !== "undefined" && process.env?.["DIAG_ETAPA"]) {
+      console.log("[validarEtapa] recusou:", porque);
+    }
+    return null;
+  };
+  if (!valor || typeof valor !== "object") return recusa("nao e objeto");
   const e = valor as Partial<ConteudoEtapa>;
 
   const objetivo = typeof e.objetivo === "string" ? e.objetivo.trim() : "";
-  if (objetivo.length < 15) return null;
+  if (objetivo.length < 15) return recusa(`objetivo curto (${objetivo.length})`);
 
   const explicacao = textos(e.explicacao, 2);
   const conhecimentoNecessario = textos(e.conhecimentoNecessario, 1);
@@ -241,7 +242,9 @@ export function validarEtapa(valor: unknown): ConteudoEtapa | null {
   const riscos = textos(e.riscos, 1);
   const modoManual = textos(e.modoManual, 3);
   if (!explicacao || !conhecimentoNecessario || !criteriosDeConclusao || !riscos || !modoManual) {
-    return null;
+    return recusa(
+      `listas: explicacao=${explicacao?.length} conhecimento=${conhecimentoNecessario?.length} criterios=${criteriosDeConclusao?.length} riscos=${riscos?.length} manual=${modoManual?.length}`,
+    );
   }
 
   // O modo manual não pode delegar para a IA — é justamente a alternativa a ela.
@@ -253,7 +256,10 @@ export function validarEtapa(valor: unknown): ConteudoEtapa | null {
       t.includes("use o prompt acima")
     );
   });
-  if (delega) return null;
+  if (delega)
+    return recusa(
+      `modo manual delega para IA: ${modoManual.find((p) => p.toLowerCase().includes("ia"))?.slice(0, 90)}`,
+    );
 
   const tarefas = (Array.isArray(e.tarefas) ? e.tarefas : []).filter(
     (t): t is Tarefa =>
@@ -263,20 +269,30 @@ export function validarEtapa(valor: unknown): ConteudoEtapa | null {
       typeof t.porque === "string" &&
       t.porque.trim().length > 5,
   );
-  if (tarefas.length < 2) return null;
+  if (tarefas.length < 2) return recusa(`tarefas validas=${tarefas.length}`);
 
-  const checklist = (Array.isArray(e.checklist) ? e.checklist : []).filter(
-    (c): c is ItemChecklist =>
-      Boolean(c) && typeof c.texto === "string" && c.texto.trim().length > 5,
-  );
-  if (checklist.length < 2) return null;
+  /**
+   * Aceita as duas formas.
+   *
+   * O contrato pede `string[]`, mas alguns modelos insistem em `{ texto }` — provavelmente porque
+   * é o formato das tarefas logo acima. Normalizar aqui custa três linhas; recusar a etapa inteira
+   * por causa disso custa uma geração e a paciência de quem esperou.
+   */
+  const checklist = (Array.isArray(e.checklist) ? e.checklist : [])
+    .map((c) => {
+      if (typeof c === "string") return c.trim();
+      const obj = c as { texto?: unknown };
+      return typeof obj?.texto === "string" ? obj.texto.trim() : "";
+    })
+    .filter((c) => c.length > 5);
+  if (checklist.length < 2) return recusa(`checklist valido=${checklist.length}`);
 
   const prompt = typeof e.prompt === "string" ? e.prompt.trim() : "";
   // Prompt curto demais é um resumo do prompt, não o prompt. Inútil para colar.
-  if (prompt.length < 80) return null;
+  if (prompt.length < 80) return recusa(`prompt curto (${prompt.length})`);
 
   const validacao = typeof e.validacao === "string" ? e.validacao.trim() : "";
-  if (validacao.length < 15) return null;
+  if (validacao.length < 15) return recusa(`validacao curta (${validacao.length})`);
 
   return {
     objetivo,
