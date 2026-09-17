@@ -643,6 +643,14 @@ export type Database = {
         Args: { p_endpoint: string; p_janela_minutos: number }
         Returns: number
       }
+      registrar_uso_ia_servidor: {
+        Args: {
+          p_endpoint: string
+          p_janela_minutos: number
+          p_user_id: string
+        }
+        Returns: number
+      }
     }
     Enums: {
       [_ in never]: never
