@@ -92,4 +92,9 @@ export const LIMITES = {
   banco: { limite: 8, janelaMinutos: 60 },
   /** Mesmo raciocínio do banco: um projeto tem um mapa de APIs, e refazer é exceção. */
   api: { limite: 8, janelaMinutos: 60 },
+  /**
+   * A análise de segurança é barata: só os extras passam pela IA, e a lista é curta. O catálogo
+   * e a detecção rodam sem chamada nenhuma.
+   */
+  seguranca: { limite: 12, janelaMinutos: 60 },
 } as const;

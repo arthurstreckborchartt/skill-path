@@ -9,6 +9,7 @@ import {
   Network,
   Pencil,
   RefreshCw,
+  ShieldAlert,
   Sparkles,
 } from "lucide-react";
 import { Btn, Chip, Panel, Reveal } from "@/components/pathly/ui";
@@ -268,6 +269,33 @@ function TelaBlueprint() {
           </Link>
         </Reveal>
       )}
+
+      {/*
+        A segurança não espera banco nem API: ela roda com o questionário, e diz o que ficou fora
+        do alcance. Escondê-la até o projeto estar completo seria esconder justamente de quem está
+        começando — que é quem mais precisa ver a lista.
+      */}
+      <Reveal>
+        <Link
+          to="/app/seguranca/$id"
+          params={{ id }}
+          className="tap group flex items-center justify-between gap-4 rounded-xl border border-border bg-surface/50 p-5 transition-colors hover:border-primary/30"
+        >
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <ShieldAlert className="size-4 text-primary" />
+              <h2 className="font-display text-lg font-semibold">Segurança</h2>
+            </div>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Os riscos que o seu plano já mostra, com a evidência de cada um — e o checklist do que
+              conferir antes de lançar.
+            </p>
+          </div>
+          <span className="shrink-0 rounded-lg border border-border px-4 py-2.5 text-sm font-medium transition-transform group-hover:translate-x-0.5">
+            Abrir
+          </span>
+        </Link>
+      </Reveal>
 
       <Reveal>
         <Panel>

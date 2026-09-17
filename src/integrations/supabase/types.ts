@@ -260,6 +260,33 @@ export type Database = {
         }
         Relationships: []
       }
+      pathly_seguranca: {
+        Row: {
+          atualizado_em: string
+          criado_em: string
+          extras: Json
+          itens_feitos: string[]
+          projeto_id: string
+          user_id: string
+        }
+        Insert: {
+          atualizado_em?: string
+          criado_em?: string
+          extras?: Json
+          itens_feitos?: string[]
+          projeto_id: string
+          user_id: string
+        }
+        Update: {
+          atualizado_em?: string
+          criado_em?: string
+          extras?: Json
+          itens_feitos?: string[]
+          projeto_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       pathly_projetos: {
         Row: {
           atualizado_em: string

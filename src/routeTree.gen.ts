@@ -27,6 +27,7 @@ import { Route as ApiEtapaRouteImport } from './routes/api.etapa'
 import { Route as ApiLicaoRouteImport } from './routes/api.licao'
 import { Route as ApiPraticaRouteImport } from './routes/api.pratica'
 import { Route as ApiRotaRouteImport } from './routes/api.rota'
+import { Route as ApiSegurancaRouteImport } from './routes/api.seguranca'
 import { Route as ApiStripeWebhookRouteImport } from './routes/api.stripe-webhook'
 import { Route as AppIndexRouteImport } from './routes/app.index'
 import { Route as AppBlueprintsRouteImport } from './routes/app.blueprints'
@@ -43,6 +44,7 @@ import { Route as AppAprenderActivityIdRouteImport } from './routes/app.aprender
 import { Route as AppBancoIdRouteImport } from './routes/app.banco.$id'
 import { Route as AppBlueprintIdRouteImport } from './routes/app.blueprint.$id'
 import { Route as AppRoadmapIdRouteImport } from './routes/app.roadmap.$id'
+import { Route as AppSegurancaIdRouteImport } from './routes/app.seguranca.$id'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 
@@ -137,6 +139,11 @@ const ApiRotaRoute = ApiRotaRouteImport.update({
   path: '/api/rota',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiSegurancaRoute = ApiSegurancaRouteImport.update({
+  id: '/api/seguranca',
+  path: '/api/seguranca',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiStripeWebhookRoute = ApiStripeWebhookRouteImport.update({
   id: '/api/stripe-webhook',
   path: '/api/stripe-webhook',
@@ -217,6 +224,11 @@ const AppRoadmapIdRoute = AppRoadmapIdRouteImport.update({
   path: '/roadmap/$id',
   getParentRoute: () => AppRoute,
 } as any)
+const AppSegurancaIdRoute = AppSegurancaIdRouteImport.update({
+  id: '/seguranca/$id',
+  path: '/seguranca/$id',
+  getParentRoute: () => AppRoute,
+} as any)
 const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
   id: '/lovable/email/auth/preview',
   path: '/lovable/email/auth/preview',
@@ -247,6 +259,7 @@ export interface FileRoutesByFullPath {
   '/api/licao': typeof ApiLicaoRoute
   '/api/pratica': typeof ApiPraticaRoute
   '/api/rota': typeof ApiRotaRoute
+  '/api/seguranca': typeof ApiSegurancaRoute
   '/api/stripe-webhook': typeof ApiStripeWebhookRoute
   '/app/blueprints': typeof AppBlueprintsRoute
   '/app/configuracoes': typeof AppConfiguracoesRoute
@@ -263,6 +276,7 @@ export interface FileRoutesByFullPath {
   '/app/banco/$id': typeof AppBancoIdRoute
   '/app/blueprint/$id': typeof AppBlueprintIdRoute
   '/app/roadmap/$id': typeof AppRoadmapIdRoute
+  '/app/seguranca/$id': typeof AppSegurancaIdRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
 }
@@ -284,6 +298,7 @@ export interface FileRoutesByTo {
   '/api/licao': typeof ApiLicaoRoute
   '/api/pratica': typeof ApiPraticaRoute
   '/api/rota': typeof ApiRotaRoute
+  '/api/seguranca': typeof ApiSegurancaRoute
   '/api/stripe-webhook': typeof ApiStripeWebhookRoute
   '/app/blueprints': typeof AppBlueprintsRoute
   '/app/configuracoes': typeof AppConfiguracoesRoute
@@ -300,6 +315,7 @@ export interface FileRoutesByTo {
   '/app/banco/$id': typeof AppBancoIdRoute
   '/app/blueprint/$id': typeof AppBlueprintIdRoute
   '/app/roadmap/$id': typeof AppRoadmapIdRoute
+  '/app/seguranca/$id': typeof AppSegurancaIdRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
 }
@@ -323,6 +339,7 @@ export interface FileRoutesById {
   '/api/licao': typeof ApiLicaoRoute
   '/api/pratica': typeof ApiPraticaRoute
   '/api/rota': typeof ApiRotaRoute
+  '/api/seguranca': typeof ApiSegurancaRoute
   '/api/stripe-webhook': typeof ApiStripeWebhookRoute
   '/app/blueprints': typeof AppBlueprintsRoute
   '/app/configuracoes': typeof AppConfiguracoesRoute
@@ -339,6 +356,7 @@ export interface FileRoutesById {
   '/app/banco/$id': typeof AppBancoIdRoute
   '/app/blueprint/$id': typeof AppBlueprintIdRoute
   '/app/roadmap/$id': typeof AppRoadmapIdRoute
+  '/app/seguranca/$id': typeof AppSegurancaIdRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
 }
@@ -363,6 +381,7 @@ export interface FileRouteTypes {
     | '/api/licao'
     | '/api/pratica'
     | '/api/rota'
+    | '/api/seguranca'
     | '/api/stripe-webhook'
     | '/app/blueprints'
     | '/app/configuracoes'
@@ -379,6 +398,7 @@ export interface FileRouteTypes {
     | '/app/banco/$id'
     | '/app/blueprint/$id'
     | '/app/roadmap/$id'
+    | '/app/seguranca/$id'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
   fileRoutesByTo: FileRoutesByTo
@@ -400,6 +420,7 @@ export interface FileRouteTypes {
     | '/api/licao'
     | '/api/pratica'
     | '/api/rota'
+    | '/api/seguranca'
     | '/api/stripe-webhook'
     | '/app/blueprints'
     | '/app/configuracoes'
@@ -416,6 +437,7 @@ export interface FileRouteTypes {
     | '/app/banco/$id'
     | '/app/blueprint/$id'
     | '/app/roadmap/$id'
+    | '/app/seguranca/$id'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
   id:
@@ -438,6 +460,7 @@ export interface FileRouteTypes {
     | '/api/licao'
     | '/api/pratica'
     | '/api/rota'
+    | '/api/seguranca'
     | '/api/stripe-webhook'
     | '/app/blueprints'
     | '/app/configuracoes'
@@ -454,6 +477,7 @@ export interface FileRouteTypes {
     | '/app/banco/$id'
     | '/app/blueprint/$id'
     | '/app/roadmap/$id'
+    | '/app/seguranca/$id'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
   fileRoutesById: FileRoutesById
@@ -477,6 +501,7 @@ export interface RootRouteChildren {
   ApiLicaoRoute: typeof ApiLicaoRoute
   ApiPraticaRoute: typeof ApiPraticaRoute
   ApiRotaRoute: typeof ApiRotaRoute
+  ApiSegurancaRoute: typeof ApiSegurancaRoute
   ApiStripeWebhookRoute: typeof ApiStripeWebhookRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
@@ -610,6 +635,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiRotaRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/seguranca': {
+      id: '/api/seguranca'
+      path: '/api/seguranca'
+      fullPath: '/api/seguranca'
+      preLoaderRoute: typeof ApiSegurancaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/stripe-webhook': {
       id: '/api/stripe-webhook'
       path: '/api/stripe-webhook'
@@ -722,6 +754,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppRoadmapIdRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/seguranca/$id': {
+      id: '/app/seguranca/$id'
+      path: '/seguranca/$id'
+      fullPath: '/app/seguranca/$id'
+      preLoaderRoute: typeof AppSegurancaIdRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/lovable/email/auth/preview': {
       id: '/lovable/email/auth/preview'
       path: '/lovable/email/auth/preview'
@@ -755,6 +794,7 @@ interface AppRouteChildren {
   AppBancoIdRoute: typeof AppBancoIdRoute
   AppBlueprintIdRoute: typeof AppBlueprintIdRoute
   AppRoadmapIdRoute: typeof AppRoadmapIdRoute
+  AppSegurancaIdRoute: typeof AppSegurancaIdRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
@@ -773,6 +813,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppBancoIdRoute: AppBancoIdRoute,
   AppBlueprintIdRoute: AppBlueprintIdRoute,
   AppRoadmapIdRoute: AppRoadmapIdRoute,
+  AppSegurancaIdRoute: AppSegurancaIdRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
@@ -797,6 +838,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiLicaoRoute: ApiLicaoRoute,
   ApiPraticaRoute: ApiPraticaRoute,
   ApiRotaRoute: ApiRotaRoute,
+  ApiSegurancaRoute: ApiSegurancaRoute,
   ApiStripeWebhookRoute: ApiStripeWebhookRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
