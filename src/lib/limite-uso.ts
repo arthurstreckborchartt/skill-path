@@ -80,4 +80,9 @@ export const LIMITES = {
    * `effort: high`, que é a chamada mais cara que o app faz.
    */
   blueprint: { limite: 20, janelaMinutos: 60 },
+  /**
+   * Abrir etapas do roadmap é o uso mais frequente do app: a pessoa navega, lê, volta. 40 por
+   * hora cobre um dia inteiro de estudo do plano; quem passa disso não está lendo.
+   */
+  etapa: { limite: 40, janelaMinutos: 60 },
 } as const;

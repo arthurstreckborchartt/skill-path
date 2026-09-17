@@ -2,6 +2,8 @@ import { gerarJson, type Saida } from "@/lib/ia/gerar-json";
 import { ESQUEMAS } from "./esquemas";
 import { DEPENDE_DE, VALIDADORES, podeGerar, type Bloco, type Blueprint } from "./contrato";
 import { diretrizesEmTexto, filtrarTecnico } from "./regras";
+import { fasesDoProjeto } from "./fases";
+import { validarExecucaoComFases } from "./contrato";
 import { ROTULO_NIVEL, ROTULO_TIPO, type Respostas } from "./respostas";
 
 /**
@@ -118,9 +120,10 @@ funcionais acima, não a partir do que é comum em projetos parecidos.`,
 número, a infraestrutura mínima com custo estimado, como o deploy acontece e quais testes valem
 o esforço. Quem vai operar isto é uma pessoa só — nada aqui pode exigir um time.`,
 
-  execucao: `Monte a ordem de construção. Cada etapa entrega algo que passa a existir e que dá
-para verificar. A primeira fase é sempre fundação técnica — projeto, banco, autenticação. Tela
-nunca vem antes da tabela que ela mostra.`,
+  execucao: `Distribua o trabalho deste projeto entre as fases listadas acima. Cada etapa entrega
+algo que passa a existir e que dá para verificar, e pertence a UMA das fases — use o nome exato,
+sem inventar fase nova. Tela nunca vem antes da tabela que ela mostra. Nem toda fase precisa do
+mesmo número de etapas: as grandes levam quatro ou cinco, as pequenas uma.`,
 };
 
 /** Formato compacto por bloco, para os serviços que não aceitam schema estruturado. */
@@ -142,8 +145,8 @@ uma tabela so e uma resposta legitima para um sistema simples:
 {"requisitosNaoFuncionais":[{"categoria":"","descricao":"","comoMedir":""}],"infraestrutura":[{"componente":"","servico":"","porque":"","custoEstimado":""}],"deploy":{"estrategia":"","ambientes":[""],"passos":[""],"variaveis":[""]},"testes":[{"tipo":"","oQueCobre":"","ferramenta":"","prioridade":"alta|media|baixa"}]}`,
 
   execucao: `Responda SOMENTE com JSON. 6 a 30 etapas, "ordem" começando em 1 sem pular número, e
-"fase" sempre igual ao nome de uma das fases:
-{"fases":[{"nome":"","objetivo":""}],"etapas":[{"ordem":1,"titulo":"","entrega":"","fase":"","dependeDe":[],"estimativaHoras":4}],"riscos":[{"descricao":"","impacto":"baixo|medio|alto","mitigacao":""}]}`,
+"fase" sempre igual ao nome EXATO de uma das fases listadas no pedido:
+{"etapas":[{"ordem":1,"titulo":"","entrega":"","fase":"","dependeDe":[],"estimativaHoras":4}],"riscos":[{"descricao":"","impacto":"baixo|medio|alto","mitigacao":""}]}`,
 };
 
 /**
@@ -222,12 +225,31 @@ export async function gerarBloco(
    * estas são as regras que não podem ser negociadas. São elas que impedem o plano de ganhar um
    * gateway de pagamento que ninguém pediu.
    */
+  /**
+   * As fases do projeto, quando o bloco é o de execução.
+   *
+   * Vêm de `fases.ts`, derivadas das respostas — a IA recebe a lista pronta e só distribui as
+   * etapas nela. É o que mantém "Fase 09 = Frontend" verdadeiro entre projetos e entre
+   * regerações, e é isso que faz a pergunta "onde estou?" ter resposta estável.
+   */
+  const ativas = fasesDoProjeto(respostas, blueprint);
+
+  const listaDeFases =
+    bloco === "execucao"
+      ? [
+          ``,
+          `## As fases deste projeto (use exatamente estes nomes)`,
+          ...ativas.map((f) => `${f.numero}. ${f.nome} — ${f.objetivo}`),
+        ].join("\n")
+      : "";
+
   const usuario = [
     `A ideia, nas palavras da pessoa: "${ideia}"`,
     ``,
     questionario(respostas),
     ``,
     contexto(blueprint, bloco),
+    listaDeFases,
     ``,
     INSTRUCAO[bloco],
     ``,
@@ -240,7 +262,10 @@ export async function gerarBloco(
       usuario,
       schema: ESQUEMAS[bloco],
       formato: FORMATO[bloco],
-      validar: VALIDADORES[bloco] as (v: unknown) => unknown | null,
+      validar:
+        bloco === "execucao"
+          ? (v: unknown) => validarExecucaoComFases(v, ativas)
+          : (VALIDADORES[bloco] as (v: unknown) => unknown | null),
       tetoMs: TETOS_MS[bloco],
       maxTokens: TOKENS[bloco],
       ...(opcoes.comClaude ? { comClaude: true } : {}),

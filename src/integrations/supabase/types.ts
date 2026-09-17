@@ -98,6 +98,48 @@ export type Database = {
         }
         Relationships: []
       }
+      pathly_etapas: {
+        Row: {
+          anotacoes: string
+          atualizado_em: string
+          checklist_feito: number[]
+          concluida_em: string | null
+          conteudo: Json | null
+          id: string
+          iniciada_em: string | null
+          ordem: number
+          projeto_id: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          anotacoes?: string
+          atualizado_em?: string
+          checklist_feito?: number[]
+          concluida_em?: string | null
+          conteudo?: Json | null
+          id?: string
+          iniciada_em?: string | null
+          ordem: number
+          projeto_id: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          anotacoes?: string
+          atualizado_em?: string
+          checklist_feito?: number[]
+          concluida_em?: string | null
+          conteudo?: Json | null
+          id?: string
+          iniciada_em?: string | null
+          ordem?: number
+          projeto_id?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       pathly_licoes: {
         Row: {
           chave: string

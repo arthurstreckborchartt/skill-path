@@ -438,22 +438,6 @@ const ESQUEMA_OPERACAO = {
 const ESQUEMA_EXECUCAO = {
   type: "object" as const,
   properties: {
-    fases: {
-      type: "array",
-      minItems: 3,
-      maxItems: 6,
-      items: {
-        type: "object",
-        properties: {
-          nome: { type: "string" },
-          objetivo: { type: "string", description: "O que está pronto quando a fase termina." },
-        },
-        required: ["nome", "objetivo"],
-        additionalProperties: false,
-      },
-      description:
-        "A primeira fase é sempre fundação técnica (projeto, banco, autenticação). Telas nunca vêm antes do modelo de dados.",
-    },
     etapas: {
       type: "array",
       minItems: 6,
@@ -468,7 +452,11 @@ const ESQUEMA_EXECUCAO = {
             description:
               "O que passa a existir quando esta etapa termina, de forma verificável. Nada de 'entender X' — entregas são coisas que existem.",
           },
-          fase: { type: "string", description: "O nome exato de uma das fases acima." },
+          fase: {
+            type: "string",
+            description:
+              "O nome EXATO de uma das fases listadas no pedido. Nao invente fase nem mude o nome.",
+          },
           dependeDe: {
             type: "array",
             items: { type: "number" },
@@ -506,7 +494,7 @@ const ESQUEMA_EXECUCAO = {
       },
     },
   },
-  required: ["fases", "etapas", "riscos"],
+  required: ["etapas", "riscos"],
   additionalProperties: false,
 };
 

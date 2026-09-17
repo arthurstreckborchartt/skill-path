@@ -527,14 +527,41 @@ export function validarTecnico(valor: unknown): Tecnico | null {
   };
 }
 
-export function validarExecucao(valor: unknown): Execucao | null {
+/** Casa o nome que a IA escreveu com uma fase canônica, tolerando número na frente e caixa. */
+function casarFase(escrito: unknown, fases: { nome: string }[]): string {
+  const bruto = typeof escrito === "string" ? escrito : "";
+  const limpo = bruto
+    .trim()
+    .toLowerCase()
+    .replace(/^\d+\s*[.)-]?\s*/, "");
+
+  const exata = fases.find((f) => f.nome.toLowerCase() === limpo);
+  if (exata) return exata.nome;
+  const contida = fases.find((f) => limpo.includes(f.nome.toLowerCase()));
+  if (contida) return contida.nome;
+  // Sem casar, cai na primeira: perder a etapa seria pior que colocá-la na fase errada.
+  return fases[0]!.nome;
+}
+
+/**
+ * Valida o bloco de execução contra uma lista de fases que **já existe**.
+ *
+ * A IA não inventa mais os nomes das fases: ela recebe as fases canônicas do projeto e só
+ * distribui as etapas entre elas. Antes disso, o mesmo projeto gerado duas vezes vinha com
+ * recortes diferentes ("Fundação Técnica" numa vez, "Setup Inicial" na outra), e isso torna
+ * impossível responder "onde estou?" de forma estável entre uma regeração e outra.
+ *
+ * `fasesAtivas` vem de `fases.ts`, derivada das respostas do questionário.
+ */
+export function validarExecucaoComFases(
+  valor: unknown,
+  fasesAtivas: { nome: string; objetivo: string }[],
+): Execucao | null {
   if (!valor || typeof valor !== "object") return null;
+  if (fasesAtivas.length === 0) return null;
   const e = valor as Partial<Execucao>;
 
-  const fases = (Array.isArray(e.fases) ? e.fases : []).filter(
-    (f) => f && frase(f.nome, 2) && frase(f.objetivo, 10),
-  );
-  if (fases.length < 2) return null;
+  const fases = fasesAtivas;
 
   const brutas = (Array.isArray(e.etapas) ? e.etapas : []).filter(
     (x): x is Etapa =>
@@ -564,12 +591,15 @@ export function validarExecucao(valor: unknown): Execucao | null {
           typeof x.estimativaHoras === "number" && x.estimativaHoras > 0
             ? Math.min(x.estimativaHoras, 40)
             : 4,
-        fase: fases.some((f) => f.nome === x.fase) ? x.fase : fases[0]!.nome,
+        fase: casarFase(x.fase, fases),
       };
     });
 
+  // Só as fases que receberam etapa. Uma fase vazia na tela parece trabalho esquecido.
+  const usadas = new Set(etapas.map((x) => x.fase));
+
   return {
-    fases: fases.map((f) => ({ nome: f.nome.trim(), objetivo: f.objetivo.trim() })),
+    fases: fases.filter((f) => usadas.has(f.nome)),
     etapas,
     riscos: (Array.isArray(e.riscos) ? e.riscos : []).filter(
       (r): r is Risco =>
@@ -581,10 +611,13 @@ export function validarExecucao(valor: unknown): Execucao | null {
   };
 }
 
+/**
+ * `execucao` fica de fora: ele precisa das fases do projeto, que dependem das respostas. Quem
+ * gera monta o validador dele com `validarExecucaoComFases`.
+ */
 export const VALIDADORES = {
   fundacao: validarFundacao,
   produto: validarProduto,
   tecnico: validarTecnico,
   operacao: validarOperacao,
-  execucao: validarExecucao,
 } as const;

@@ -21,6 +21,7 @@ import { Route as TermosRouteImport } from './routes/termos'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as ApiAssinaturaRouteImport } from './routes/api.assinatura'
 import { Route as ApiBlueprintRouteImport } from './routes/api.blueprint'
+import { Route as ApiEtapaRouteImport } from './routes/api.etapa'
 import { Route as ApiLicaoRouteImport } from './routes/api.licao'
 import { Route as ApiPraticaRouteImport } from './routes/api.pratica'
 import { Route as ApiRotaRouteImport } from './routes/api.rota'
@@ -37,6 +38,7 @@ import { Route as AppRevisarRouteImport } from './routes/app.revisar'
 import { Route as AppRotaRouteImport } from './routes/app.rota'
 import { Route as AppAprenderActivityIdRouteImport } from './routes/app.aprender.$activityId'
 import { Route as AppBlueprintIdRouteImport } from './routes/app.blueprint.$id'
+import { Route as AppRoadmapIdRouteImport } from './routes/app.roadmap.$id'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 
@@ -99,6 +101,11 @@ const ApiAssinaturaRoute = ApiAssinaturaRouteImport.update({
 const ApiBlueprintRoute = ApiBlueprintRouteImport.update({
   id: '/api/blueprint',
   path: '/api/blueprint',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiEtapaRoute = ApiEtapaRouteImport.update({
+  id: '/api/etapa',
+  path: '/api/etapa',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiLicaoRoute = ApiLicaoRouteImport.update({
@@ -181,6 +188,11 @@ const AppBlueprintIdRoute = AppBlueprintIdRouteImport.update({
   path: '/blueprint/$id',
   getParentRoute: () => AppRoute,
 } as any)
+const AppRoadmapIdRoute = AppRoadmapIdRouteImport.update({
+  id: '/roadmap/$id',
+  path: '/roadmap/$id',
+  getParentRoute: () => AppRoute,
+} as any)
 const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
   id: '/lovable/email/auth/preview',
   path: '/lovable/email/auth/preview',
@@ -205,6 +217,7 @@ export interface FileRoutesByFullPath {
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/api/assinatura': typeof ApiAssinaturaRoute
   '/api/blueprint': typeof ApiBlueprintRoute
+  '/api/etapa': typeof ApiEtapaRoute
   '/api/licao': typeof ApiLicaoRoute
   '/api/pratica': typeof ApiPraticaRoute
   '/api/rota': typeof ApiRotaRoute
@@ -221,6 +234,7 @@ export interface FileRoutesByFullPath {
   '/app/': typeof AppIndexRoute
   '/app/aprender/$activityId': typeof AppAprenderActivityIdRoute
   '/app/blueprint/$id': typeof AppBlueprintIdRoute
+  '/app/roadmap/$id': typeof AppRoadmapIdRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
 }
@@ -236,6 +250,7 @@ export interface FileRoutesByTo {
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/api/assinatura': typeof ApiAssinaturaRoute
   '/api/blueprint': typeof ApiBlueprintRoute
+  '/api/etapa': typeof ApiEtapaRoute
   '/api/licao': typeof ApiLicaoRoute
   '/api/pratica': typeof ApiPraticaRoute
   '/api/rota': typeof ApiRotaRoute
@@ -252,6 +267,7 @@ export interface FileRoutesByTo {
   '/app': typeof AppIndexRoute
   '/app/aprender/$activityId': typeof AppAprenderActivityIdRoute
   '/app/blueprint/$id': typeof AppBlueprintIdRoute
+  '/app/roadmap/$id': typeof AppRoadmapIdRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
 }
@@ -269,6 +285,7 @@ export interface FileRoutesById {
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/api/assinatura': typeof ApiAssinaturaRoute
   '/api/blueprint': typeof ApiBlueprintRoute
+  '/api/etapa': typeof ApiEtapaRoute
   '/api/licao': typeof ApiLicaoRoute
   '/api/pratica': typeof ApiPraticaRoute
   '/api/rota': typeof ApiRotaRoute
@@ -285,6 +302,7 @@ export interface FileRoutesById {
   '/app/': typeof AppIndexRoute
   '/app/aprender/$activityId': typeof AppAprenderActivityIdRoute
   '/app/blueprint/$id': typeof AppBlueprintIdRoute
+  '/app/roadmap/$id': typeof AppRoadmapIdRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
 }
@@ -303,6 +321,7 @@ export interface FileRouteTypes {
     | '/.well-known/oauth-protected-resource'
     | '/api/assinatura'
     | '/api/blueprint'
+    | '/api/etapa'
     | '/api/licao'
     | '/api/pratica'
     | '/api/rota'
@@ -319,6 +338,7 @@ export interface FileRouteTypes {
     | '/app/'
     | '/app/aprender/$activityId'
     | '/app/blueprint/$id'
+    | '/app/roadmap/$id'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
   fileRoutesByTo: FileRoutesByTo
@@ -334,6 +354,7 @@ export interface FileRouteTypes {
     | '/.well-known/oauth-protected-resource'
     | '/api/assinatura'
     | '/api/blueprint'
+    | '/api/etapa'
     | '/api/licao'
     | '/api/pratica'
     | '/api/rota'
@@ -350,6 +371,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/app/aprender/$activityId'
     | '/app/blueprint/$id'
+    | '/app/roadmap/$id'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
   id:
@@ -366,6 +388,7 @@ export interface FileRouteTypes {
     | '/.well-known/oauth-protected-resource'
     | '/api/assinatura'
     | '/api/blueprint'
+    | '/api/etapa'
     | '/api/licao'
     | '/api/pratica'
     | '/api/rota'
@@ -382,6 +405,7 @@ export interface FileRouteTypes {
     | '/app/'
     | '/app/aprender/$activityId'
     | '/app/blueprint/$id'
+    | '/app/roadmap/$id'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
   fileRoutesById: FileRoutesById
@@ -399,6 +423,7 @@ export interface RootRouteChildren {
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   ApiAssinaturaRoute: typeof ApiAssinaturaRoute
   ApiBlueprintRoute: typeof ApiBlueprintRoute
+  ApiEtapaRoute: typeof ApiEtapaRoute
   ApiLicaoRoute: typeof ApiLicaoRoute
   ApiPraticaRoute: typeof ApiPraticaRoute
   ApiRotaRoute: typeof ApiRotaRoute
@@ -491,6 +516,13 @@ declare module '@tanstack/react-router' {
       path: '/api/blueprint'
       fullPath: '/api/blueprint'
       preLoaderRoute: typeof ApiBlueprintRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/etapa': {
+      id: '/api/etapa'
+      path: '/api/etapa'
+      fullPath: '/api/etapa'
+      preLoaderRoute: typeof ApiEtapaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/licao': {
@@ -605,6 +637,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppBlueprintIdRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/roadmap/$id': {
+      id: '/app/roadmap/$id'
+      path: '/roadmap/$id'
+      fullPath: '/app/roadmap/$id'
+      preLoaderRoute: typeof AppRoadmapIdRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/lovable/email/auth/preview': {
       id: '/lovable/email/auth/preview'
       path: '/lovable/email/auth/preview'
@@ -635,6 +674,7 @@ interface AppRouteChildren {
   AppIndexRoute: typeof AppIndexRoute
   AppAprenderActivityIdRoute: typeof AppAprenderActivityIdRoute
   AppBlueprintIdRoute: typeof AppBlueprintIdRoute
+  AppRoadmapIdRoute: typeof AppRoadmapIdRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
@@ -650,6 +690,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppIndexRoute: AppIndexRoute,
   AppAprenderActivityIdRoute: AppAprenderActivityIdRoute,
   AppBlueprintIdRoute: AppBlueprintIdRoute,
+  AppRoadmapIdRoute: AppRoadmapIdRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
@@ -668,6 +709,7 @@ const rootRouteChildren: RootRouteChildren = {
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
   ApiAssinaturaRoute: ApiAssinaturaRoute,
   ApiBlueprintRoute: ApiBlueprintRoute,
+  ApiEtapaRoute: ApiEtapaRoute,
   ApiLicaoRoute: ApiLicaoRoute,
   ApiPraticaRoute: ApiPraticaRoute,
   ApiRotaRoute: ApiRotaRoute,

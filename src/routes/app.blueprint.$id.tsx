@@ -1,6 +1,14 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, Check, Loader2, Pencil, RefreshCw, Sparkles } from "lucide-react";
+import {
+  ArrowLeft,
+  Check,
+  Loader2,
+  Map as MapIcon,
+  Pencil,
+  RefreshCw,
+  Sparkles,
+} from "lucide-react";
 import { Btn, Chip, Panel, Reveal } from "@/components/pathly/ui";
 import { Questionario, ResumoRespostas } from "@/components/pathly/questionario";
 import { respostasSuficientes, type Respostas } from "@/lib/blueprint/respostas";
@@ -176,6 +184,34 @@ function TelaBlueprint() {
         <Panel>
           <p className="text-sm text-destructive">{erro}</p>
         </Panel>
+      )}
+
+      {/*
+        O roadmap só aparece depois da execução existir: é dela que as etapas saem. Antes disso o
+        atalho levaria a uma tela vazia, que é pior que não ter atalho.
+      */}
+      {conteudo.execucao && (
+        <Reveal>
+          <Link
+            to="/app/roadmap/$id"
+            params={{ id }}
+            className="tap group flex items-center justify-between gap-4 rounded-xl border border-primary/30 bg-gradient-to-br from-primary/10 via-surface to-surface p-5"
+          >
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <MapIcon className="size-4 text-primary" />
+                <h2 className="font-display text-lg font-semibold">Seu roadmap</h2>
+              </div>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {conteudo.execucao.etapas.length} etapas em {conteudo.execucao.fases.length} fases.
+                Comece pela primeira.
+              </p>
+            </div>
+            <span className="shrink-0 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-transform group-hover:translate-x-0.5">
+              Abrir
+            </span>
+          </Link>
+        </Reveal>
       )}
 
       <Reveal>
