@@ -223,7 +223,7 @@ function TelaRoadmap() {
                     <Btn
                       variant="outline"
                       className="mt-4"
-                      onClick={() => setAberta(etapaAberta.ordem)}
+                      onClick={conteudo.tentarNovamente}
                     >
                       Tentar de novo
                     </Btn>

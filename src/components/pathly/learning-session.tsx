@@ -85,7 +85,7 @@ export function LearningSession({ activity }: { activity: LearningActivity }) {
     if (stepActivities.every((item) => completedIds.has(item.id)))
       route.completeStep(activity.stepId);
     setBusy(false);
-    setStage(5);
+    setStage(3);
   }
 
   return (

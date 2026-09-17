@@ -225,8 +225,13 @@ export type EstadoEtapa =
   | { estado: "erro"; mensagem: string };
 
 /** Busca (ou gera) o conteúdo de uma etapa. */
-export function useConteudoEtapa(projetoId: string, ordem: number | null): EstadoEtapa {
+export function useConteudoEtapa(
+  projetoId: string,
+  ordem: number | null,
+): EstadoEtapa & { tentarNovamente: () => void } {
   const [estado, setEstado] = useState<EstadoEtapa>({ estado: "carregando" });
+  const [tentativa, setTentativa] = useState(0);
+  const tentarNovamente = useCallback(() => setTentativa((atual) => atual + 1), []);
 
   useEffect(() => {
     if (ordem === null) return;
@@ -269,9 +274,9 @@ export function useConteudoEtapa(projetoId: string, ordem: number | null): Estad
     return () => {
       vivo = false;
     };
-  }, [projetoId, ordem]);
+  }, [projetoId, ordem, tentativa]);
 
-  return estado;
+  return { ...estado, tentarNovamente };
 }
 
 /** Usado pela tela para não recalcular o roadmap a cada render. */
