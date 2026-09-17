@@ -131,7 +131,7 @@ function TelaBanco() {
             <Btn className="mt-5" disabled={gerando} onClick={() => void gerar(false)}>
               {gerando ? (
                 <>
-                  <Loader2 className="size-4 animate-spin" /> Projetando — leva até um minuto e meio
+                  <Loader2 className="size-4 animate-spin" /> Projetando — leva até dois minutos
                 </>
               ) : (
                 <>

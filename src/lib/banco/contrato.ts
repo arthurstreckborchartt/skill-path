@@ -217,6 +217,72 @@ function validarEntidade(v: unknown): Entidade | null {
   };
 }
 
+/**
+ * Encontra a tabela que uma coluna `algo_id` aponta.
+ *
+ * Testa o nome cru e as formas de plural do português: `produto_id` acha `produtos`,
+ * `ficha_tecnica_id` acha `fichas_tecnicas`. Não é adivinhação — é a convenção que o próprio
+ * prompt manda a IA seguir.
+ */
+function tabelaApontada(coluna: string, tabelas: Set<string>): string | null {
+  if (!coluna.endsWith("_id")) return null;
+  const base = coluna.slice(0, -3);
+  if (!base) return null;
+
+  const candidatos = [base, `${base}s`, `${base}es`];
+
+  // Plural de nome composto pluraliza a primeira palavra: ficha_tecnica -> fichas_tecnicas.
+  const partes = base.split("_");
+  if (partes.length > 1) {
+    const [primeira, ...resto] = partes;
+    candidatos.push([`${primeira}s`, ...resto].join("_"));
+    candidatos.push([`${primeira}s`, ...resto.map((r) => `${r}s`)].join("_"));
+  }
+
+  return candidatos.find((c) => tabelas.has(c)) ?? null;
+}
+
+/**
+ * Deduz as relações que o modelo deixou de declarar.
+ *
+ * Em 17/09/2026 um modelo veio com sete tabelas, colunas `produto_id` e `venda_id`, índices
+ * criados em cima delas — e `relacoes: []`. A IA entendeu os relacionamentos e não preencheu o
+ * campo. Sem as relações não há chave estrangeira no SQL, e o banco deixa de garantir justamente
+ * o que mais importa: que um item aponte para uma venda que existe.
+ *
+ * Deduzir é seguro aqui porque a evidência é forte: uma coluna `produto_id` numa base que tem a
+ * tabela `produtos` não é ambígua. O texto explicativo sai mais seco que o da IA, e isso é melhor
+ * que uma chave estrangeira ausente.
+ */
+function inferirRelacoes(entidades: Entidade[], jaDeclaradas: Relacao[]): Relacao[] {
+  const tabelas = new Set(entidades.map((e) => e.nome));
+  const cobertas = new Set(jaDeclaradas.map((r) => `${r.de}.${r.coluna}`));
+  const novas: Relacao[] = [];
+
+  for (const e of entidades) {
+    for (const c of e.colunas) {
+      if (cobertas.has(`${e.nome}.${c.nome}`)) continue;
+      if (e.chavePrimaria.includes(c.nome)) continue;
+
+      const alvo = tabelaApontada(c.nome, tabelas);
+      if (!alvo || alvo === e.nome) continue;
+
+      novas.push({
+        de: e.nome,
+        para: alvo,
+        coluna: c.nome,
+        cardinalidade: "1:N",
+        porque: `Cada linha de ${e.nome} pertence a um registro de ${alvo}, e o mesmo registro de ${alvo} pode aparecer em várias linhas de ${e.nome}.`,
+        // `restrict` é o padrão seguro: impede apagar o pai enquanto houver filho, em vez de
+        // apagar dados em cascata numa relação que ninguém declarou de propósito.
+        aoApagarPai: "restrict",
+      });
+    }
+  }
+
+  return novas;
+}
+
 export function validarModelo(valor: unknown): ModeloDeDados | null {
   if (!valor || typeof valor !== "object") return null;
   const m = valor as Partial<ModeloDeDados>;
@@ -262,20 +328,23 @@ export function validarModelo(valor: unknown): ModeloDeDados | null {
       Boolean(texto(r.expressao, 3)),
   );
 
+  const declaradas: Relacao[] = relacoes.map((r) => ({
+    de: nomeSql(r.de)!,
+    para: nomeSql(r.para)!,
+    coluna: nomeSql(r.coluna)!,
+    cardinalidade: (["1:1", "1:N", "N:N"] as const).includes(r.cardinalidade)
+      ? r.cardinalidade
+      : "1:N",
+    porque: texto(r.porque, 10) ?? "",
+    aoApagarPai: (["cascade", "restrict", "set null"] as const).includes(r.aoApagarPai)
+      ? r.aoApagarPai
+      : "restrict",
+  }));
+
   return {
     entidades,
-    relacoes: relacoes.map((r) => ({
-      de: nomeSql(r.de)!,
-      para: nomeSql(r.para)!,
-      coluna: nomeSql(r.coluna)!,
-      cardinalidade: (["1:1", "1:N", "N:N"] as const).includes(r.cardinalidade)
-        ? r.cardinalidade
-        : "1:N",
-      porque: texto(r.porque, 10) ?? "",
-      aoApagarPai: (["cascade", "restrict", "set null"] as const).includes(r.aoApagarPai)
-        ? r.aoApagarPai
-        : "restrict",
-    })),
+    // As declaradas primeiro: a explicação da IA é melhor que a deduzida.
+    relacoes: [...declaradas, ...inferirRelacoes(entidades, declaradas)],
     indices: indices.map((i) => ({
       tabela: nomeSql(i.tabela)!,
       colunas: i.colunas.map((c) => nomeSql(c)!).filter(Boolean),

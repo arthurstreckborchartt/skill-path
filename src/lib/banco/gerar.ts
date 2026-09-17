@@ -303,8 +303,21 @@ function contexto(bp: Blueprint, r: Respostas): string {
   return partes.join("\n");
 }
 
-/** Medido: o modelo completo com explicações sai em 30 a 70s. */
-const TETO_MS = 85_000;
+/**
+ * O orçamento mais alto do app, e com motivo medido.
+ *
+ * Esta é a geração mais pesada que existe aqui: sete tabelas com descrição e justificativa por
+ * coluna passam de 14 mil tokens de saída, e o modelo leva de 40 a 70s para escrever.
+ *
+ * Com 85s a conta não fechava. A primeira tentativa recebe 55% do que resta, e em 17/09/2026 o
+ * `gemini-3.8-flash` gastou 19,5s **só para devolver um 503** — depois disso sobravam 33s por
+ * tentativa, menos do que a geração precisa. A escada inteira morria por tempo enquanto quatro
+ * provedores estavam de pé, e a tela culpava congestionamento.
+ *
+ * Com 115s a primeira tentativa recebe ~63s, que cobre o caso real, e ainda sobra para uma
+ * segunda depois de uma recusa lenta.
+ */
+const TETO_MS = 115_000;
 
 export async function gerarModelo(
   bp: Blueprint,
