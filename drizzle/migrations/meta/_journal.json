@@ -22,6 +22,13 @@
       "when": 1789668865419,
       "tag": "0002_restrict_ai_usage_counter_to_service_role",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1789669135022,
+      "tag": "0003_restrict_selected_learning_data_access",
+      "breakpoints": true
     }
   ]
 }

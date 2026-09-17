@@ -88,14 +88,19 @@ export const Route = createFileRoute("/api/licao")({
         }
 
         const chave = await chaveDe(contexto);
-        const comoUsuario = { Authorization: `Bearer ${token}`, apikey: anonKey };
+        const serviceRole = lerEnv("SUPABASE_SERVICE_ROLE_KEY");
 
         // Cache primeiro: a maioria das aberturas não deve gerar nada.
-        const cache = await fetch(
-          `${supabaseUrl}/rest/v1/pathly_licoes?select=conteudo&chave=eq.${chave}&limit=1`,
-          { headers: comoUsuario },
-        );
-        if (cache.ok) {
+        // A leitura usa a credencial do servidor porque a tabela não é mais um catálogo global
+        // para qualquer conta. No cliente, uma lição só pode ser relida quando existe uma revisão
+        // daquela própria pessoa apontando para a chave.
+        const cache = serviceRole
+          ? await fetch(
+              `${supabaseUrl}/rest/v1/pathly_licoes?select=conteudo&chave=eq.${chave}&limit=1`,
+              { headers: cabecalhosServico(serviceRole) },
+            )
+          : null;
+        if (cache?.ok) {
           const linhas = (await cache.json()) as { conteudo?: unknown }[];
           if (linhas[0]?.conteudo) {
             return new Response(
@@ -142,7 +147,6 @@ export const Route = createFileRoute("/api/licao")({
 
         // Guarda com a service role: `pathly_licoes` não tem política de escrita de propósito —
         // se `authenticated` pudesse inserir, uma pessoa escreveria a aula que as outras leem.
-        const serviceRole = lerEnv("SUPABASE_SERVICE_ROLE_KEY");
         if (serviceRole) {
           await fetch(`${supabaseUrl}/rest/v1/pathly_licoes`, {
             method: "POST",
