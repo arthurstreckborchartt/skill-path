@@ -170,14 +170,11 @@ create table if not exists public.pathly_resources (
 
 alter table public.pathly_resources enable row level security;
 
--- Leitura para todo mundo, inclusive quem não entrou: o catálogo aparece na rota de exemplo.
+-- O app usa o catálogo versionado em src/lib/catalog.ts. A cópia no banco fica restrita ao
+-- servidor para manutenção e auditoria, sem exposição redundante pela Data API pública.
 drop policy if exists "pathly_resources_read_all" on public.pathly_resources;
-create policy "pathly_resources_read_all"
-  on public.pathly_resources for select to anon, authenticated
-  using (true);
--- Sem policy de escrita: só a service role popula o catálogo.
-
-grant select on public.pathly_resources to anon, authenticated;
+revoke all on public.pathly_resources from anon, authenticated;
+grant all on public.pathly_resources to service_role;
 
 create index if not exists pathly_resources_areas_idx
   on public.pathly_resources using gin (areas);
@@ -231,7 +228,7 @@ grant select, insert, delete                     on public.pathly_profiles      
 grant update (user_id, onboarding, goal_text, updated_at) on public.pathly_profiles to authenticated;
 grant select, insert, update         on public.pathly_route_progress to authenticated;
 grant select, insert, delete         on public.pathly_routes         to authenticated;
-grant select                         on public.pathly_resources      to anon, authenticated;
+grant all                            on public.pathly_resources      to service_role;
 grant insert                         on public.feedback              to authenticated;
 
 -- ---------------------------------------------------------------- limite de uso da IA
@@ -254,8 +251,16 @@ create table if not exists public.pathly_uso_ia (
 
 alter table public.pathly_uso_ia enable row level security;
 
--- Sem policy nenhuma e sem grant: se o cliente pudesse escrever aqui, zeraria o proprio contador.
+-- O cliente pode consultar apenas o proprio consumo. Escrita continua exclusiva da funcao
+-- privilegiada chamada pelo servidor, portanto a pessoa nao consegue zerar o contador.
 revoke all on public.pathly_uso_ia from anon, authenticated;
+grant select on public.pathly_uso_ia to authenticated;
+grant all on public.pathly_uso_ia to service_role;
+
+drop policy if exists "pathly_uso_ia_select_own" on public.pathly_uso_ia;
+create policy "pathly_uso_ia_select_own"
+  on public.pathly_uso_ia for select to authenticated
+  using (auth.uid() = user_id);
 
 create index if not exists pathly_uso_ia_janela_idx on public.pathly_uso_ia (janela);
 
