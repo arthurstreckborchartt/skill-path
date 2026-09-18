@@ -18,3 +18,12 @@
 - [ ] Integrar gamificação baseada em evidência, projetos e tutor contextual.
 - [ ] Validar fluxos críticos em celular e desktop.
 - [x] Manter `docs/LEARNING_SYSTEM.md` e `docs/IMPLEMENTATION_STATUS.md` atualizados.
+
+## Correções de confiabilidade
+
+- [ ] Restaurar permissões mínimas das tabelas centrais.
+- [ ] Corrigir persistência do checklist de segurança.
+- [ ] Preservar o dialeto ao regenerar o banco.
+- [ ] Manter o relatório de segurança após falha da IA.
+- [ ] Validar banco, tipos e fluxos corrigidos.
+
