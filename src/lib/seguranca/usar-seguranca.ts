@@ -138,12 +138,14 @@ export function useSeguranca(projetoId: string) {
 
       setEstado((atual) =>
         atual.estado === "pronto"
-          ? {
-              ...atual,
-              extras: lerExtras(corpo.extras),
-              extrasVieram: corpo.extrasVieram !== false,
-              erroExtras: undefined,
-            }
+          ? (() => {
+              const { erroExtras: _erroExtras, ...restante } = atual;
+              return {
+                ...restante,
+                extras: lerExtras(corpo.extras),
+                extrasVieram: corpo.extrasVieram !== false,
+              };
+            })()
           : atual,
       );
     } catch {
@@ -166,7 +168,8 @@ export function useSeguranca(projetoId: string) {
         : [...estado.itensFeitos, chave];
 
       const anterior = estado.itensFeitos;
-      setEstado({ ...estado, itensFeitos: novo, erroChecklist: undefined });
+      const { erroChecklist: _erroChecklist, ...estadoSemErro } = estado;
+      setEstado({ ...estadoSemErro, itensFeitos: novo });
 
       /**
        * `upsert`, não `update`: a linha só existe depois que alguém buscou os extras, e marcar um
