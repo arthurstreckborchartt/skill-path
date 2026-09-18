@@ -30,12 +30,14 @@ export default defineConfig(({ mode }) => {
       alias: {
         "entities/lib/decode.js": path.resolve(
           process.cwd(),
-          "node_modules/entities/lib/decode.js",
+          "node_modules/@react-email/render/node_modules/entities/lib/decode.js",
         ),
         "entities/lib/encode.js": path.resolve(
           process.cwd(),
-          "node_modules/entities/lib/encode.js",
+          "node_modules/@react-email/render/node_modules/entities/lib/encode.js",
         ),
+        "entities/decode": path.resolve(process.cwd(), "node_modules/entities/decode.js"),
+        "entities/escape": path.resolve(process.cwd(), "node_modules/entities/escape.js"),
       },
     },
     tanstackStart: {
