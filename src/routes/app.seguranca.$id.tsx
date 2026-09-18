@@ -195,6 +195,13 @@ function TelaSeguranca() {
               na varinha para tentar de novo.
             </p>
           )}
+
+          {estado.erroExtras && (
+            <p role="alert" className="mt-4 text-xs leading-relaxed text-destructive">
+              {estado.erroExtras} A análise atual continua disponível; toque na varinha para tentar
+              novamente.
+            </p>
+          )}
         </Panel>
       </Reveal>
 
@@ -228,6 +235,11 @@ function TelaSeguranca() {
 
         {aba === "checklist" && (
           <Panel>
+            {estado.erroChecklist && (
+              <p role="alert" className="mb-4 text-sm text-destructive">
+                {estado.erroChecklist}
+              </p>
+            )}
             <VistaChecklistSeguranca
               itens={checklist}
               feitos={estado.itensFeitos}

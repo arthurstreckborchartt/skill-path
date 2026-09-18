@@ -255,6 +255,11 @@ function TelaApi() {
 
         {aba === "testes" && (
           <Panel>
+            {estado.erroPersistencia && (
+              <p role="alert" className="mb-4 text-sm text-destructive">
+                {estado.erroPersistencia}
+              </p>
+            )}
             <VistaChecklist
               itens={d.checklist}
               feitos={estado.testesFeitos}

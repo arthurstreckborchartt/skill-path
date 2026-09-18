@@ -234,6 +234,11 @@ function TelaBanco() {
             <p className="mt-2 text-xs text-muted-foreground">
               Trocar é instantâneo: o SQL é reescrito a partir do mesmo modelo, sem gerar de novo.
             </p>
+            {estado.erroPersistencia && (
+              <p role="alert" className="mt-2 text-xs text-destructive">
+                {estado.erroPersistencia}
+              </p>
+            )}
           </div>
         </Panel>
       </Reveal>
@@ -313,6 +318,11 @@ function TelaBanco() {
 
         {aba === "validar" && (
           <Panel>
+            {estado.erroPersistencia && (
+              <p role="alert" className="mb-4 text-sm text-destructive">
+                {estado.erroPersistencia}
+              </p>
+            )}
             <VistaChecklist
               itens={d.checklist}
               feitos={estado.checklistFeito}

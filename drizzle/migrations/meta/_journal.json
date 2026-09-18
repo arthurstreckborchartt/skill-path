@@ -29,6 +29,13 @@
       "when": 1789669135022,
       "tag": "0003_restrict_selected_learning_data_access",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1789757379651,
+      "tag": "0004_restore_core_authenticated_access",
+      "breakpoints": true
     }
   ]
 }

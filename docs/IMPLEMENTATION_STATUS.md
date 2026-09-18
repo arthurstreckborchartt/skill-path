@@ -22,6 +22,10 @@
 - Reconciliação de avanços offline com o snapshot da nuvem.
 - Paywall aplicado também ao acesso direto de uma sessão.
 - Documentação técnica e de continuidade criada.
+- Permissões mínimas das tabelas centrais restauradas e verificadas sem liberar leitura anônima.
+- Checklists de Segurança, Banco e API revertem alterações otimistas e exibem falhas de gravação.
+- Regenerar o modelo preserva o dialeto escolhido; falhas da IA preservam o relatório de segurança.
+- Onboarding compara `updatedAt` antes de substituir respostas locais pela cópia da nuvem.
 
 ## IN PROGRESS
 

@@ -22,7 +22,7 @@ import type { Respostas } from "@/lib/blueprint/respostas";
 
 export type EstadoApi =
   | { estado: "carregando" }
-  | { estado: "pronto"; mapa: MapaApi; testesFeitos: number[] }
+  | { estado: "pronto"; mapa: MapaApi; testesFeitos: number[]; erroPersistencia?: string }
   | { estado: "vazio" }
   | { estado: "erro"; mensagem: string; motivo?: string };
 
@@ -126,11 +126,24 @@ export function useMapaApi(projetoId: string) {
         ? feitos.filter((x) => x !== indice)
         : [...feitos, indice];
 
-      setEstado({ ...estado, testesFeitos: novo });
-      await supabase
+      const anterior = estado.testesFeitos;
+      const { erroPersistencia: _erroPersistencia, ...estadoSemErro } = estado;
+      setEstado({ ...estadoSemErro, testesFeitos: novo });
+      const { error } = await supabase
         .from("pathly_apis")
         .update({ testes_feitos: novo })
         .eq("projeto_id", projetoId);
+      if (error) {
+        setEstado((atual) =>
+          atual.estado === "pronto"
+            ? {
+                ...atual,
+                testesFeitos: anterior,
+                erroPersistencia: "Não consegui salvar este teste. Tente de novo.",
+              }
+            : atual,
+        );
+      }
     },
     [estado, projetoId],
   );
