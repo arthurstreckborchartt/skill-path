@@ -36,7 +36,6 @@ export default defineConfig(({ mode }) => {
           process.cwd(),
           "node_modules/entities/lib/encode.js",
         ),
-        entities: path.resolve(process.cwd(), "node_modules/entities"),
       },
     },
     tanstackStart: {
