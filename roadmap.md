@@ -38,10 +38,11 @@
 
 ## Pathly para criação de SaaS
 
-- [ ] Remover estudo, habilidades, XP e rotas educacionais da experiência visível.
-- [ ] Transformar cada projeto em uma conversa persistente com contexto próprio.
-- [ ] Fazer o início abrir na criação de um SaaS por conversa.
-- [ ] Reaproveitar Blueprint, Banco, API, Segurança, Arquitetura de IA e Roadmap como plano do SaaS.
+- [x] Remover estudo, habilidades, XP e rotas educacionais da experiência visível.
+- [x] Transformar cada projeto em uma conversa persistente com contexto próprio.
+- [x] Fazer o início abrir na criação de um SaaS por conversa.
+- [x] Reaproveitar Blueprint, Banco, API, Segurança, Arquitetura de IA e Roadmap como plano do SaaS.
 - [ ] Adicionar conexões de ferramentas por usuário e exigir aprovação antes de cada ação externa.
-- [ ] Validar autenticação, persistência, projetos, celular e desktop sem alterar Cloud, Stripe ou regras existentes.
+- [x] Validar autenticação, persistência e projetos sem alterar Cloud, Stripe ou regras existentes.
+- [ ] Validar visualmente celular e desktop no preview autenticado.
 
