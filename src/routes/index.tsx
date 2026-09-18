@@ -53,7 +53,7 @@ const transformation = [
 
 function Nav() {
   return (
-    <header className="sticky top-0 z-40 border-b border-border/60 bg-background/70 pt-[env(safe-area-inset-top)] backdrop-blur-xl">
+    <header className="sticky top-0 z-40 border-b border-border bg-background pt-[env(safe-area-inset-top)]">
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-5 py-3.5 sm:px-8">
         <Logo />
         <nav className="hidden items-center gap-7 text-sm text-muted-foreground md:flex">
@@ -94,11 +94,7 @@ const fadeUp = "animate-[fade-up_0.6s_cubic-bezier(0.16,1,0.3,1)_both]";
 
 function Hero() {
   return (
-    <section className="halo relative overflow-hidden px-5 pt-8 pb-10 sm:px-8 sm:pt-10">
-      <div
-        aria-hidden
-        className="animate-[drift_18s_ease-in-out_infinite_alternate] pointer-events-none absolute -top-40 left-1/2 -z-10 size-[42rem] -translate-x-1/2 rounded-full bg-primary/12 blur-[120px]"
-      />
+    <section className="relative overflow-hidden border-b border-border px-5 pt-16 pb-16 sm:px-8 sm:pt-20">
       <div className="mx-auto w-full max-w-4xl text-center">
         <div className={fadeUp}>
           <Chip tone="primary" className="mb-4">
@@ -112,7 +108,7 @@ function Hero() {
           Pare de aprender <span className="text-foreground/60">coisas aleatórias.</span>
           <br />
           Descubra o que estudar para{" "}
-          <span className="text-gradient">chegar na renda que você quer.</span>
+          <span className="text-foreground">chegar na renda que você quer.</span>
         </h1>
         {/* text-foreground/85 e não text-muted-foreground: sob o halo do hero o secundário cai
             para 4,6:1 de contraste, no limite do AA. Aqui fica acima de 9:1. */}
@@ -156,7 +152,7 @@ function Hero() {
             {transformation.map((item, i) => (
               <div
                 key={item.label}
-                className="rounded-2xl bg-surface-2/50 px-3 py-2.5 text-left sm:text-center"
+                className="rounded-md border border-border bg-surface px-3 py-2.5 text-left sm:text-center"
               >
                 <span className="text-[10px] font-semibold tracking-[0.14em] text-primary">
                   {String(i + 1).padStart(2, "0")}
@@ -220,7 +216,7 @@ const benefits = [
  */
 function MobileHome() {
   return (
-    <div className="halo flex min-h-svh flex-col px-6 pt-[calc(2.5rem+env(safe-area-inset-top))] pb-[calc(2rem+env(safe-area-inset-bottom))] lg:hidden">
+    <div className="flex min-h-svh flex-col px-6 pt-[calc(2.5rem+env(safe-area-inset-top))] pb-[calc(2rem+env(safe-area-inset-bottom))] lg:hidden">
       <Logo />
 
       <div className="flex flex-1 flex-col justify-center py-8">
@@ -229,7 +225,7 @@ function MobileHome() {
         </Chip>
         <h1 className="font-display text-4xl leading-[1.08] font-semibold text-balance">
           Descubra o que estudar para{" "}
-          <span className="text-gradient">chegar na renda que você quer.</span>
+          <span className="text-foreground">chegar na renda que você quer.</span>
         </h1>
         <p className="mt-4 text-base text-foreground/85">
           Responda onde está e onde quer chegar. A Pathly monta a sequência de habilidades e os
@@ -303,7 +299,7 @@ function DesktopLanding() {
             {howItWorks.map((item, i) => (
               <Reveal key={item.title} delay={i * 90}>
                 <Panel hover className="h-full">
-                  <span className="grid size-11 place-items-center rounded-2xl bg-primary/12 text-primary">
+                  <span className="grid size-10 place-items-center rounded-md border border-border bg-surface-2 text-foreground">
                     <item.icon className="size-5" />
                   </span>
                   <h3 className="mt-5 text-lg font-semibold">{item.title}</h3>
@@ -335,7 +331,7 @@ function DesktopLanding() {
                   { k: "Projetos", v: 5 },
                   { k: "XP total", v: 4840 },
                 ].map((m) => (
-                  <div key={m.k} className="rounded-2xl bg-surface p-4">
+                  <div key={m.k} className="rounded-md border border-border bg-surface p-4">
                     <div className="font-display text-2xl font-semibold">
                       <AnimatedNumber value={m.v} />
                     </div>
@@ -399,7 +395,7 @@ function DesktopLanding() {
             {benefits.map((b, i) => (
               <Reveal key={b.title} delay={i * 80}>
                 <Panel hover className="flex h-full gap-4">
-                  <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-accent/12 text-accent">
+                  <span className="grid size-10 shrink-0 place-items-center rounded-md border border-border bg-surface-2 text-foreground">
                     <b.icon className="size-5" />
                   </span>
                   <div className="min-w-0">
@@ -490,7 +486,7 @@ function DesktopLanding() {
               "Quem quer chegar a nível pleno ou remoto",
             ].map((t, i) => (
               <Reveal key={t} delay={i * 60}>
-                <div className="flex items-center gap-3 rounded-2xl bg-surface px-4 py-4 text-sm transition-colors hover:bg-surface-2">
+                <div className="flex items-center gap-3 rounded-md border border-border bg-surface px-4 py-4 text-sm transition-colors hover:bg-surface-2">
                   <span className="size-1.5 shrink-0 rounded-full bg-primary" />
                   <span className="text-muted-foreground">{t}</span>
                 </div>
@@ -503,13 +499,9 @@ function DesktopLanding() {
       {/* CTA final */}
       <section className="px-5 pt-10 pb-24 sm:px-8">
         <Reveal>
-          <div className="halo relative mx-auto w-full max-w-4xl overflow-hidden rounded-4xl bg-surface p-10 text-center sm:p-16">
-            <div
-              aria-hidden
-              className="pointer-events-none absolute -top-32 left-1/2 -z-10 size-[30rem] -translate-x-1/2 rounded-full bg-primary/15 blur-[110px]"
-            />
+          <div className="relative mx-auto w-full max-w-4xl overflow-hidden rounded-lg border border-border bg-surface p-10 text-center sm:p-16">
             <h2 className="mx-auto max-w-2xl font-display text-3xl font-semibold sm:text-5xl">
-              Sua rota até <span className="text-gradient">R$ 8.000</span> começa com 10 perguntas
+              Sua rota até <span className="text-foreground">R$ 8.000</span> começa com 10 perguntas
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-sm text-muted-foreground sm:text-base">
               Sem promessa mágica. Só clareza sobre a próxima coisa certa a fazer.
