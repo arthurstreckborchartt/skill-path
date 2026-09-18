@@ -334,6 +334,22 @@ export function VistaConceitosIa({
 }) {
   const [aberto, setAberto] = useState<string | null>(conceitos[0]?.id ?? null);
 
+  /**
+   * Nenhum conceito e nenhum descartado significa que o plano concluiu que não há IA.
+   *
+   * Sem esta mensagem a aba abre em branco, e aba em branco parece tela quebrada — a pessoa fica
+   * procurando o que deu errado num resultado que está correto.
+   */
+  if (conceitos.length === 0 && fora.length === 0) {
+    return (
+      <p className="text-sm leading-relaxed text-muted-foreground">
+        Não há conceito de IA para aprender aqui: a análise concluiu que este projeto não precisa de
+        IA. Se isso mudar — e a aba &ldquo;Sem IA&rdquo; diz o que teria mudado —, os conceitos
+        aparecem junto.
+      </p>
+    );
+  }
+
   return (
     <div className="space-y-3">
       {conceitos.map((c) => {
