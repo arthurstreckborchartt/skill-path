@@ -15,7 +15,6 @@ import { Btn, Chip, Logo, PageHeader, Panel } from "@/components/pathly/ui";
 import { PLANOS, usePlan, type Plano } from "@/lib/plan";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
-import logoAsset from "@/assets/pathly-email-logo.png.asset.json";
 
 export const Route = createFileRoute("/app/planos")({
   staticData: { sitemap: false },
@@ -141,11 +140,12 @@ function CheckoutPathly({
                     </p>
                     <h2 className="mt-1 font-display text-2xl font-semibold">Pathly Pro</h2>
                   </div>
-                  <img
-                    src={logoAsset.url}
-                    alt="Logo da Pathly"
-                    className="size-12 rounded-lg border border-background/20 object-cover shadow-lg"
-                  />
+                   <span className="grid size-11 place-items-center rounded-md border border-background/20 text-background">
+                     <svg viewBox="0 0 24 24" className="size-5" fill="none" aria-hidden="true">
+                       <path d="M5 19c0-5 4-5 6-7s1-6-1-7" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
+                       <circle cx="18" cy="6.5" r="2.6" fill="currentColor" />
+                     </svg>
+                   </span>
                 </div>
               </div>
 

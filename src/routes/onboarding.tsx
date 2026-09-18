@@ -568,7 +568,7 @@ function Onboarding() {
         </div>
       </main>
 
-      <footer className="fixed inset-x-0 bottom-0 border-t border-border bg-background/85 px-5 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] backdrop-blur-xl sm:static sm:border-0 sm:bg-transparent sm:px-8 sm:pb-10 sm:backdrop-blur-none">
+      <footer className="fixed inset-x-0 bottom-0 border-t border-border bg-background px-5 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:static sm:border-0 sm:bg-transparent sm:px-8 sm:pb-10">
         <div className="mx-auto flex w-full max-w-lg items-center gap-3">
           {position > 0 && (
             <Btn variant="outline" size="lg" onClick={() => setIndex(position - 1)}>
@@ -639,11 +639,10 @@ function BuildingScreen({ onDone, trabalho }: { onDone: () => void; trabalho: Pr
   }, [onDone, trabalho]);
 
   return (
-    <div className="halo grid min-h-screen place-items-center px-5 py-12">
+    <div className="grid min-h-screen place-items-center px-5 py-12">
       <div className="w-full max-w-md">
         <div className="text-center">
-          <span className="relative mx-auto grid size-16 place-items-center rounded-3xl bg-signal shadow-[var(--shadow-glow)]">
-            <span className="absolute inset-0 animate-ping rounded-3xl bg-primary/30" />
+          <span className="relative mx-auto grid size-14 place-items-center rounded-md bg-primary">
             <Sparkles className="relative size-7 text-primary-foreground" />
           </span>
           <h1 className="mt-7 font-display text-2xl font-semibold text-balance sm:text-3xl">
@@ -661,7 +660,7 @@ function BuildingScreen({ onDone, trabalho }: { onDone: () => void; trabalho: Pr
               <div
                 key={label}
                 className={cn(
-                  "flex items-center gap-3 rounded-2xl border px-4 py-3.5 transition-all duration-500",
+                   "flex items-center gap-3 rounded-md border px-4 py-3.5 transition-colors duration-300",
                   state === "done"
                     ? "border-primary/40 bg-primary/8"
                     : state === "active"
@@ -714,10 +713,10 @@ function ReadyScreen({ profile, onGo }: { profile: OnboardingProfile; onGo: () =
   const milestones = routePreview(profile);
 
   return (
-    <div className="halo grid min-h-screen place-items-center px-5 py-12">
+    <div className="grid min-h-screen place-items-center px-5 py-12">
       <div className="animate-[pop_0.5s_cubic-bezier(0.34,1.56,0.64,1)_both] w-full max-w-md">
         <div className="text-center">
-          <span className="mx-auto grid size-14 place-items-center rounded-3xl bg-signal shadow-[var(--shadow-glow)]">
+          <span className="mx-auto grid size-14 place-items-center rounded-md bg-primary">
             <TrendingUp className="size-6 text-primary-foreground" />
           </span>
           <h1 className="mt-6 font-display text-3xl font-semibold">Sua rota está pronta.</h1>
@@ -732,7 +731,7 @@ function ReadyScreen({ profile, onGo }: { profile: OnboardingProfile; onGo: () =
               <div
                 style={{ animationDelay: `${i * 130}ms` }}
                 className={cn(
-                  "animate-[fade-up_0.55s_cubic-bezier(0.16,1,0.3,1)_both] flex items-center justify-between gap-3 rounded-2xl border px-4 py-4",
+                   "animate-[fade-up_0.4s_cubic-bezier(0.16,1,0.3,1)_both] flex items-center justify-between gap-3 rounded-md border px-4 py-4",
                   i === milestones.length - 1
                     ? "border-primary/45 bg-primary/10"
                     : "border-border bg-surface/50",
@@ -752,7 +751,7 @@ function ReadyScreen({ profile, onGo }: { profile: OnboardingProfile; onGo: () =
                 </span>
               </div>
               {i < milestones.length - 1 && (
-                <div className="ml-7 h-4 w-px bg-gradient-to-b from-primary/60 to-primary/10" />
+                <div className="ml-7 h-4 w-px bg-border" />
               )}
             </div>
           ))}
