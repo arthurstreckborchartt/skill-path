@@ -8,6 +8,15 @@ import { RecoveryEmail } from "@/lib/email-templates/recovery";
 import { EmailChangeEmail } from "@/lib/email-templates/email-change";
 import { ReauthenticationEmail } from "@/lib/email-templates/reauthentication";
 
+/**
+ * `any` aqui é honesto, e trocar por um tipo mais estreito seria pior.
+ *
+ * Cada template de e-mail tem uma forma de props diferente, e esta rota renderiza qualquer um
+ * deles com o `SAMPLE_DATA` correspondente. Um `ComponentType<Record<string, unknown>>` não
+ * aceitaria os componentes concretos — props são contravariantes —, e a saída seria um `as` em
+ * cada uso, que esconde o mesmo buraco em mais lugares.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
   signup: SignupEmail,
   invite: InviteEmail,

@@ -40,7 +40,8 @@ type BtnProps = {
 const btnBase =
   "tap inline-flex items-center justify-center gap-2 rounded-lg font-semibold whitespace-nowrap outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50";
 
-export const btnStyles = {
+/** Interno: só o `Btn` abaixo usa. Era exportado sem ninguém importar. */
+const btnStyles = {
   primary: "bg-primary text-primary-foreground shadow-[var(--shadow-glow)] hover:bg-primary/90",
   soft: "bg-surface-2 text-foreground hover:bg-surface-2/70",
   outline: "border border-border text-foreground hover:border-primary/40 hover:bg-surface/60",

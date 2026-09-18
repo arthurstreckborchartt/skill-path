@@ -308,6 +308,10 @@ export function LearningSystemProvider({ children }: { children: ReactNode }) {
       completeActivity,
       error,
       mastery,
+      // `nextActivity` depende também de `route.views`, que não está nesta lista. Sem ele aqui, uma
+      // mudança de rota recalculava a próxima atividade e o contexto continuava entregando a
+      // anterior — a tela apontava para a atividade errada até algo mais mudar.
+      nextActivity,
       progress,
       projects,
       reviewsDue,

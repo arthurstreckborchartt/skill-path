@@ -51,6 +51,12 @@ export function brokeredPreviewStorage() {
     new Promise((resolve) => {
       const requestId = newId();
       let done = false;
+      /**
+       * `let` e não `const`, de propósito: `finish` precisa de `timer` para limpá-lo, e o timer só
+       * pode começar depois que o ouvinte de mensagem estiver registrado. Declarar e atribuir na
+       * mesma linha adiantaria a contagem do timeout para antes do ouvinte existir.
+       */
+      // eslint-disable-next-line prefer-const
       let timer: ReturnType<typeof setTimeout>;
       const finish = (r: { ok: boolean; value?: string | null } | null) => {
         if (done) return;
