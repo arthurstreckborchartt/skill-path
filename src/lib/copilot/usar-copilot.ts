@@ -1,8 +1,15 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { completarBlueprint, type Blueprint } from "@/lib/blueprint/contrato";
-import type { MensagemCopilot, Modo, Proposta, RespostaCopilot } from "./contrato";
-import { lerMensagens, lerPropostasPendentes, PAGINA_MENSAGENS } from "./memoria";
+import { validarModelo, type ModeloDeDados } from "@/lib/banco/contrato";
+import { validarMapa, type MapaApi } from "@/lib/api/contrato";
+import type { Decisao, MensagemCopilot, Modo, Proposta, RespostaCopilot } from "./contrato";
+import {
+  lerDecisoesAtivas,
+  lerMensagens,
+  lerPropostasPendentes,
+  PAGINA_MENSAGENS,
+} from "./memoria";
 import { aprovarProposta } from "./aplicar";
 import { rejeitarProposta } from "./propostas";
 import { calcularProgresso, calcularProximoPasso, type ProximoPasso } from "./proximo-passo";
@@ -30,6 +37,14 @@ export type EstadoCopilot = {
   progresso: number;
   nomeProjeto: string;
   blueprint: Blueprint | null;
+  /** Os artefatos completos, e não só a existência: o gerador de prompt precisa deles. */
+  modelo: ModeloDeDados | null;
+  api: MapaApi | null;
+  decisoes: Decisao[];
+  etapaAtual: number;
+  etapasConcluidas: number;
+  /** O que já está pronto no plano, em texto, para a seção ESTADO ATUAL do prompt. */
+  jaExiste: string[];
 };
 
 const INICIAL: EstadoCopilot = {
@@ -43,6 +58,12 @@ const INICIAL: EstadoCopilot = {
   progresso: 0,
   nomeProjeto: "",
   blueprint: null,
+  modelo: null,
+  api: null,
+  decisoes: [],
+  etapaAtual: 1,
+  etapasConcluidas: 0,
+  jaExiste: [],
 };
 
 export function useCopilot(projetoId: string | null, faceta: Faceta | null) {
@@ -54,20 +75,21 @@ export function useCopilot(projetoId: string | null, faceta: Faceta | null) {
       return;
     }
 
-    const [proj, pagina, propostas, banco, api, ia] = await Promise.all([
+    const [proj, pagina, propostas, decisoes, banco, api, ia] = await Promise.all([
       supabase
         .from("pathly_projetos")
-        .select("nome,conteudo,etapas_concluidas,etapas_total")
+        .select("nome,conteudo,etapa_atual,etapas_concluidas,etapas_total")
         .eq("id", projetoId)
         .maybeSingle(),
       lerMensagens(projetoId),
       lerPropostasPendentes(projetoId),
+      lerDecisoesAtivas(projetoId),
       supabase
         .from("pathly_modelos_dados")
-        .select("projeto_id")
+        .select("modelo")
         .eq("projeto_id", projetoId)
         .maybeSingle(),
-      supabase.from("pathly_apis").select("projeto_id").eq("projeto_id", projetoId).maybeSingle(),
+      supabase.from("pathly_apis").select("mapa").eq("projeto_id", projetoId).maybeSingle(),
       supabase
         .from("pathly_arquitetura_ia")
         .select("projeto_id")
@@ -81,10 +103,13 @@ export function useCopilot(projetoId: string | null, faceta: Faceta | null) {
     }
 
     const blueprint = completarBlueprint((proj.data.conteudo ?? {}) as Blueprint);
+    const modelo = banco.error ? null : validarModelo(banco.data?.modelo);
+    const mapaApi = api.error ? null : validarMapa(api.data?.mapa);
+
     const estado = {
       blueprint,
-      temModelo: Boolean(banco.data),
-      temApi: Boolean(api.data),
+      temModelo: modelo !== null,
+      temApi: mapaApi !== null,
       // Segurança não guarda "existe": a análise roda no cliente. Tratada como pendente aqui,
       // o que só afeta a ordem do próximo passo, nunca a resposta do Copilot.
       temSeguranca: false,
@@ -105,6 +130,21 @@ export function useCopilot(projetoId: string | null, faceta: Faceta | null) {
       progresso: calcularProgresso(estado),
       nomeProjeto: proj.data.nome,
       blueprint,
+      modelo,
+      api: mapaApi,
+      decisoes,
+      etapaAtual: proj.data.etapa_atual,
+      etapasConcluidas: proj.data.etapas_concluidas,
+      jaExiste: [
+        blueprint.fundacao ? "Fundação" : null,
+        blueprint.produto ? "Produto" : null,
+        blueprint.tecnico ? "Plano técnico" : null,
+        modelo ? "Modelo de dados" : null,
+        mapaApi ? "Mapa de API" : null,
+        ia.data ? "Arquitetura de IA" : null,
+        blueprint.operacao ? "Operação" : null,
+        blueprint.execucao ? "Trilha de execução" : null,
+      ].filter((x): x is string => x !== null),
     });
   }, [projetoId]);
 

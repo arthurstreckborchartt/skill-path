@@ -1,4 +1,4 @@
-import type { Blueprint } from "@/lib/blueprint/contrato";
+import type { Blueprint, Etapa } from "@/lib/blueprint/contrato";
 import type { ModeloDeDados } from "@/lib/banco/contrato";
 import type { MapaApi } from "@/lib/api/contrato";
 import type { Decisao } from "./contrato";
@@ -16,6 +16,12 @@ import type { ResumoBanco } from "./estado-banco";
  * então construiu do zero.
  *
  * O prompt daqui carrega o que existe, o que pode mudar e o que **não** pode. As três coisas.
+ *
+ * ## Por que ele não passa por IA
+ *
+ * Pedir a um modelo que escreva o prompt daria markdown bonito e genérico, que esquece o nome do
+ * banco da pessoa. O código tem a stack, as tabelas, os endpoints e a etapa atual na mão, e monta
+ * a mesma instrução sem gastar um token — e sem variar entre uma geração e outra.
  *
  * ## Por que o destino muda o prompt
  *
@@ -70,8 +76,8 @@ export const ROTULO_TIPO: Record<TipoPrompt, string> = {
  * As regras de convivência, iguais em todo prompt.
  *
  * Ficam em código, canônicas, e não são geradas por IA: são a parte que não pode variar. Um
- * modelo que reescreve estas oito linhas a cada prompt vai, alguma hora, esquecer a que mais
- * importa — e a que mais importa é "não altere o que não tem relação".
+ * modelo que reescreve estas linhas a cada prompt vai, alguma hora, esquecer a que mais importa —
+ * e a que mais importa é "não altere o que não tem relação".
  */
 const REGRAS_COMUNS = [
   "NÃO duplique funcionalidade que já existe. Se algo parecido já está implementado, estenda em vez de criar do lado.",
@@ -159,36 +165,52 @@ const EXIGENCIAS_POR_TIPO: Record<TipoPrompt, string[]> = {
   ],
 };
 
+/**
+ * O alvo do prompt.
+ *
+ * `etapa` é o caso principal e o que o produto promete: o prompt sai da etapa em que a pessoa
+ * está, com a entrega esperada e as dependências já resolvidas. `livre` existe para quando ela
+ * quer outra coisa — mas não é o padrão, porque prompt de texto livre é justamente o prompt
+ * genérico que este módulo existe para evitar.
+ */
+export type Alvo = { tipo: "etapa"; etapa: Etapa } | { tipo: "livre"; tarefa: string };
+
 export type EntradaPrompt = {
   destino: Destino;
   tipo: TipoPrompt;
-  /** O que a pessoa quer, nas palavras dela. */
-  tarefa: string;
+  alvo: Alvo;
   nomeProjeto: string;
   blueprint: Blueprint;
   modelo: ModeloDeDados | null;
   api: MapaApi | null;
   decisoes: Decisao[];
   estadoBanco: ResumoBanco | null;
-  /** O que já está pronto no projeto — vem do motor de próximo passo. */
+  /** O que já está pronto no projeto. */
   jaExiste: string[];
-  /** O que não pode ser tocado nesta tarefa. */
-  naoAlterar: string[];
+  /** Etapas já concluídas, para o prompt não mandar refazer o que existe. */
+  etapasConcluidas: Etapa[];
+  progresso: number;
 };
 
-function secao(titulo: string, linhas: (string | null)[]): string | null {
+function secao(titulo: string, linhas: (string | null | undefined)[]): string | null {
   const uteis = linhas.filter((l): l is string => Boolean(l && l.trim()));
   return uteis.length === 0 ? null : [`## ${titulo}`, ...uteis].join("\n");
 }
 
+function objetivoDo(alvo: Alvo): string {
+  return alvo.tipo === "etapa" ? alvo.etapa.titulo : alvo.tarefa;
+}
+
 export function montarPrompt(e: EntradaPrompt): string {
   const t = e.blueprint.tecnico;
+  const objetivo = objetivoDo(e.alvo);
   const secoes: (string | null)[] = [];
 
+  // --- CONTEXTO -------------------------------------------------------------------------------
   secoes.push(
-    secao("CONTEXTO DO PROJETO", [
+    secao("CONTEXTO", [
       `Projeto: ${e.nomeProjeto}`,
-      e.blueprint.fundacao?.descricao ?? null,
+      e.blueprint.fundacao?.descricao,
       e.blueprint.fundacao?.persona
         ? `Quem usa: ${e.blueprint.fundacao.persona.nome}, ${e.blueprint.fundacao.persona.papel}`
         : null,
@@ -196,31 +218,54 @@ export function montarPrompt(e: EntradaPrompt): string {
     ]),
   );
 
-  secoes.push(secao("OBJETIVO", [e.tarefa]));
+  // --- OBJETIVO -------------------------------------------------------------------------------
+  secoes.push(
+    secao("OBJETIVO", [
+      objetivo,
+      e.alvo.tipo === "etapa" ? `Entrega esperada: ${e.alvo.etapa.entrega}` : null,
+      e.alvo.tipo === "etapa" ? `Fase do projeto: ${e.alvo.etapa.fase}` : null,
+    ]),
+  );
 
+  // --- ESTADO ATUAL ---------------------------------------------------------------------------
   secoes.push(
     secao("ESTADO ATUAL", [
+      `Progresso do projeto: ${e.progresso}%`,
+      e.alvo.tipo === "etapa"
+        ? `Esta é a etapa ${e.alvo.etapa.ordem} da trilha de execução.`
+        : null,
       e.jaExiste.length > 0
-        ? `Já está pronto: ${e.jaExiste.join("; ")}.`
+        ? `Já está pronto no plano: ${e.jaExiste.join("; ")}.`
         : "O projeto está começando.",
-      e.estadoBanco?.paraOContexto ?? null,
+      /**
+       * As etapas concluídas entram pelo nome.
+       *
+       * É o que impede o pedido mais caro que uma IA externa pode atender: reimplementar do zero
+       * algo que a pessoa já construiu, porque ninguém disse que aquilo existia.
+       */
+      e.etapasConcluidas.length > 0
+        ? `Etapas JÁ CONCLUÍDAS (não refaça): ${e.etapasConcluidas.map((x) => `${x.ordem}. ${x.titulo}`).join("; ")}.`
+        : null,
+      e.estadoBanco?.paraOContexto,
     ]),
   );
 
+  // --- ARQUITETURA ----------------------------------------------------------------------------
   secoes.push(
-    secao("STACK", [
-      t?.stack.frontend ? `Frontend: ${t.stack.frontend}` : null,
-      t?.stack.backend ? `Backend: ${t.stack.backend}` : null,
-      t?.stack.banco ? `Banco: ${t.stack.banco}` : null,
-      t?.stack.hospedagem ? `Hospedagem: ${t.stack.hospedagem}` : null,
+    secao("ARQUITETURA", [
+      t?.arquitetura,
+      t ? `Frontend: ${t.stack.frontend}` : null,
+      t ? `Backend: ${t.stack.backend}` : null,
+      t ? `Banco: ${t.stack.banco}` : null,
+      t ? `Hospedagem: ${t.stack.hospedagem}` : null,
       `Use o que já está aqui. NÃO introduza biblioteca nova sem me perguntar antes.`,
+      ...(e.api?.endpoints ?? []).map((x) => `- ${x.metodo} ${x.caminho} — ${x.finalidade}`),
     ]),
   );
 
-  secoes.push(secao("ARQUITETURA", [t?.arquitetura ?? null]));
-
+  // --- BANCO ----------------------------------------------------------------------------------
   secoes.push(
-    secao("BANCO DE DADOS", [
+    secao("BANCO", [
       ...(e.modelo?.entidades ?? []).map(
         (x) => `- ${x.nome}: ${x.colunas.map((c) => c.nome).join(", ")}`,
       ),
@@ -232,104 +277,118 @@ export function montarPrompt(e: EntradaPrompt): string {
     ]),
   );
 
-  secoes.push(
-    secao(
-      "APIs",
-      (e.api?.endpoints ?? []).map((x) => `- ${x.metodo} ${x.caminho} — ${x.finalidade}`),
-    ),
-  );
-
+  // --- REQUISITOS -----------------------------------------------------------------------------
   /**
-   * A seção de autenticação aparece mesmo vazia, ao contrário das outras.
+   * Requisito não funcional entra com o `comoMedir` junto, sempre.
    *
-   * Quando o plano ainda não definiu o método, o silêncio faz a IA externa escolher um por conta
-   * — e aí o projeto ganha uma decisão de autenticação que ninguém tomou, escondida dentro de um
-   * commit sobre outra coisa. Dizer "não definido, pergunte" custa uma linha e evita isso.
+   * "O sistema deve ser rápido" não serve para nada; "a tela de vendas abre em menos de 1s num
+   * celular de entrada" é um alvo que dá para conferir. Mandar o primeiro faz a IA externa
+   * escrever otimização por intuição, na parte errada.
    */
   secoes.push(
-    secao("AUTENTICAÇÃO", [
-      t?.autenticacao?.metodo
-        ? `Método: ${t.autenticacao.metodo}`
-        : `O plano ainda NÃO definiu o método de autenticação. NÃO escolha um por conta própria: pergunte antes.`,
-      t?.autenticacao?.protecaoDeRotas ?? null,
-      t?.autenticacao?.papeis?.length
-        ? `Papéis: ${t.autenticacao.papeis.map((p) => p.nome).join(", ")}`
+    secao("REQUISITOS", [
+      ...(e.blueprint.operacao?.requisitosNaoFuncionais ?? [])
+        .slice(0, 6)
+        .map((r) => `- ${r.descricao} — como medir: ${r.comoMedir}`),
+      e.alvo.tipo === "etapa" && e.alvo.etapa.dependeDe.length > 0
+        ? `Esta etapa depende das etapas ${e.alvo.etapa.dependeDe.join(", ")}, que devem estar prontas antes.`
         : null,
     ]),
   );
 
+  // --- RESTRIÇÕES -----------------------------------------------------------------------------
   secoes.push(
-    secao("REGRAS DE SEGURANÇA", [
-      ...(t?.seguranca ?? []),
-      `Trate tudo que vem do cliente como hostil, inclusive de usuário logado.`,
-    ]),
-  );
-
-  secoes.push(
-    secao("O QUE JÁ EXISTE", [
-      ...(e.jaExiste.length > 0 ? e.jaExiste.map((x) => `- ${x}`) : ["- Nada além do plano."]),
-      ...(e.decisoes.length > 0
-        ? [``, `Decisões técnicas já tomadas, que você deve respeitar:`]
-        : []),
-      ...e.decisoes.map((d) => `- ${d.chave}: ${d.valor} — ${d.motivo}`),
-    ]),
-  );
-
-  secoes.push(secao("O QUE PRECISA SER ALTERADO", [e.tarefa]));
-
-  secoes.push(
-    secao("O QUE NÃO PODE SER ALTERADO", [
-      ...(e.naoAlterar.length > 0 ? e.naoAlterar.map((x) => `- ${x}`) : []),
-      ...(e.decisoes.length > 0
-        ? e.decisoes.map(
-            (d) =>
-              `- A decisão sobre ${d.chave} (${d.valor}). Se ela precisar mudar, PARE e me avise.`,
-          )
-        : []),
-      `- Qualquer funcionalidade que já funciona e não tem relação com esta tarefa.`,
-    ]),
-  );
-
-  secoes.push(secao("TAREFA", [e.tarefa, ...COMO_COMECAR[e.destino].map((x) => `- ${x}`)]));
-
-  secoes.push(
-    secao("IMPLEMENTAÇÃO ESPERADA", [
-      ...EXIGENCIAS_POR_TIPO[e.tipo].map((x) => `- ${x}`),
+    secao("RESTRIÇÕES", [
+      ...COMO_COMECAR[e.destino].map((x) => `- ${x}`),
       ...REGRAS_COMUNS.map((x) => `- ${x}`),
+      ...e.decisoes.map((d) => `- Respeite a decisão sobre ${d.chave}: ${d.valor} (${d.motivo}).`),
     ]),
   );
 
+  // --- IMPLEMENTAÇÃO --------------------------------------------------------------------------
+  secoes.push(
+    secao("IMPLEMENTAÇÃO", [
+      `Tipo de trabalho: ${ROTULO_TIPO[e.tipo]}.`,
+      ...EXIGENCIAS_POR_TIPO[e.tipo].map((x) => `- ${x}`),
+    ]),
+  );
+
+  // --- CRITÉRIOS DE ACEITAÇÃO -----------------------------------------------------------------
   secoes.push(
     secao("CRITÉRIOS DE ACEITAÇÃO", [
-      `- A tarefa acima está resolvida de ponta a ponta.`,
+      e.alvo.tipo === "etapa"
+        ? `- A entrega desta etapa existe e funciona: ${e.alvo.etapa.entrega}`
+        : `- O objetivo acima está resolvido de ponta a ponta.`,
       `- Nada que funcionava antes parou de funcionar.`,
       `- Nenhum arquivo não relacionado foi tocado.`,
       `- Os padrões do projeto foram mantidos.`,
     ]),
   );
 
+  // --- TESTES ---------------------------------------------------------------------------------
   secoes.push(
     secao("TESTES", [
       `- Descreva como testar esta mudança à mão, passo a passo.`,
       `- Se o projeto já tem testes automatizados, acrescente os desta mudança.`,
       `- Cubra pelo menos um caso de erro, não só o caminho feliz.`,
+      `- Rode typecheck, lint e build antes de dizer que terminou. Se falhar, conserte antes de entregar.`,
     ]),
   );
 
+  // --- SEGURANÇA ------------------------------------------------------------------------------
   secoes.push(
-    secao("VALIDAÇÃO", [
-      `- Rode typecheck, lint e build antes de dizer que terminou.`,
-      `- Se algo falhar, conserte antes de entregar — não entregue com aviso.`,
+    secao("SEGURANÇA", [
+      t?.autenticacao?.metodo
+        ? `Autenticação do projeto: ${t.autenticacao.metodo}. ${t.autenticacao.protecaoDeRotas ?? ""}`.trim()
+        : `O plano ainda NÃO definiu o método de autenticação. NÃO escolha um por conta própria: pergunte antes.`,
+      t?.autenticacao?.papeis?.length
+        ? `Papéis: ${t.autenticacao.papeis.map((p) => p.nome).join(", ")}`
+        : null,
+      ...(t?.seguranca ?? []).map((x) => `- ${x}`),
+      `- Trate tudo que vem do cliente como hostil, inclusive de usuário logado.`,
     ]),
   );
 
+  // --- NÃO ALTERAR ----------------------------------------------------------------------------
+  secoes.push(
+    secao("NÃO ALTERAR", [
+      ...e.etapasConcluidas.map((x) => `- A etapa ${x.ordem} (${x.titulo}), que já está entregue.`),
+      ...e.decisoes.map(
+        (d) => `- A decisão sobre ${d.chave} (${d.valor}). Se ela precisar mudar, PARE e me avise.`,
+      ),
+      `- Qualquer funcionalidade que já funciona e não tem relação com esta tarefa.`,
+      `- Configuração de build, deploy e variáveis de ambiente, salvo pedido explícito.`,
+    ]),
+  );
+
+  // --- RESULTADO ESPERADO ---------------------------------------------------------------------
   secoes.push(
     secao("RESULTADO ESPERADO", [
       `- A lista exata dos arquivos alterados, com o que mudou em cada um.`,
       `- O que você decidiu e por quê, quando houve escolha.`,
       `- O que ficou de fora, se ficou, e por quê.`,
+      `- Como eu confiro que está pronto.`,
     ]),
   );
 
   return secoes.filter((s): s is string => s !== null).join("\n\n");
+}
+
+/**
+ * A etapa que o prompt deve mirar.
+ *
+ * `etapa_atual` do projeto quando ela existe na trilha; senão, a primeira não concluída. O
+ * fallback importa: projeto que regerou a execução pode ter `etapa_atual` apontando para uma
+ * ordem que não existe mais, e devolver `null` ali esconderia o recurso inteiro da pessoa.
+ */
+export function etapaAlvo(blueprint: Blueprint, etapaAtual: number): Etapa | null {
+  const etapas = blueprint.execucao?.etapas ?? [];
+  if (etapas.length === 0) return null;
+  return etapas.find((x) => x.ordem === etapaAtual) ?? etapas[0] ?? null;
+}
+
+/** As etapas já entregues, pela ordem da trilha. Entram no prompt como "não refaça". */
+export function etapasConcluidas(blueprint: Blueprint, quantasConcluidas: number): Etapa[] {
+  const etapas = blueprint.execucao?.etapas ?? [];
+  return [...etapas].sort((a, b) => a.ordem - b.ordem).slice(0, Math.max(0, quantasConcluidas));
 }

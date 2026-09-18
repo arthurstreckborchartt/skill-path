@@ -4,6 +4,7 @@ import {
   ArrowUp,
   Check,
   ChevronUp,
+  FileCode,
   Loader2,
   MessageSquare,
   Sparkles,
@@ -12,6 +13,7 @@ import {
 } from "lucide-react";
 import { Btn, Chip } from "./ui";
 import { BlocoCopiavel } from "./banco-vistas";
+import { GeradorDePrompt } from "./gerador-de-prompt";
 import { cn } from "@/lib/utils";
 import { useCopilot } from "@/lib/copilot/usar-copilot";
 import {
@@ -100,6 +102,7 @@ function Painel({
   );
   const [texto, setTexto] = useState("");
   const [modo, setModo] = useState<Modo | undefined>(undefined);
+  const [vista, setVista] = useState<"conversa" | "prompt">("conversa");
   const fim = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -133,9 +136,27 @@ function Painel({
                 Você está em: {rota.onde} · Progresso: {estado.progresso}%
               </p>
             </div>
-            <button onClick={aoFechar} aria-label="Fechar" className="tap -mr-1 p-1">
-              <X className="size-5 text-muted-foreground" />
-            </button>
+            <div className="flex shrink-0 items-center gap-1">
+              {/*
+                Acesso permanente ao gerador. Antes ele só aparecia na tela de conversa vazia, e
+                bastava mandar uma mensagem para o recurso sumir — justamente o recurso que a
+                pessoa mais vai querer depois de conversar sobre o que fazer.
+              */}
+              <button
+                onClick={() => setVista(vista === "prompt" ? "conversa" : "prompt")}
+                aria-label="Gerar prompt de implementação"
+                title="Gerar prompt de implementação"
+                className={cn(
+                  "tap rounded-lg p-1.5 transition-colors",
+                  vista === "prompt" ? "bg-primary/15 text-primary" : "text-muted-foreground",
+                )}
+              >
+                <FileCode className="size-4.5" />
+              </button>
+              <button onClick={aoFechar} aria-label="Fechar" className="tap -mr-1 p-1">
+                <X className="size-5 text-muted-foreground" />
+              </button>
+            </div>
           </div>
 
           {estado.proximoPasso && !estado.proximoPasso.concluido && (
@@ -147,7 +168,23 @@ function Painel({
         </header>
 
         <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
-          {estado.carregando ? (
+          {vista === "prompt" && estado.blueprint ? (
+            <GeradorDePrompt
+              fontes={{
+                nomeProjeto: estado.nomeProjeto,
+                blueprint: estado.blueprint,
+                modelo: estado.modelo,
+                api: estado.api,
+                decisoes: estado.decisoes,
+                estadoBanco: null,
+                jaExiste: estado.jaExiste,
+                etapaAtual: estado.etapaAtual,
+                qtdEtapasConcluidas: estado.etapasConcluidas,
+                progresso: estado.progresso,
+              }}
+              aoVoltar={() => setVista("conversa")}
+            />
+          ) : estado.carregando ? (
             <p className="text-sm text-muted-foreground">Carregando…</p>
           ) : (
             <>
@@ -161,7 +198,11 @@ function Painel({
               )}
 
               {estado.mensagens.length === 0 && (
-                <Abertura passo={estado.proximoPasso} aoPedir={enviar} />
+                <Abertura
+                  passo={estado.proximoPasso}
+                  aoPedir={enviar}
+                  aoGerarPrompt={() => setVista("prompt")}
+                />
               )}
 
               {estado.propostas.length > 0 && (
@@ -249,9 +290,11 @@ function Painel({
 function Abertura({
   passo,
   aoPedir,
+  aoGerarPrompt,
 }: {
   passo: { titulo: string; porque: string; concluido: boolean } | null;
   aoPedir: (p: string, modo?: Modo) => void;
+  aoGerarPrompt: () => void;
 }) {
   if (!passo) return null;
 
@@ -267,12 +310,6 @@ function Abertura({
       icone: Check,
       modo: "guiar",
       pergunta: `Quero fazer isto agora: ${passo.titulo}. Me mostre os passos.`,
-    },
-    {
-      rotulo: "Gerar prompt",
-      icone: Sparkles,
-      modo: "gerar",
-      pergunta: `Gere um prompt para uma IA de codificação implementar: ${passo.titulo}`,
     },
   ];
 
@@ -292,6 +329,13 @@ function Abertura({
               <a.icone className="size-3" /> {a.rotulo}
             </button>
           ))}
+          {/* Gerar prompt nao passa por IA: e uma tela, montada por codigo. */}
+          <button
+            onClick={aoGerarPrompt}
+            className="tap flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-medium transition-colors hover:border-primary/30"
+          >
+            <Sparkles className="size-3" /> Gerar prompt
+          </button>
         </div>
       )}
     </div>
