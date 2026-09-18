@@ -8,21 +8,21 @@ export function Logo({ className, compact }: { className?: string; compact?: boo
     // coarse:min-h-11 — a logo costuma ser link de volta para o início; em tela de toque
     // precisa dos 44px mesmo sendo visualmente menor.
     <span className={cn("flex items-center gap-2.5 coarse:min-h-11", className)}>
-      <span className="relative grid size-8 shrink-0 place-items-center rounded-lg bg-signal shadow-[var(--shadow-glow)]">
+      <span className="relative grid size-8 shrink-0 place-items-center text-foreground">
         <svg viewBox="0 0 24 24" className="size-4" fill="none" aria-hidden="true">
           {/* A marca fica sobre o gradiente de ação nos dois temas, então segue o token que
               já é o "texto sobre a cor primária" — sem cor fixa. */}
           <path
             d="M5 19c0-5 4-5 6-7s1-6-1-7"
-            stroke="var(--primary-foreground)"
+            stroke="currentColor"
             strokeWidth="2.4"
             strokeLinecap="round"
           />
-          <circle cx="18" cy="6.5" r="2.6" fill="var(--primary-foreground)" />
+          <circle cx="18" cy="6.5" r="2.6" fill="currentColor" />
         </svg>
       </span>
       {!compact && (
-        <span className="font-display text-lg font-semibold tracking-tight">Pathly</span>
+        <span className="font-display text-lg font-semibold">Pathly</span>
       )}
     </span>
   );
@@ -38,14 +38,14 @@ type BtnProps = {
 } & React.ButtonHTMLAttributes<HTMLButtonElement>;
 
 const btnBase =
-  "tap inline-flex items-center justify-center gap-2 rounded-lg font-semibold whitespace-nowrap outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50";
+  "tap inline-flex items-center justify-center gap-2 rounded-md font-medium whitespace-nowrap outline-hidden transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50";
 
 /** Interno: só o `Btn` abaixo usa. Era exportado sem ninguém importar. */
 const btnStyles = {
-  primary: "bg-primary text-primary-foreground shadow-[var(--shadow-glow)] hover:bg-primary/90",
-  soft: "bg-surface-2 text-foreground hover:bg-surface-2/70",
-  outline: "border border-border text-foreground hover:border-primary/40 hover:bg-surface/60",
-  ghost: "text-muted-foreground hover:text-foreground hover:bg-surface/60",
+  primary: "border border-primary bg-primary text-primary-foreground hover:opacity-85",
+  soft: "border border-transparent bg-surface-2 text-foreground hover:border-border hover:bg-muted",
+  outline: "border border-border bg-surface text-foreground hover:border-foreground/25 hover:bg-surface-2",
+  ghost: "text-muted-foreground hover:bg-surface-2 hover:text-foreground",
 };
 
 // Em tela de toque nenhum botão fica abaixo de 44px de altura (md e lg já passam).
@@ -74,24 +74,8 @@ export function Panel({
   hover?: boolean;
   tilt?: boolean;
 }) {
-  const ref = useRef<HTMLDivElement>(null);
-
-  function onMove(e: React.MouseEvent<HTMLDivElement>) {
-    if (!tilt || !ref.current) return;
-    const r = ref.current.getBoundingClientRect();
-    const x = (e.clientX - r.left) / r.width - 0.5;
-    const y = (e.clientY - r.top) / r.height - 0.5;
-    ref.current.style.transform = `perspective(900px) rotateX(${-y * 3}deg) rotateY(${x * 4}deg) translateY(-3px)`;
-  }
-  function onLeave() {
-    if (ref.current) ref.current.style.transform = "";
-  }
-
   return (
     <div
-      ref={ref}
-      onMouseMove={onMove}
-      onMouseLeave={onLeave}
       className={cn("panel p-5 sm:p-6", (hover || tilt) && "panel-hover", className)}
     >
       {children}
@@ -109,11 +93,11 @@ export function Chip({
   className?: string;
 }) {
   const tones = {
-    neutral: "bg-surface-2 text-foreground/80",
-    primary: "bg-primary/15 text-primary",
-    accent: "bg-accent/15 text-accent",
-    xp: "bg-xp/15 text-xp",
-    muted: "bg-muted text-muted-foreground",
+    neutral: "border border-border bg-surface text-foreground/80",
+    primary: "border border-foreground/15 bg-foreground text-background",
+    accent: "border border-border bg-surface-2 text-foreground",
+    xp: "border border-border bg-surface-2 text-foreground",
+    muted: "border border-border bg-muted text-muted-foreground",
   };
   return (
     <span
@@ -260,7 +244,7 @@ export function ProgressBar({
     <div className={cn("h-2 w-full overflow-hidden rounded-full bg-muted", className)}>
       <div
         className={cn(
-          "h-full rounded-full transition-[width] duration-1000 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)]",
+          "h-full rounded-full transition-[width] duration-700 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)]",
           tones[tone],
         )}
         style={{ width: `${w}%` }}
@@ -305,18 +289,12 @@ export function Ring({
           r={r}
           strokeWidth={7}
           fill="none"
-          stroke="url(#ringGrad)"
+          className="stroke-foreground"
           strokeLinecap="round"
           strokeDasharray={c}
           strokeDashoffset={c - (c * v) / 100}
           style={{ transition: "stroke-dashoffset 1.2s cubic-bezier(0.16,1,0.3,1)" }}
         />
-        <defs>
-          <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="var(--primary)" />
-            <stop offset="100%" stopColor="var(--accent)" />
-          </linearGradient>
-        </defs>
       </svg>
       <div className="absolute text-center">
         <div className="font-display text-xl font-semibold">{label}</div>
@@ -329,7 +307,7 @@ export function Ring({
 export function XpBurst({ amount, show }: { amount: number; show: boolean }) {
   if (!show) return null;
   return (
-    <span className="animate-[xp-float_1.1s_cubic-bezier(0.16,1,0.3,1)_forwards] pointer-events-none absolute -top-1 right-2 rounded-full bg-xp/20 px-2 py-0.5 text-xs font-semibold text-xp">
+    <span className="animate-[xp-float_1.1s_cubic-bezier(0.16,1,0.3,1)_forwards] pointer-events-none absolute -top-1 right-2 rounded-md border border-border bg-foreground px-2 py-0.5 text-xs font-semibold text-background">
       +{amount} XP
     </span>
   );
@@ -341,7 +319,7 @@ export function Skeleton({ className }: { className?: string }) {
 
 export function SectionLabel({ children }: { children: ReactNode }) {
   return (
-    <span className="text-xs font-semibold tracking-[0.12em] text-primary uppercase">
+    <span className="text-xs font-semibold text-muted-foreground uppercase">
       {children}
     </span>
   );
@@ -359,7 +337,7 @@ export function PageHeader({
   return (
     <header className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4 sm:flex sm:items-center sm:justify-between">
       <div className="min-w-0">
-        <h1 className="truncate font-display text-2xl font-semibold sm:text-3xl">{title}</h1>
+        <h1 className="truncate font-display text-2xl font-semibold sm:text-[1.75rem]">{title}</h1>
         {subtitle && <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>}
       </div>
       {action}
