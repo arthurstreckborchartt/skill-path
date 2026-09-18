@@ -114,12 +114,14 @@ export function activitiesFromRoute(steps: StepView[]): LearningActivity[] {
 export function isReviewDue(progress: ActivityProgress, now = new Date()): boolean {
   return Boolean(
     progress.status === "completed" &&
-      progress.reviewDueAt &&
-      new Date(progress.reviewDueAt).getTime() <= now.getTime(),
+    progress.reviewDueAt &&
+    new Date(progress.reviewDueAt).getTime() <= now.getTime(),
   );
 }
 
-export function masteryLabel(value: number): "Por aprender" | "Em progresso" | "Praticando" | "Dominada" {
+export function masteryLabel(
+  value: number,
+): "Por aprender" | "Em progresso" | "Praticando" | "Dominada" {
   if (value >= 85) return "Dominada";
   if (value >= 55) return "Praticando";
   if (value > 0) return "Em progresso";
@@ -139,7 +141,10 @@ export function nextReviewDate(score: number, previousAttempts: number, from = n
   return next.toISOString();
 }
 
-export function routeLearningPercent(activities: LearningActivity[], progress: ActivityProgress[]): number {
+export function routeLearningPercent(
+  activities: LearningActivity[],
+  progress: ActivityProgress[],
+): number {
   if (activities.length === 0) return 0;
   const done = activities.filter((activity) =>
     progress.some((item) => item.activityId === activity.id && item.status === "completed"),

@@ -79,11 +79,11 @@ function ProfilePage() {
   // completando etapas. Rota demo: mantém os níveis fixos do mock, que existem só pra ilustrar
   // a tela antes de qualquer onboarding real.
   const topSkills = [
-        ...learning.mastery.map((skill) => ({ name: skill.skillName, level: skill.mastery })),
-        ...profile.declaredSkills
-          .filter((s) => !learning.mastery.some((skill) => skill.skillName === s.name))
-          .map((s) => ({ name: s.name, level: SKILL_LEVEL_PCT[s.level] })),
-      ].slice(0, 4);
+    ...learning.mastery.map((skill) => ({ name: skill.skillName, level: skill.mastery })),
+    ...profile.declaredSkills
+      .filter((s) => !learning.mastery.some((skill) => skill.skillName === s.name))
+      .map((s) => ({ name: s.name, level: SKILL_LEVEL_PCT[s.level] })),
+  ].slice(0, 4);
   const initials = profile.firstName ? profile.firstName.slice(0, 2).toUpperCase() : null;
 
   return (
@@ -92,7 +92,11 @@ function ProfilePage() {
         title="Perfil"
         subtitle="O cenário que gerou a sua rota"
         action={
-          <Link to="/app/configuracoes"><Btn variant="soft" size="sm"><Settings className="size-4" /> Ajustes</Btn></Link>
+          <Link to="/app/configuracoes">
+            <Btn variant="soft" size="sm">
+              <Settings className="size-4" /> Ajustes
+            </Btn>
+          </Link>
         }
       />
 
@@ -107,7 +111,7 @@ function ProfilePage() {
                 {profile.firstName || profile.role}
               </h2>
               <p className="truncate text-sm text-muted-foreground">
-                 {profile.role} → {profile.target}
+                {profile.role} → {profile.target}
               </p>
               <div className="mt-3 flex flex-wrap gap-2">
                 <Chip tone="primary">
@@ -230,8 +234,36 @@ function ProfilePage() {
 
       <Reveal delay={240}>
         <div className="grid gap-3 sm:grid-cols-2">
-          <Link to="/app/planos" className="group flex items-center justify-between rounded-lg border border-border bg-surface p-5 shadow-[var(--shadow-soft)]"><span className="flex items-center gap-3"><Gem className="size-5 text-primary" /><span><span className="block font-display font-semibold">Plano Pathly</span><span className="mt-1 block text-xs text-muted-foreground">Veja seu plano e acesso à rota</span></span></span><ArrowRight className="size-4 text-muted-foreground transition-transform group-hover:translate-x-1" /></Link>
-          <Link to="/app/configuracoes" className="group flex items-center justify-between rounded-lg border border-border bg-surface p-5 shadow-[var(--shadow-soft)]"><span className="flex items-center gap-3"><Settings className="size-5 text-primary" /><span><span className="block font-display font-semibold">Configurações</span><span className="mt-1 block text-xs text-muted-foreground">Conta, aparência e nova rota</span></span></span><ArrowRight className="size-4 text-muted-foreground transition-transform group-hover:translate-x-1" /></Link>
+          <Link
+            to="/app/planos"
+            className="group flex items-center justify-between rounded-lg border border-border bg-surface p-5 shadow-[var(--shadow-soft)]"
+          >
+            <span className="flex items-center gap-3">
+              <Gem className="size-5 text-primary" />
+              <span>
+                <span className="block font-display font-semibold">Plano Pathly</span>
+                <span className="mt-1 block text-xs text-muted-foreground">
+                  Veja seu plano e acesso à rota
+                </span>
+              </span>
+            </span>
+            <ArrowRight className="size-4 text-muted-foreground transition-transform group-hover:translate-x-1" />
+          </Link>
+          <Link
+            to="/app/configuracoes"
+            className="group flex items-center justify-between rounded-lg border border-border bg-surface p-5 shadow-[var(--shadow-soft)]"
+          >
+            <span className="flex items-center gap-3">
+              <Settings className="size-5 text-primary" />
+              <span>
+                <span className="block font-display font-semibold">Configurações</span>
+                <span className="mt-1 block text-xs text-muted-foreground">
+                  Conta, aparência e nova rota
+                </span>
+              </span>
+            </span>
+            <ArrowRight className="size-4 text-muted-foreground transition-transform group-hover:translate-x-1" />
+          </Link>
         </div>
       </Reveal>
     </div>

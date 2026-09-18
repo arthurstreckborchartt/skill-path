@@ -444,7 +444,8 @@ export function useRouteProgress() {
         if (
           profile.isPersonalized &&
           !step.checklist.every((item) => p.checks.includes(`${stepId}:${item.id}`))
-        ) return p;
+        )
+          return p;
         const next = {
           ...p,
           done: [...p.done, stepId],

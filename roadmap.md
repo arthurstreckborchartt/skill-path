@@ -10,6 +10,7 @@
 - [x] Validar fluxos, acessibilidade e responsividade.
 
 ## Learning System
+
 - [x] Auditar arquitetura, dados, fluxos e persistência atuais.
 - [x] Planejar e implementar a fundação do estado de aprendizado persistente.
 - [x] Evoluir dashboard, caminho e a primeira sessão avaliável com domínio e revisões.

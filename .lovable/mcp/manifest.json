@@ -5,9 +5,7 @@
   "auth": {
     "type": "oauth",
     "issuer": "https://qfkzalijwqbpxskgttsg.supabase.co/auth/v1",
-    "accepted_audiences": [
-      "authenticated"
-    ],
+    "accepted_audiences": ["authenticated"],
     "jwks_uri": "https://qfkzalijwqbpxskgttsg.supabase.co/auth/v1/.well-known/jwks.json"
   },
   "mcp": {
@@ -73,13 +71,7 @@
             },
             "experience": {
               "type": "string",
-              "enum": [
-                "none",
-                "lt1",
-                "1to3",
-                "3to5",
-                "gt5"
-              ],
+              "enum": ["none", "lt1", "1to3", "3to5", "gt5"],
               "description": "Experiência na área desejada."
             },
             "hoursPerWeek": {
@@ -91,13 +83,7 @@
               "type": "string"
             }
           },
-          "required": [
-            "area",
-            "currentIncome",
-            "targetIncome",
-            "experience",
-            "hoursPerWeek"
-          ]
+          "required": ["area", "currentIncome", "targetIncome", "experience", "hoursPerWeek"]
         },
         "outputSchema": null
       }

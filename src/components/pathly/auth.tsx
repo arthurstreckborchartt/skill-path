@@ -14,7 +14,6 @@ export function AuthLayout({
 }) {
   return (
     <div className="relative grid min-h-screen lg:grid-cols-[0.9fr_1.1fr]">
-
       {/* Form side */}
       <div className="flex flex-col px-5 pt-[calc(2rem+env(safe-area-inset-top))] pb-[calc(2rem+env(safe-area-inset-bottom))] sm:px-10">
         <Link to="/" className="tap">
@@ -41,18 +40,18 @@ export function AuthLayout({
           ].map((row, i) => (
             <div
               key={row.label}
-               className="animate-[fade-up_0.7s_cubic-bezier(0.16,1,0.3,1)_both] flex items-center justify-between border-b border-background/10 px-1 py-6"
+              className="animate-[fade-up_0.7s_cubic-bezier(0.16,1,0.3,1)_both] flex items-center justify-between border-b border-background/10 px-1 py-6"
               style={{ animationDelay: `${i * 110}ms` }}
             >
               <span
                 className={cn(
-                   "font-display text-xl font-semibold text-background",
+                  "font-display text-xl font-semibold text-background",
                   row.highlight && "text-primary",
                 )}
               >
                 {row.label}
               </span>
-               <span className="text-xs text-background/50">{row.note}</span>
+              <span className="text-xs text-background/50">{row.note}</span>
             </div>
           ))}
         </div>

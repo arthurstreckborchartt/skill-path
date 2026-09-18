@@ -28,8 +28,14 @@ export default defineConfig(({ mode }) => {
     plugins: isWindows ? [] : [mcpPlugin()],
     resolve: {
       alias: {
-        "entities/lib/decode.js": path.resolve(process.cwd(), "node_modules/entities/lib/decode.js"),
-        "entities/lib/encode.js": path.resolve(process.cwd(), "node_modules/entities/lib/encode.js"),
+        "entities/lib/decode.js": path.resolve(
+          process.cwd(),
+          "node_modules/entities/lib/decode.js",
+        ),
+        "entities/lib/encode.js": path.resolve(
+          process.cwd(),
+          "node_modules/entities/lib/encode.js",
+        ),
         entities: path.resolve(process.cwd(), "node_modules/entities"),
       },
     },

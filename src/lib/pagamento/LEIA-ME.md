@@ -5,12 +5,12 @@
 Todas são **secrets de servidor**. Nenhuma pode ter prefixo `VITE_` — isso a colocaria no bundle
 do navegador. Verificado no build: `.output/public/` não contém nenhuma delas.
 
-| Variável | Onde pegar |
-|---|---|
-| `STRIPE_SECRET_KEY` | Stripe → Developers → API keys → Secret key (`sk_test_...`) |
-| `STRIPE_PRICE_PRO` | já criado: `price_1UFyvALrCF4XONGkxIDv4FG6` |
-| `STRIPE_WEBHOOK_SECRET` | Stripe → Developers → Webhooks → o endpoint → Signing secret (`whsec_...`) |
-| `SUPABASE_SERVICE_ROLE_KEY` | Supabase → Project Settings → API → `service_role` |
+| Variável                    | Onde pegar                                                                 |
+| --------------------------- | -------------------------------------------------------------------------- |
+| `STRIPE_SECRET_KEY`         | Stripe → Developers → API keys → Secret key (`sk_test_...`)                |
+| `STRIPE_PRICE_PRO`          | já criado: `price_1UFyvALrCF4XONGkxIDv4FG6`                                |
+| `STRIPE_WEBHOOK_SECRET`     | Stripe → Developers → Webhooks → o endpoint → Signing secret (`whsec_...`) |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase → Project Settings → API → `service_role`                         |
 
 O webhook precisa da service role porque `plano` **não** é atualizável por `authenticated` — é
 justamente o que impede alguém de se promover a Pro com um PATCH na API pública. Quem concede

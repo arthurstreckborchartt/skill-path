@@ -220,11 +220,7 @@ function TelaRoadmap() {
                 {conteudo.estado === "erro" && (
                   <div className="py-6">
                     <p className="text-sm text-destructive">{conteudo.mensagem}</p>
-                    <Btn
-                      variant="outline"
-                      className="mt-4"
-                      onClick={conteudo.tentarNovamente}
-                    >
+                    <Btn variant="outline" className="mt-4" onClick={conteudo.tentarNovamente}>
                       Tentar de novo
                     </Btn>
                   </div>

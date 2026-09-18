@@ -23,13 +23,13 @@ leitura manual do arquivo de licença antes de qualquer uso. Não usar até isso
 
 ## Pode usar
 
-| Fonte | Licença | O que permite |
-|---|---|---|
-| freeCodeCamp | BSD-3-Clause | Uso comercial, com aviso de copyright preservado |
-| free-programming-books (EbookFoundation) | CC-BY-4.0 | Uso comercial, com atribuição |
-| Curadoria própria | nossa | Título e descrição escritos por nós, apontando para o link original |
-| YouTube Data API | ToS do YouTube | Metadados (título, canal, duração) exibidos conforme as regras deles |
-| GitHub API | ToS do GitHub | Metadados de repositório (fatos: nome, estrelas, licença) |
+| Fonte                                    | Licença        | O que permite                                                        |
+| ---------------------------------------- | -------------- | -------------------------------------------------------------------- |
+| freeCodeCamp                             | BSD-3-Clause   | Uso comercial, com aviso de copyright preservado                     |
+| free-programming-books (EbookFoundation) | CC-BY-4.0      | Uso comercial, com atribuição                                        |
+| Curadoria própria                        | nossa          | Título e descrição escritos por nós, apontando para o link original  |
+| YouTube Data API                         | ToS do YouTube | Metadados (título, canal, duração) exibidos conforme as regras deles |
+| GitHub API                               | ToS do GitHub  | Metadados de repositório (fatos: nome, estrelas, licença)            |
 
 ## A regra prática
 

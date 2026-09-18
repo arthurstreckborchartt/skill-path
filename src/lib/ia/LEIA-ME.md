@@ -6,14 +6,14 @@ O plano gratuito não depende de um fornecedor só. Em 15/09/2026 três modelos 
 em "high demand" no intervalo de poucos minutos — com um provedor apenas, isso vira falha para a
 pessoa. A cadeia tenta um depois do outro até alguém responder.
 
-| Ordem | Serviço | Variável | Modelo padrão | Custo |
-|---|---|---|---|---|
-| Pro, 1º | Claude Opus 5 | `ANTHROPIC_API_KEY` | — | por uso |
-| 1º | Gemini | `GEMINI_API_KEY` | `gemini-3.5-flash`, com `3.6` de reserva | gratuito |
-| 2º | Groq | `GROQ_API_KEY` | `llama-3.3-70b-versatile` | gratuito |
-| 3º | OpenRouter | `OPENROUTER_API_KEY` | `llama-3.3-70b-instruct:free` | gratuito |
-| 4º | Cerebras | `CEREBRAS_API_KEY` | `llama-3.3-70b` | gratuito |
-| 5º | Mistral | `MISTRAL_API_KEY` | `mistral-small-latest` | gratuito |
+| Ordem   | Serviço       | Variável             | Modelo padrão                            | Custo    |
+| ------- | ------------- | -------------------- | ---------------------------------------- | -------- |
+| Pro, 1º | Claude Opus 5 | `ANTHROPIC_API_KEY`  | —                                        | por uso  |
+| 1º      | Gemini        | `GEMINI_API_KEY`     | `gemini-3.5-flash`, com `3.6` de reserva | gratuito |
+| 2º      | Groq          | `GROQ_API_KEY`       | `llama-3.3-70b-versatile`                | gratuito |
+| 3º      | OpenRouter    | `OPENROUTER_API_KEY` | `llama-3.3-70b-instruct:free`            | gratuito |
+| 4º      | Cerebras      | `CEREBRAS_API_KEY`   | `llama-3.3-70b`                          | gratuito |
+| 5º      | Mistral       | `MISTRAL_API_KEY`    | `mistral-small-latest`                   | gratuito |
 
 **Serviço sem chave nem entra na fila.** Dá para acrescentar fornecedor sem tocar em código:
 configurou a variável, entrou. Cada um tem também `<NOME>_MODELO` para trocar o modelo por env,
@@ -62,10 +62,10 @@ A chamada ao Claude acontece **só no servidor**, em `src/routes/api.rota.ts`. O
 não entra no bundle do navegador — isso foi verificado no build: `.output/public/` não contém nem
 o SDK nem a string `ANTHROPIC_API_KEY`.
 
-| Onde | O que fazer |
-|---|---|
+| Onde            | O que fazer                                                                                   |
+| --------------- | --------------------------------------------------------------------------------------------- |
 | Desenvolvimento | `GEMINI_API_KEY=...` e `ANTHROPIC_API_KEY=sk-ant-...` em **`.env.local`** (ignorado pelo git) |
-| Produção | painel de variáveis de ambiente do Cloudflare / Lovable, como **secret** |
+| Produção        | painel de variáveis de ambiente do Cloudflare / Lovable, como **secret**                      |
 
 **Nunca no `.env`.** Esse arquivo está versionado e vai para o GitHub.
 
@@ -76,10 +76,10 @@ cliente cai na rota por regras (`generateRoute`), que é completa.
 
 A IA escreve **conteúdo de estudo**. Ela não toca em número de dinheiro.
 
-| Quem decide | O quê |
-|---|---|
-| Claude | título, objetivo, por quê, marco, habilidades, projetos, dificuldade, horas, tarefas |
-| Servidor | `id`, `order`, `eta`, `week`, `xp`, `incomeAfter`, `prereqs`, `demandPct`, `status` |
+| Quem decide | O quê                                                                                |
+| ----------- | ------------------------------------------------------------------------------------ |
+| Claude      | título, objetivo, por quê, marco, habilidades, projetos, dificuldade, horas, tarefas |
+| Servidor    | `id`, `order`, `eta`, `week`, `xp`, `incomeAfter`, `prereqs`, `demandPct`, `status`  |
 
 O motivo é de produto, não de arquitetura: um valor de renda escrito por um modelo e exibido numa
 tela vira promessa de salário. `incomeAfter` continua sendo a divisão determinística da distância

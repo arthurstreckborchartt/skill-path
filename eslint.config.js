@@ -6,7 +6,9 @@ import reactRefresh from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
-  { ignores: ["dist", ".output", ".vinxi"] },
+  // `.agents` sao skills de plugins instalados localmente: nao sao do projeto e nao
+  // estao no git. `*.gen.ts` e gerado.
+  { ignores: ["dist", ".output", ".vinxi", ".agents", "**/*.gen.ts"] },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ["**/*.{ts,tsx}"],

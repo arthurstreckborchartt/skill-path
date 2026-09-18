@@ -86,23 +86,36 @@ function CheckoutPathly({
 
         <main className="grid flex-1 items-center gap-8 py-5 sm:py-8 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16 lg:py-12">
           <section className="order-2 animate-fade-up lg:order-1 lg:pr-4">
-            <Btn variant="ghost" size="sm" className="-ml-4 mb-7 hidden lg:inline-flex" onClick={onClose} disabled={ocupado}>
+            <Btn
+              variant="ghost"
+              size="sm"
+              className="-ml-4 mb-7 hidden lg:inline-flex"
+              onClick={onClose}
+              disabled={ocupado}
+            >
               <ArrowLeft className="size-4" /> Voltar aos planos
             </Btn>
 
             <Chip tone="primary" className="mb-4">
               <Sparkles className="size-3" /> 14 dias por nossa conta
             </Chip>
-            <h1 id="checkout-title" className="max-w-xl font-display text-4xl font-semibold leading-tight sm:text-5xl">
+            <h1
+              id="checkout-title"
+              className="max-w-xl font-display text-4xl font-semibold leading-tight sm:text-5xl"
+            >
               Sua rota inteira, sem bloqueios.
             </h1>
             <p className="mt-4 max-w-lg text-base leading-relaxed text-muted-foreground sm:text-lg">
-              Acesse cada etapa, projeto e habilidade que liga sua situação atual à sua próxima meta profissional.
+              Acesse cada etapa, projeto e habilidade que liga sua situação atual à sua próxima meta
+              profissional.
             </p>
 
             <div className="mt-8 grid gap-3 sm:grid-cols-2">
               {pro.inclui.slice(0, 4).map((item) => (
-                <div key={item} className="flex items-start gap-3 border-t border-border/70 py-3 text-sm">
+                <div
+                  key={item}
+                  className="flex items-start gap-3 border-t border-border/70 py-3 text-sm"
+                >
                   <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-primary" />
                   <span>{item}</span>
                 </div>
@@ -123,10 +136,16 @@ function CheckoutPathly({
               <div className="bg-foreground p-5 text-background sm:p-6">
                 <div className="flex items-center justify-between gap-4">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-wider opacity-80">Seu plano</p>
+                    <p className="text-xs font-semibold uppercase tracking-wider opacity-80">
+                      Seu plano
+                    </p>
                     <h2 className="mt-1 font-display text-2xl font-semibold">Pathly Pro</h2>
                   </div>
-                  <img src={logoAsset.url} alt="Logo da Pathly" className="size-12 rounded-lg border border-background/20 object-cover shadow-lg" />
+                  <img
+                    src={logoAsset.url}
+                    alt="Logo da Pathly"
+                    className="size-12 rounded-lg border border-background/20 object-cover shadow-lg"
+                  />
                 </div>
               </div>
 
@@ -158,7 +177,10 @@ function CheckoutPathly({
                 </div>
 
                 {erro && (
-                  <p className="mb-4 rounded-lg border border-destructive/30 bg-destructive/[0.06] p-3 text-sm" role="alert">
+                  <p
+                    className="mb-4 rounded-lg border border-destructive/30 bg-destructive/[0.06] p-3 text-sm"
+                    role="alert"
+                  >
                     {erro}
                   </p>
                 )}
@@ -171,7 +193,8 @@ function CheckoutPathly({
                 <div className="mt-4 flex items-start gap-2 text-xs leading-relaxed text-muted-foreground">
                   <ShieldCheck className="mt-0.5 size-4 shrink-0 text-primary" />
                   <p>
-                    Você será encaminhado ao Stripe para informar o cartão. A Pathly não armazena seus dados de pagamento.
+                    Você será encaminhado ao Stripe para informar o cartão. A Pathly não armazena
+                    seus dados de pagamento.
                   </p>
                 </div>
               </div>

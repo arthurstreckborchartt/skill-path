@@ -96,8 +96,7 @@ function NodeCard({
       className={cn(
         "tap group w-full rounded-lg border p-4 text-left transition-all duration-300",
         "border-border bg-surface/70 hover:-translate-y-0.5 hover:border-primary/30",
-        active &&
-           "border-primary/50 bg-primary/[0.06] shadow-[var(--shadow-soft)]",
+        active && "border-primary/50 bg-primary/[0.06] shadow-[var(--shadow-soft)]",
         locked && "opacity-70",
         align === "right" && "lg:text-right",
       )}
@@ -494,7 +493,8 @@ export function StepDetail({
           {step.checklist.map((c) => {
             const activityId = `${step.id}:${c.id}`;
             const activityProgress = learning.progressFor(activityId);
-            const checked = activityProgress?.status === "completed" || step.checkedIds.includes(c.id);
+            const checked =
+              activityProgress?.status === "completed" || step.checkedIds.includes(c.id);
             return (
               <li key={c.id}>
                 <Link
@@ -521,14 +521,20 @@ export function StepDetail({
                     {checked && <Check className="size-3" />}
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className={cn("block", checked && "text-muted-foreground")}>{c.label}</span>
+                    <span className={cn("block", checked && "text-muted-foreground")}>
+                      {c.label}
+                    </span>
                     <span className="mt-0.5 block text-xs text-muted-foreground">
                       {activityProgress?.score != null
                         ? `${activityProgress.score}% · ${activityProgress.attempts} tentativa${activityProgress.attempts === 1 ? "" : "s"}`
-                        : checked ? "Histórico anterior preservado" : "Aprender · testar · praticar"}
+                        : checked
+                          ? "Histórico anterior preservado"
+                          : "Aprender · testar · praticar"}
                     </span>
                   </span>
-                  {!checked && !locked && !bloqueadaPorPlano && <ArrowUpRight className="size-4 shrink-0 text-primary" />}
+                  {!checked && !locked && !bloqueadaPorPlano && (
+                    <ArrowUpRight className="size-4 shrink-0 text-primary" />
+                  )}
                 </Link>
               </li>
             );
@@ -577,7 +583,7 @@ export function StepActions({
       <Link
         to="/app/planos"
         className={cn(
-            "tap inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-glow)] hover:bg-primary/90",
+          "tap inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-glow)] hover:bg-primary/90",
           full ? "h-12 w-full" : "h-10",
         )}
       >

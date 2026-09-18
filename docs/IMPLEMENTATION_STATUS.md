@@ -1,6 +1,7 @@
 # Learning System — Implementation Status
 
 ## COMPLETED
+
 - Auditoria de autenticação, onboarding, rota, progresso, gamificação, plano e dados reais/mock.
 - Migração `0001_create_learning_system_foundation.sql` aplicada com quatro tabelas, GRANTs, RLS e índices.
 - Estado por pessoa + rota para sessões, domínio, XP e projetos.
@@ -23,11 +24,13 @@
 - Documentação técnica e de continuidade criada.
 
 ## IN PROGRESS
+
 - Validação ponta a ponta no navegador: login, onboarding, sessão, tentativa, XP, domínio, refresh e troca de viewport.
 - Calibragem visual das novas telas em celular e desktop.
 - Projeto prático: persistência está pronta; faltam marcos e avaliação.
 
 ## TODO
+
 - Conteúdo editorial específico para todas as áreas e unidades.
 - Mais formatos: completar código, verdadeiro/falso, ordenar, identificar erro e resposta aberta.
 - Desafios com níveis fácil, médio, difícil e projeto.
@@ -41,14 +44,17 @@
 - QA completo de cadastro por e-mail e Google em ambiente publicado.
 
 ## BLOCKED
+
 - Tutor contextual: depende da implementação do fluxo de IA e validação real da chamada; não foi simulado.
 - Conteúdo profundo por área: exige autoria/curadoria pedagógica, não deve ser fabricado como dado real.
 - Avaliação automática de projetos: exige critérios por projeto ou tutor avaliador.
 
 ## KNOWN ISSUES
+
 - Sessões derivadas de checklists usam explicações estruturais genéricas até existir conteúdo editorial próprio.
 - Itens legados concluídos permanecem marcados, mas não geram domínio retroativo.
 - Não existe suíte automatizada no repositório; a validação atual é manual pelo app.
 
 ## Próximo passo recomendado
+
 Produzir e versionar o conteúdo das primeiras unidades de Tecnologia, Dados, Design e Marketing, com duas perguntas e um exercício prático por unidade; depois ligar o tutor contextual às tentativas incorretas.

@@ -1,10 +1,10 @@
-import * as React from 'react'
+import * as React from "react";
 
-import { Text } from '@react-email/components'
-import { code, EmailLayout, paragraph } from './email-layout'
+import { Text } from "@react-email/components";
+import { code, EmailLayout, paragraph } from "./email-layout";
 
 interface ReauthenticationEmailProps {
-  token: string
+  token: string;
 }
 
 export const ReauthenticationEmail = ({ token }: ReauthenticationEmailProps) => (
@@ -17,7 +17,6 @@ export const ReauthenticationEmail = ({ token }: ReauthenticationEmailProps) => 
     <Text style={paragraph}>Use o código abaixo para confirmar sua identidade:</Text>
     <Text style={code}>{token}</Text>
   </EmailLayout>
-)
+);
 
-export default ReauthenticationEmail
-
+export default ReauthenticationEmail;

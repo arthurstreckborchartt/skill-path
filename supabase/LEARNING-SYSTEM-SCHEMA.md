@@ -2,15 +2,15 @@
 
 ## 1. Estado atual (auditoria)
 
-| Onde | O que faz | Problema |
-|---|---|---|
-| `supabase/schema.sql:84-109` | `pathly_route_progress`: 1 linha por `user_id` (PK = `user_id`), `progress` é um blob `jsonb` (`{done:[], checks:[], lastActiveDate, streak}`) | Não normalizado: impossível consultar "quantas pessoas dominam a skill X" sem escanear jsonb; não guarda histórico, só o estado atual |
-| `supabase/schema.sql:116-124` | `pathly_routes`: guarda a rota gerada (`steps jsonb`) | Etapas nunca viram linhas — vivem hardcoded em `src/lib/route-map.ts:38-120` (`extras`, 9 objetos fixos "s1".."s9") |
-| `src/lib/route-map.ts:1-120` | Define `RouteStep` e os dados de cada etapa (`why`, `prereqs`, `hours`, `week`, `demandPct`...) inteiramente em memória, sem tabela própria | Não há `skills`/`lessons` no banco; qualquer edição exige deploy de código |
-| `src/lib/catalog.ts:1-431` | Catálogo de recursos (cursos/vídeos/artigos) também em array TS, espelhado manualmente para `supabase/seed-catalogo.sql` (comentário em catalog.ts:10-11) | Fonte de verdade duplicada (TS + SQL), risco de dessincronia |
-| `src/lib/cloud-sync.ts:49-124` | Único ponto de leitura/gravação de progresso e perfil; `upsert(..., { onConflict: "user_id" })` em `saveCloudRouteProgress` (linha 110-118) | Acoplado à PK atual de `pathly_route_progress` ser só `user_id`; qualquer migração que troque essa PK quebra esta função silenciosamente (o `catch` engole o erro e cai para localStorage, linha 121-124) |
-| `drizzle.config.ts:1-9` + `drizzle/migrations/` | Migrações reais são SQL puro aplicado via `drizzle-kit` contra `LOVABLE_DB_MIGRATION_URL` | `drizzle/schema.ts:1` é só um stub em branco — Drizzle não infere tipos aqui, só versiona os `.sql` |
-| Não existem hoje | `skills`, `lessons`, `activities`, `activity_attempts`, `mastery_evidence`, `reviews`, `challenges`, `achievements`, `projects` | — |
+| Onde                                            | O que faz                                                                                                                                                 | Problema                                                                                                                                                                                                  |
+| ----------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `supabase/schema.sql:84-109`                    | `pathly_route_progress`: 1 linha por `user_id` (PK = `user_id`), `progress` é um blob `jsonb` (`{done:[], checks:[], lastActiveDate, streak}`)            | Não normalizado: impossível consultar "quantas pessoas dominam a skill X" sem escanear jsonb; não guarda histórico, só o estado atual                                                                     |
+| `supabase/schema.sql:116-124`                   | `pathly_routes`: guarda a rota gerada (`steps jsonb`)                                                                                                     | Etapas nunca viram linhas — vivem hardcoded em `src/lib/route-map.ts:38-120` (`extras`, 9 objetos fixos "s1".."s9")                                                                                       |
+| `src/lib/route-map.ts:1-120`                    | Define `RouteStep` e os dados de cada etapa (`why`, `prereqs`, `hours`, `week`, `demandPct`...) inteiramente em memória, sem tabela própria               | Não há `skills`/`lessons` no banco; qualquer edição exige deploy de código                                                                                                                                |
+| `src/lib/catalog.ts:1-431`                      | Catálogo de recursos (cursos/vídeos/artigos) também em array TS, espelhado manualmente para `supabase/seed-catalogo.sql` (comentário em catalog.ts:10-11) | Fonte de verdade duplicada (TS + SQL), risco de dessincronia                                                                                                                                              |
+| `src/lib/cloud-sync.ts:49-124`                  | Único ponto de leitura/gravação de progresso e perfil; `upsert(..., { onConflict: "user_id" })` em `saveCloudRouteProgress` (linha 110-118)               | Acoplado à PK atual de `pathly_route_progress` ser só `user_id`; qualquer migração que troque essa PK quebra esta função silenciosamente (o `catch` engole o erro e cai para localStorage, linha 121-124) |
+| `drizzle.config.ts:1-9` + `drizzle/migrations/` | Migrações reais são SQL puro aplicado via `drizzle-kit` contra `LOVABLE_DB_MIGRATION_URL`                                                                 | `drizzle/schema.ts:1` é só um stub em branco — Drizzle não infere tipos aqui, só versiona os `.sql`                                                                                                       |
+| Não existem hoje                                | `skills`, `lessons`, `activities`, `activity_attempts`, `mastery_evidence`, `reviews`, `challenges`, `achievements`, `projects`                           | —                                                                                                                                                                                                         |
 
 **Ponto de risco central:** qualquer redesenho tem que preservar o contrato de
 `cloud-sync.ts:85-124` (`onConflict: "user_id"` sobre `pathly_route_progress`).
@@ -73,7 +73,7 @@ Regra de RLS seguida em todas as tabelas novas (mesmo padrão de
 3. Quando uma tela nova passar a gravar `activity_attempts` diretamente, ela
    pode continuar espelhando o resultado em `pathly_route_progress.progress`
    (upsert de sempre) até o dia em que a UI parar de ler aquela tabela — troca
-   é feita por *feature flag* na leitura, não por migração destrutiva.
+   é feita por _feature flag_ na leitura, não por migração destrutiva.
 4. Só depois que nenhuma tela mais ler `pathly_route_progress`/`pathly_routes`
    é seguro considerar depreciá-las (não fazer isso nesta etapa).
 

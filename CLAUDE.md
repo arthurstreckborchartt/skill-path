@@ -23,7 +23,7 @@ Nunca escreva "tabela criada", "RLS configurada" ou "estrutura disponível" só 
 A sonda que vale, do console do app com sessão aberta:
 
 ```js
-const { error } = await supabase.from('tabela').select('*').limit(0);
+const { error } = await supabase.from("tabela").select("*").limit(0);
 ```
 
 `42501` prova que a tabela **existe** (permissão negada só acontece sobre algo que existe). `PGRST205` prova que **não existe**. Qualquer outro código é inconclusivo — e inconclusivo não é ausência.
@@ -37,11 +37,11 @@ Confirmação humana ("rodei") é registrada como confirmação humana, nunca co
 
 ## As três camadas de IA, para não confundir
 
-| | O que é | Onde mora |
-|---|---|---|
-| Infra de provedores | Como o Pathly chama Gemini/Groq/Claude. | `src/lib/ia/` |
-| AI Architecture | Decide se o SaaS **do usuário** precisa de IA. | `src/lib/arquitetura-ia/` |
-| Copilot | Chat que ajuda o usuário **a construir**. | `src/lib/copilot/` |
+|                     | O que é                                        | Onde mora                 |
+| ------------------- | ---------------------------------------------- | ------------------------- |
+| Infra de provedores | Como o Pathly chama Gemini/Groq/Claude.        | `src/lib/ia/`             |
+| AI Architecture     | Decide se o SaaS **do usuário** precisa de IA. | `src/lib/arquitetura-ia/` |
+| Copilot             | Chat que ajuda o usuário **a construir**.      | `src/lib/copilot/`        |
 
 Não misture o Copilot com a infraestrutura de provedores, e não duplique a cadeia de fallback: use `gerarJson` de `src/lib/ia/`.
 
@@ -49,4 +49,6 @@ Não misture o Copilot com a infraestrutura de provedores, e não duplique a cad
 
 Fim de linha é LF, garantido pelo `.gitattributes`. Arquivos gerados (`routeTree.gen.ts`, `src/integrations/supabase/types.ts`) estão no `.prettierignore` — não os formate.
 
-O repositório tem dívida de formatação pré-existente em ~42 arquivos. Não conserte de carona numa feature: normalização merece commit próprio.
+O repositório está formatado. Se o `eslint` acusar formatação em massa de novo, é sinal de que algo chegou de fora sem passar pelo prettier — normalize num commit próprio, nunca de carona numa feature.
+
+`.agents/` é skill de plugin instalada localmente, não está no git e não é linkada.

@@ -10,3 +10,6 @@ routeTree.gen.ts
 # Gerado pelo Supabase, como o routeTree acima. Formatar arquivo gerado e churn:
 # a proxima geracao volta sem formatacao e o diff reaparece.
 src/integrations/supabase/types.ts
+
+# Skills de plugins instalados localmente. Nao sao do projeto e nao estao no git.
+.agents

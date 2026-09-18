@@ -1,6 +1,11 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
-import type { ActivityProgress, ProjectEvidence, SkillMastery, XpEvent } from "@/lib/learning-system";
+import type {
+  ActivityProgress,
+  ProjectEvidence,
+  SkillMastery,
+  XpEvent,
+} from "@/lib/learning-system";
 
 type ActivityRow = Tables<"pathly_learning_activity_progress">;
 type MasteryRow = Tables<"pathly_skill_mastery">;
@@ -32,12 +37,32 @@ function activityFromRow(row: ActivityRow): ActivityProgress {
   };
 }
 
-export async function loadLearningCloud(userId: string, routeSignature: string): Promise<LearningCloudSnapshot> {
+export async function loadLearningCloud(
+  userId: string,
+  routeSignature: string,
+): Promise<LearningCloudSnapshot> {
   const [activities, mastery, xpEvents, projects] = await Promise.all([
-    supabase.from("pathly_learning_activity_progress").select("*").eq("user_id", userId).eq("route_signature", routeSignature),
-    supabase.from("pathly_skill_mastery").select("*").eq("user_id", userId).eq("route_signature", routeSignature),
-    supabase.from("pathly_xp_events").select("*").eq("user_id", userId).eq("route_signature", routeSignature).order("created_at", { ascending: false }),
-    supabase.from("pathly_project_progress").select("*").eq("user_id", userId).eq("route_signature", routeSignature),
+    supabase
+      .from("pathly_learning_activity_progress")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("route_signature", routeSignature),
+    supabase
+      .from("pathly_skill_mastery")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("route_signature", routeSignature),
+    supabase
+      .from("pathly_xp_events")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("route_signature", routeSignature)
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("pathly_project_progress")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("route_signature", routeSignature),
   ]);
   const error = activities.error ?? mastery.error ?? xpEvents.error ?? projects.error;
   if (error) throw error;
@@ -69,28 +94,39 @@ export async function loadLearningCloud(userId: string, routeSignature: string):
   };
 }
 
-export async function saveActivityCloud(userId: string, routeSignature: string, progress: ActivityProgress) {
-  const { error } = await supabase.from("pathly_learning_activity_progress").upsert({
-    user_id: userId,
-    route_signature: routeSignature,
-    activity_id: progress.activityId,
-    step_id: progress.stepId,
-    skill_names: progress.skillNames,
-    activity_type: progress.activityType,
-    status: progress.status,
-    score: progress.score,
-    attempts: progress.attempts,
-    minutes_spent: progress.minutesSpent,
-    confidence: progress.confidence,
-    completed_at: progress.completedAt,
-    review_due_at: progress.reviewDueAt,
-    last_answer_correct: progress.lastAnswerCorrect,
-    updated_at: progress.updatedAt,
-  }, { onConflict: "user_id,route_signature,activity_id" });
+export async function saveActivityCloud(
+  userId: string,
+  routeSignature: string,
+  progress: ActivityProgress,
+) {
+  const { error } = await supabase.from("pathly_learning_activity_progress").upsert(
+    {
+      user_id: userId,
+      route_signature: routeSignature,
+      activity_id: progress.activityId,
+      step_id: progress.stepId,
+      skill_names: progress.skillNames,
+      activity_type: progress.activityType,
+      status: progress.status,
+      score: progress.score,
+      attempts: progress.attempts,
+      minutes_spent: progress.minutesSpent,
+      confidence: progress.confidence,
+      completed_at: progress.completedAt,
+      review_due_at: progress.reviewDueAt,
+      last_answer_correct: progress.lastAnswerCorrect,
+      updated_at: progress.updatedAt,
+    },
+    { onConflict: "user_id,route_signature,activity_id" },
+  );
   if (error) throw error;
 }
 
-export async function saveMasteryCloud(userId: string, routeSignature: string, mastery: SkillMastery[]) {
+export async function saveMasteryCloud(
+  userId: string,
+  routeSignature: string,
+  mastery: SkillMastery[],
+) {
   if (mastery.length === 0) return;
   const { error } = await supabase.from("pathly_skill_mastery").upsert(
     mastery.map((item) => ({
@@ -108,7 +144,11 @@ export async function saveMasteryCloud(userId: string, routeSignature: string, m
   if (error) throw error;
 }
 
-export async function saveXpEventCloud(userId: string, routeSignature: string, event: XpEvent): Promise<boolean> {
+export async function saveXpEventCloud(
+  userId: string,
+  routeSignature: string,
+  event: XpEvent,
+): Promise<boolean> {
   const { error } = await supabase.from("pathly_xp_events").insert({
     user_id: userId,
     route_signature: routeSignature,
@@ -122,19 +162,26 @@ export async function saveXpEventCloud(userId: string, routeSignature: string, e
   throw error;
 }
 
-export async function saveProjectCloud(userId: string, routeSignature: string, project: ProjectEvidence) {
-  const { error } = await supabase.from("pathly_project_progress").upsert({
-    user_id: userId,
-    route_signature: routeSignature,
-    project_id: project.projectId,
-    step_id: project.stepId,
-    title: project.title,
-    status: project.status,
-    progress: project.progress,
-    evidence_url: project.evidenceUrl,
-    reflection: project.reflection,
-    completed_at: project.completedAt,
-    updated_at: new Date().toISOString(),
-  }, { onConflict: "user_id,route_signature,project_id" });
+export async function saveProjectCloud(
+  userId: string,
+  routeSignature: string,
+  project: ProjectEvidence,
+) {
+  const { error } = await supabase.from("pathly_project_progress").upsert(
+    {
+      user_id: userId,
+      route_signature: routeSignature,
+      project_id: project.projectId,
+      step_id: project.stepId,
+      title: project.title,
+      status: project.status,
+      progress: project.progress,
+      evidence_url: project.evidenceUrl,
+      reflection: project.reflection,
+      completed_at: project.completedAt,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "user_id,route_signature,project_id" },
+  );
   if (error) throw error;
 }

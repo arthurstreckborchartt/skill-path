@@ -1,6 +1,20 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 import { useSession } from "@/lib/auth";
-import { loadLearningCloud, saveActivityCloud, saveMasteryCloud, saveProjectCloud, saveXpEventCloud } from "@/lib/learning-cloud";
+import {
+  loadLearningCloud,
+  saveActivityCloud,
+  saveMasteryCloud,
+  saveProjectCloud,
+  saveXpEventCloud,
+} from "@/lib/learning-cloud";
 import {
   activitiesFromRoute,
   isReviewDue,
@@ -18,7 +32,12 @@ import { useRouteProgressContext } from "@/lib/route-progress-context";
 
 type LearningStatus = "loading" | "synced" | "local" | "error";
 
-type CompleteInput = { activity: LearningActivity; score: number; confidence: number; minutesSpent: number };
+type CompleteInput = {
+  activity: LearningActivity;
+  score: number;
+  confidence: number;
+  minutesSpent: number;
+};
 
 type LearningValue = {
   activities: LearningActivity[];
@@ -90,7 +109,10 @@ export function LearningSystemProvider({ children }: { children: ReactNode }) {
         const progressById = new Map(snapshot.activities.map((item) => [item.activityId, item]));
         for (const item of localProgress) {
           const cloudItem = progressById.get(item.activityId);
-          if (!cloudItem || new Date(item.updatedAt).getTime() > new Date(cloudItem.updatedAt).getTime()) {
+          if (
+            !cloudItem ||
+            new Date(item.updatedAt).getTime() > new Date(cloudItem.updatedAt).getTime()
+          ) {
             progressById.set(item.activityId, item);
             void saveActivityCloud(session.user.id, route.signature, item).catch(() => undefined);
           }
@@ -98,7 +120,8 @@ export function LearningSystemProvider({ children }: { children: ReactNode }) {
         const mergedMastery = new Map(snapshot.mastery.map((item) => [item.skillKey, item]));
         for (const item of local?.mastery ?? []) {
           const cloudItem = mergedMastery.get(item.skillKey);
-          if (!cloudItem || item.evidenceCount > cloudItem.evidenceCount) mergedMastery.set(item.skillKey, item);
+          if (!cloudItem || item.evidenceCount > cloudItem.evidenceCount)
+            mergedMastery.set(item.skillKey, item);
         }
         const mergedXp = new Map(snapshot.xpEvents.map((item) => [item.eventKey, item]));
         for (const item of local?.xpEvents ?? []) {
@@ -116,7 +139,9 @@ export function LearningSystemProvider({ children }: { children: ReactNode }) {
         }
         const masteryItems = [...mergedMastery.values()];
         if (masteryItems.length > snapshot.mastery.length) {
-          void saveMasteryCloud(session.user.id, route.signature, masteryItems).catch(() => undefined);
+          void saveMasteryCloud(session.user.id, route.signature, masteryItems).catch(
+            () => undefined,
+          );
         }
         setProgress([...progressById.values()]);
         setMastery(masteryItems);
@@ -130,126 +155,167 @@ export function LearningSystemProvider({ children }: { children: ReactNode }) {
         setStatus(local ? "local" : "error");
         setError("Não foi possível sincronizar agora. Seu avanço continua salvo neste aparelho.");
       });
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, [route.hydrated, route.signature, session?.user.id, sessionLoading]);
 
   useEffect(() => {
     if (!route.hydrated || typeof window === "undefined") return;
     try {
-      window.localStorage.setItem(storageKey(route.signature), JSON.stringify({ progress, mastery, xpEvents, projects }));
+      window.localStorage.setItem(
+        storageKey(route.signature),
+        JSON.stringify({ progress, mastery, xpEvents, projects }),
+      );
     } catch {
       setStatus("error");
       setError("O navegador não permitiu salvar o avanço localmente.");
     }
   }, [mastery, progress, projects, route.hydrated, route.signature, xpEvents]);
 
-  const completeActivity = useCallback(async ({ activity, score, confidence, minutesSpent }: CompleteInput) => {
-    const existing = progress.find((item) => item.activityId === activity.id);
-    const review = existing ? isReviewDue(existing) : false;
-    // Reabrir uma sessão concluída antes da revisão é permitido para consulta, mas não cria
-    // evidência nova, domínio ou XP. Isso torna a recompensa totalmente idempotente.
-    if (existing?.status === "completed" && !review) return { xp: 0, review: false };
-    const now = new Date();
-    const attempts = (existing?.attempts ?? 0) + 1;
-    const passed = score >= 70;
-    const next: ActivityProgress = {
-      activityId: activity.id,
-      stepId: activity.stepId,
-      skillNames: activity.skills,
-      activityType: activity.type,
-      status: passed ? "completed" : "in_progress",
-      score,
-      attempts,
-      minutesSpent: (existing?.minutesSpent ?? 0) + Math.max(1, minutesSpent),
-      confidence,
-      completedAt: passed ? now.toISOString() : (existing?.completedAt ?? null),
-      reviewDueAt: passed ? nextReviewDate(score, review ? attempts : 0, now) : now.toISOString(),
-      lastAnswerCorrect: passed,
-      updatedAt: now.toISOString(),
-    };
-    setProgress((items) => [...items.filter((item) => item.activityId !== activity.id), next]);
+  const completeActivity = useCallback(
+    async ({ activity, score, confidence, minutesSpent }: CompleteInput) => {
+      const existing = progress.find((item) => item.activityId === activity.id);
+      const review = existing ? isReviewDue(existing) : false;
+      // Reabrir uma sessão concluída antes da revisão é permitido para consulta, mas não cria
+      // evidência nova, domínio ou XP. Isso torna a recompensa totalmente idempotente.
+      if (existing?.status === "completed" && !review) return { xp: 0, review: false };
+      const now = new Date();
+      const attempts = (existing?.attempts ?? 0) + 1;
+      const passed = score >= 70;
+      const next: ActivityProgress = {
+        activityId: activity.id,
+        stepId: activity.stepId,
+        skillNames: activity.skills,
+        activityType: activity.type,
+        status: passed ? "completed" : "in_progress",
+        score,
+        attempts,
+        minutesSpent: (existing?.minutesSpent ?? 0) + Math.max(1, minutesSpent),
+        confidence,
+        completedAt: passed ? now.toISOString() : (existing?.completedAt ?? null),
+        reviewDueAt: passed ? nextReviewDate(score, review ? attempts : 0, now) : now.toISOString(),
+        lastAnswerCorrect: passed,
+        updatedAt: now.toISOString(),
+      };
+      setProgress((items) => [...items.filter((item) => item.activityId !== activity.id), next]);
 
-    const masteryNext = activity.skills.map((name) => {
-      const key = skillKey(name);
-      const before = mastery.find((item) => item.skillKey === key);
-      const gain = passed ? (review ? 22 : activity.type === "challenge" ? 24 : 14) : 4;
-      return {
-        skillKey: key,
-        skillName: name,
-        mastery: Math.min(review ? 100 : 80, (before?.mastery ?? 0) + gain),
-        evidenceCount: (before?.evidenceCount ?? 0) + 1,
-        lastPracticedAt: now.toISOString(),
-      } satisfies SkillMastery;
-    });
-    setMastery((items) => {
-      const keys = new Set(masteryNext.map((item) => item.skillKey));
-      return [...items.filter((item) => !keys.has(item.skillKey)), ...masteryNext];
-    });
+      const masteryNext = activity.skills.map((name) => {
+        const key = skillKey(name);
+        const before = mastery.find((item) => item.skillKey === key);
+        const gain = passed ? (review ? 22 : activity.type === "challenge" ? 24 : 14) : 4;
+        return {
+          skillKey: key,
+          skillName: name,
+          mastery: Math.min(review ? 100 : 80, (before?.mastery ?? 0) + gain),
+          evidenceCount: (before?.evidenceCount ?? 0) + 1,
+          lastPracticedAt: now.toISOString(),
+        } satisfies SkillMastery;
+      });
+      setMastery((items) => {
+        const keys = new Set(masteryNext.map((item) => item.skillKey));
+        return [...items.filter((item) => !keys.has(item.skillKey)), ...masteryNext];
+      });
 
-    const xp = xpForResult(activity.type, score, review);
-    const eventKey = review && existing?.reviewDueAt
-      ? `review:${activity.id}:${existing.reviewDueAt.slice(0, 10)}`
-      : `activity:${activity.id}:completed`;
-    const event: XpEvent = { eventKey, source: review ? "review" : activity.type, amount: xp, createdAt: now.toISOString() };
-    const duplicate = xpEvents.some((item) => item.eventKey === eventKey);
-    if (!duplicate && passed) setXpEvents((items) => [event, ...items]);
+      const xp = xpForResult(activity.type, score, review);
+      const eventKey =
+        review && existing?.reviewDueAt
+          ? `review:${activity.id}:${existing.reviewDueAt.slice(0, 10)}`
+          : `activity:${activity.id}:completed`;
+      const event: XpEvent = {
+        eventKey,
+        source: review ? "review" : activity.type,
+        amount: xp,
+        createdAt: now.toISOString(),
+      };
+      const duplicate = xpEvents.some((item) => item.eventKey === eventKey);
+      if (!duplicate && passed) setXpEvents((items) => [event, ...items]);
 
-    if (session?.user.id) {
+      if (session?.user.id) {
+        try {
+          await Promise.all([
+            saveActivityCloud(session.user.id, route.signature, next),
+            saveMasteryCloud(session.user.id, route.signature, masteryNext),
+            ...(!duplicate && passed
+              ? [saveXpEventCloud(session.user.id, route.signature, event)]
+              : []),
+          ]);
+          setStatus("synced");
+          setError(null);
+        } catch {
+          setStatus("local");
+          setError("Avanço salvo neste aparelho. A sincronização será tentada novamente depois.");
+        }
+      }
+      return { xp: !duplicate && passed ? xp : 0, review };
+    },
+    [mastery, progress, route.signature, session?.user.id, xpEvents],
+  );
+
+  const saveProject = useCallback(
+    async (project: ProjectEvidence) => {
+      setProjects((items) => [
+        ...items.filter((item) => item.projectId !== project.projectId),
+        project,
+      ]);
+      if (!session?.user.id) return;
       try {
-        await Promise.all([
-          saveActivityCloud(session.user.id, route.signature, next),
-          saveMasteryCloud(session.user.id, route.signature, masteryNext),
-          ...(!duplicate && passed ? [saveXpEventCloud(session.user.id, route.signature, event)] : []),
-        ]);
+        await saveProjectCloud(session.user.id, route.signature, project);
         setStatus("synced");
         setError(null);
       } catch {
         setStatus("local");
-        setError("Avanço salvo neste aparelho. A sincronização será tentada novamente depois.");
+        setError("Projeto salvo neste aparelho. A sincronização será tentada novamente depois.");
       }
-    }
-    return { xp: !duplicate && passed ? xp : 0, review };
-  }, [mastery, progress, route.signature, session?.user.id, xpEvents]);
-
-  const saveProject = useCallback(async (project: ProjectEvidence) => {
-    setProjects((items) => [...items.filter((item) => item.projectId !== project.projectId), project]);
-    if (!session?.user.id) return;
-    try {
-      await saveProjectCloud(session.user.id, route.signature, project);
-      setStatus("synced");
-      setError(null);
-    } catch {
-      setStatus("local");
-      setError("Projeto salvo neste aparelho. A sincronização será tentada novamente depois.");
-    }
-  }, [route.signature, session?.user.id]);
+    },
+    [route.signature, session?.user.id],
+  );
 
   const reviewsDue = useMemo(() => progress.filter((item) => isReviewDue(item)), [progress]);
   const nextActivity = useMemo(() => {
     const due = reviewsDue[0];
     if (due) return activities.find((item) => item.id === due.activityId) ?? null;
-    return activities.find((activity) => {
-      const step = route.views.find((item) => item.id === activity.stepId);
-      return step?.state === "atual" && !progress.some((item) => item.activityId === activity.id && item.status === "completed");
-    }) ?? null;
+    return (
+      activities.find((activity) => {
+        const step = route.views.find((item) => item.id === activity.stepId);
+        return (
+          step?.state === "atual" &&
+          !progress.some((item) => item.activityId === activity.id && item.status === "completed")
+        );
+      }) ?? null
+    );
   }, [activities, progress, reviewsDue, route.views]);
 
-  const value = useMemo<LearningValue>(() => ({
-    activities,
-    progress,
-    mastery,
-    projects,
-    xpEvents,
-    xpTotal: xpEvents.reduce((total, item) => total + item.amount, 0),
-    learningPercent: routeLearningPercent(activities, progress),
-    reviewsDue,
-    nextActivity,
-    status,
-    error,
-    progressFor: (activityId) => progress.find((item) => item.activityId === activityId),
-    completeActivity,
-    saveProject,
-  }), [activities, completeActivity, error, mastery, progress, projects, reviewsDue, saveProject, status, xpEvents]);
+  const value = useMemo<LearningValue>(
+    () => ({
+      activities,
+      progress,
+      mastery,
+      projects,
+      xpEvents,
+      xpTotal: xpEvents.reduce((total, item) => total + item.amount, 0),
+      learningPercent: routeLearningPercent(activities, progress),
+      reviewsDue,
+      nextActivity,
+      status,
+      error,
+      progressFor: (activityId) => progress.find((item) => item.activityId === activityId),
+      completeActivity,
+      saveProject,
+    }),
+    [
+      activities,
+      completeActivity,
+      error,
+      mastery,
+      progress,
+      projects,
+      reviewsDue,
+      saveProject,
+      status,
+      xpEvents,
+    ],
+  );
 
   return <LearningContext.Provider value={value}>{children}</LearningContext.Provider>;
 }
