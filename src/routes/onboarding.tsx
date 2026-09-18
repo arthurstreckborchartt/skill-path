@@ -229,7 +229,11 @@ function Onboarding() {
       const cloud = session?.user.id ? await loadCloudProfile(session.user.id) : null;
       if (!active) return;
 
-      const restored = cloud ?? stored;
+      const restored =
+        cloud &&
+        (!stored?.updatedAt || !cloud.updatedAt || cloud.updatedAt >= stored.updatedAt)
+          ? cloud
+          : stored;
       if (restored) {
         setProfile(restored);
         setIndex(Math.min(restored.lastScreenIndex, screens.length - 1));

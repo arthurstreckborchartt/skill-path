@@ -19,7 +19,13 @@ export type Modo = "aprender" | "gerar";
 
 export type EstadoBanco =
   | { estado: "carregando" }
-  | { estado: "pronto"; modelo: ModeloDeDados; dialeto: Dialeto; checklistFeito: number[] }
+  | {
+      estado: "pronto";
+      modelo: ModeloDeDados;
+      dialeto: Dialeto;
+      checklistFeito: number[];
+      erroPersistencia?: string;
+    }
   | { estado: "vazio" }
   | { estado: "erro"; mensagem: string; motivo?: string };
 
@@ -133,13 +139,27 @@ export function useModeloDeDados(projetoId: string) {
   /** Troca de dialeto é escolha da pessoa e não custa geração — só muda como o SQL é renderizado. */
   const trocarDialeto = useCallback(
     async (d: Dialeto) => {
-      setEstado((atual) => (atual.estado === "pronto" ? { ...atual, dialeto: d } : atual));
-      await supabase
+      if (estado.estado !== "pronto") return;
+      const anterior = estado.dialeto;
+      const { erroPersistencia: _erroPersistencia, ...estadoSemErro } = estado;
+      setEstado({ ...estadoSemErro, dialeto: d });
+      const { error } = await supabase
         .from("pathly_modelos_dados")
         .update({ dialeto: d })
         .eq("projeto_id", projetoId);
+      if (error) {
+        setEstado((atual) =>
+          atual.estado === "pronto"
+            ? {
+                ...atual,
+                dialeto: anterior,
+                erroPersistencia: "Não consegui salvar o banco escolhido. Tente de novo.",
+              }
+            : atual,
+        );
+      }
     },
-    [projetoId],
+    [estado, projetoId],
   );
 
   const alternarChecklist = useCallback(
@@ -150,11 +170,24 @@ export function useModeloDeDados(projetoId: string) {
         ? feitos.filter((x) => x !== indice)
         : [...feitos, indice];
 
-      setEstado({ ...estado, checklistFeito: novo });
-      await supabase
+      const anterior = estado.checklistFeito;
+      const { erroPersistencia: _erroPersistencia, ...estadoSemErro } = estado;
+      setEstado({ ...estadoSemErro, checklistFeito: novo });
+      const { error } = await supabase
         .from("pathly_modelos_dados")
         .update({ checklist_feito: novo })
         .eq("projeto_id", projetoId);
+      if (error) {
+        setEstado((atual) =>
+          atual.estado === "pronto"
+            ? {
+                ...atual,
+                checklistFeito: anterior,
+                erroPersistencia: "Não consegui salvar esta validação. Tente de novo.",
+              }
+            : atual,
+        );
+      }
     },
     [estado, projetoId],
   );
