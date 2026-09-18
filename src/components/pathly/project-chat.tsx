@@ -45,6 +45,15 @@ export function ProjectChat({ projetoId }: { projetoId: string }) {
     if (!estado.respondendo) inputRef.current?.focus();
   }, [estado.respondendo]);
 
+  useEffect(() => {
+    if (estado.carregando || estado.respondendo || estado.mensagens.length > 0) return;
+    const key = `pathly.project.prompt.${projetoId}`;
+    const pending = window.sessionStorage.getItem(key);
+    if (!pending) return;
+    window.sessionStorage.removeItem(key);
+    void perguntar(pending, "guiar");
+  }, [estado.carregando, estado.mensagens.length, estado.respondendo, perguntar, projetoId]);
+
   function enviar(pergunta: string, comModo?: Modo) {
     const limpa = pergunta.trim();
     if (!limpa || estado.respondendo) return;

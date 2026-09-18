@@ -44,7 +44,7 @@ function TelaProjetos() {
     }
     // Sem `setCriando(false)`: a navegação desmonta esta tela, e desligar o estado antes faria o
     // botão voltar ao normal por um instante — parecendo que nada aconteceu.
-    void navigate({ to: "/app/blueprint/$id", params: { id: r.id } });
+    void navigate({ to: "/app/projeto/$id", params: { id: r.id } });
   }
 
   return (

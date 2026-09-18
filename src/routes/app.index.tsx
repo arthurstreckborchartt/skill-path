@@ -39,6 +39,7 @@ function CreateWorkspace() {
     setError(null);
     const result = await criarProjeto({ ...RESPOSTAS_VAZIAS, oQue: idea.trim(), paraQuem: audience.trim(), problema: problem.trim() });
     if ("erro" in result) { setError(result.erro); setBusy(false); return; }
+    window.sessionStorage.setItem(`pathly.project.prompt.${result.id}`, idea.trim());
     void navigate({ to: "/app/projeto/$id", params: { id: result.id } });
   }
 

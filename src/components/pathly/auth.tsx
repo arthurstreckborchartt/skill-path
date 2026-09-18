@@ -1,7 +1,6 @@
 ﻿import { type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { Logo } from "./ui";
-import { cn } from "@/lib/utils";
 
 export function AuthLayout({
   title,
@@ -32,25 +31,18 @@ export function AuthLayout({
        <aside className="relative hidden overflow-hidden border-l border-border bg-[var(--gradient-panel-strong)] text-foreground lg:block">
         <div className="relative flex h-full flex-col justify-center gap-0 p-14">
           {[
-            { label: "R$ 2.600", note: "onde você está" },
-            { label: "Habilidades certas", note: "na ordem que faz sentido" },
-            { label: "Projetos reais", note: "portfólio que prova" },
-            { label: "Freelas e candidaturas", note: "as últimas etapas da rota" },
-            { label: "R$ 8.000", note: "onde você quer chegar", highlight: true },
+            { label: "Ideia", note: "o que você quer construir" },
+            { label: "Produto", note: "público, problema e MVP" },
+            { label: "Arquitetura", note: "dados, API e segurança" },
+            { label: "Execução", note: "roadmap e prompts" },
+            { label: "Integrações", note: "ações sempre aprovadas" },
           ].map((row, i) => (
             <div
               key={row.label}
                className="animate-[fade-up_0.7s_cubic-bezier(0.16,1,0.3,1)_both] flex items-center justify-between border-b border-foreground/10 px-1 py-6"
               style={{ animationDelay: `${i * 110}ms` }}
             >
-              <span
-                className={cn(
-                   "font-display text-xl font-semibold text-foreground",
-                    row.highlight && "underline decoration-foreground/40 underline-offset-8",
-                )}
-              >
-                {row.label}
-              </span>
+              <span className="font-display text-xl font-semibold text-foreground">{row.label}</span>
                <span className="text-xs text-muted-foreground">{row.note}</span>
             </div>
           ))}
