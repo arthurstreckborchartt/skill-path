@@ -62,8 +62,8 @@ Para RLS, a evidência é comportamental: tentar `insert` com `user_id` de outra
 | `pathly_persistence.sql` | `pathly_profiles`, `pathly_route_progress` | `executado` | ambas responderam `42501`. |
 | `seed-catalogo.sql` | popular o catálogo | `desconhecido` | não sondado. É seed, não estrutura. |
 | `pathly_arquitetura_ia.sql` | `pathly_arquitetura_ia` | `executado` | 2026-09-18: a tabela responde à leitura logado. A RLS ainda não foi exercitada. |
-| `pathly_copilot.sql` | `pathly_copilot_mensagens`, `_decisoes`, `_propostas` | `validado` **com uma ressalva** | 2026-09-18, bateria em projeto descartável apagado depois: RLS `user_id` alheio `42501`; posse de projeto alheio `42501`; gatilho de imutabilidade `P0001` com o valor intacto; `status` mudando normalmente; supersedência com histórico preservado; paginação em ordem; `CASCADE` sem resíduo. **Ressalva:** o `update` em mensagens não falha — é bloqueado em silêncio. Ver `pathly_copilot_revoke_update.sql`. |
-| `pathly_copilot_revoke_update.sql` | tira `update`/`delete` que o default privilege do Supabase concedeu | **`gerado`** | não executado. |
+| `pathly_copilot.sql` | `pathly_copilot_mensagens`, `_decisoes`, `_propostas` | `validado` | 2026-09-18, bateria em projeto descartável apagado depois: RLS `user_id` alheio `42501`; posse de projeto alheio `42501`; gatilho de imutabilidade `P0001` com o valor intacto; `status` mudando normalmente; supersedência com histórico preservado; paginação em ordem; `CASCADE` sem resíduo. A ressalva do `update` silencioso foi corrigida por `pathly_copilot_revoke_update.sql`. |
+| `pathly_copilot_revoke_update.sql` | declara o privilégio final das três tabelas do Copilot | `validado` | 2026-09-18: `update` e `delete` em mensagem agora respondem `42501` (antes: sem erro, zero linhas). Gravar mensagem, supersedência de decisão, criar e aprovar proposta continuam funcionando; o gatilho de imutabilidade segue devolvendo `P0001`. `CASCADE` ao apagar o projeto continua limpando tudo — ele roda como dono da tabela, não como quem chamou. |
 
 ### Tabelas que existem sem script neste repositório
 
