@@ -30,6 +30,8 @@ export type EstadoSeguranca =
       itensFeitos: string[];
       /** `null` enquanto esta sessão não pediu extras; a análise não espera por isso. */
       extrasVieram: boolean | null;
+      erroExtras?: string;
+      erroChecklist?: string;
     }
   | { estado: "erro"; mensagem: string; motivo?: string };
 
@@ -100,7 +102,11 @@ export function useSeguranca(projetoId: string) {
       const { data } = await supabase.auth.getSession();
       const token = data.session?.access_token;
       if (!token) {
-        setEstado({ estado: "erro", mensagem: "Sua sessão expirou. Entre de novo." });
+        setEstado((atual) =>
+          atual.estado === "pronto"
+            ? { ...atual, erroExtras: "Sua sessão expirou. Entre de novo." }
+            : { estado: "erro", mensagem: "Sua sessão expirou. Entre de novo." },
+        );
         return;
       }
 
@@ -117,11 +123,16 @@ export function useSeguranca(projetoId: string) {
       };
 
       if (!r.ok) {
-        setEstado({
-          estado: "erro",
-          mensagem: corpo.erro ?? "Não consegui analisar os riscos específicos agora.",
-          ...(corpo.motivo ? { motivo: corpo.motivo } : {}),
-        });
+        const mensagem = corpo.erro ?? "Não consegui analisar os riscos específicos agora.";
+        setEstado((atual) =>
+          atual.estado === "pronto"
+            ? { ...atual, erroExtras: mensagem }
+            : {
+                estado: "erro",
+                mensagem,
+                ...(corpo.motivo ? { motivo: corpo.motivo } : {}),
+              },
+        );
         return;
       }
 
@@ -131,11 +142,16 @@ export function useSeguranca(projetoId: string) {
               ...atual,
               extras: lerExtras(corpo.extras),
               extrasVieram: corpo.extrasVieram !== false,
+              erroExtras: undefined,
             }
           : atual,
       );
     } catch {
-      setEstado({ estado: "erro", mensagem: "Sem conexão. Tente de novo." });
+      setEstado((atual) =>
+        atual.estado === "pronto"
+          ? { ...atual, erroExtras: "Sem conexão. Tente de novo." }
+          : { estado: "erro", mensagem: "Sem conexão. Tente de novo." },
+      );
     } finally {
       setBuscando(false);
     }
@@ -149,7 +165,8 @@ export function useSeguranca(projetoId: string) {
         ? estado.itensFeitos.filter((x) => x !== chave)
         : [...estado.itensFeitos, chave];
 
-      setEstado({ ...estado, itensFeitos: novo });
+      const anterior = estado.itensFeitos;
+      setEstado({ ...estado, itensFeitos: novo, erroChecklist: undefined });
 
       /**
        * `upsert`, não `update`: a linha só existe depois que alguém buscou os extras, e marcar um
@@ -157,9 +174,20 @@ export function useSeguranca(projetoId: string) {
        */
       const { data } = await supabase.auth.getUser();
       const userId = data.user?.id;
-      if (!userId) return;
+      if (!userId) {
+        setEstado((atual) =>
+          atual.estado === "pronto"
+            ? {
+                ...atual,
+                itensFeitos: anterior,
+                erroChecklist: "Sua sessão expirou. Entre de novo para salvar.",
+              }
+            : atual,
+        );
+        return;
+      }
 
-      await supabase.from("pathly_seguranca").upsert(
+      const { error } = await supabase.from("pathly_seguranca").upsert(
         {
           projeto_id: projetoId,
           user_id: userId,
@@ -168,6 +196,17 @@ export function useSeguranca(projetoId: string) {
         },
         { onConflict: "projeto_id" },
       );
+      if (error) {
+        setEstado((atual) =>
+          atual.estado === "pronto"
+            ? {
+                ...atual,
+                itensFeitos: anterior,
+                erroChecklist: "Não consegui salvar este item. Tente de novo.",
+              }
+            : atual,
+        );
+      }
     },
     [estado, projetoId],
   );

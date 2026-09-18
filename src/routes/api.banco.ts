@@ -104,9 +104,11 @@ export const Route = createFileRoute("/api/banco")({
         const salvo = await fetch(salvoUrl, { headers: comoUsuario });
 
         let existe = false;
+        let dialetoSalvo: string | undefined;
         if (salvo.ok) {
           const linhas = (await salvo.json()) as { modelo?: unknown; dialeto?: string }[];
           existe = linhas.length > 0;
+          dialetoSalvo = linhas[0]?.dialeto;
           if (linhas[0]?.modelo && !refazer) {
             return new Response(
               JSON.stringify({
@@ -158,7 +160,10 @@ export const Route = createFileRoute("/api/banco")({
 
         // O dialeto sai da stack só na primeira vez: depois disso a escolha é da pessoa, e
         // sobrescrevê-la a cada regeração desfaria a troca que ela fez na tela.
-        const dialeto = dialetoDaStack(blueprint.tecnico?.stack.banco ?? "");
+        const dialeto =
+          existe && dialetoSalvo
+            ? dialetoSalvo
+            : dialetoDaStack(blueprint.tecnico?.stack.banco ?? "");
 
         const gravacao = existe
           ? fetch(

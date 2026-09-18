@@ -115,7 +115,9 @@ export function useModeloDeDados(projetoId: string) {
           modelo,
           dialeto: (DIALETOS as readonly string[]).includes(corpo.dialeto ?? "")
             ? (corpo.dialeto as Dialeto)
-            : "postgres",
+            : estado.estado === "pronto"
+              ? estado.dialeto
+              : "postgres",
           // Regerar não apaga o que já foi validado: os itens do checklist são da pessoa.
           checklistFeito: estado.estado === "pronto" ? estado.checklistFeito : [],
         });
