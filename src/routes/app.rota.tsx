@@ -49,7 +49,7 @@ function Stat({
   hint?: string;
 }) {
   return (
-    <div className="rounded-2xl border border-border bg-surface/60 p-4">
+    <div className="rounded-md border border-border bg-surface p-4">
       <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
         {icon}
         {label}
@@ -220,13 +220,13 @@ function RoutePage() {
       )}
 
       {/* seletor de visualização */}
-      <div className="inline-flex gap-1 rounded-full border border-border bg-surface/60 p-1">
+      <div className="inline-flex gap-1 rounded-md border border-border bg-surface p-1">
         {views.map((v) => (
           <button
             key={v.id}
             onClick={() => setView(v.id)}
             className={cn(
-              "tap rounded-full px-3.5 py-2 text-xs font-medium transition-all duration-300 sm:text-sm",
+               "tap rounded-sm px-3.5 py-2 text-xs font-medium transition-colors sm:text-sm",
               view === v.id
                 ? "bg-primary/15 text-primary"
                 : "text-muted-foreground hover:text-foreground",
@@ -240,7 +240,7 @@ function RoutePage() {
       {/* mapa + detalhe */}
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] lg:items-start">
         <div>
-          <div className="mb-4 flex items-center justify-between rounded-2xl border border-border bg-surface/50 px-4 py-3">
+           <div className="mb-4 flex items-center justify-between rounded-md border border-border bg-surface px-4 py-3">
             <div>
               <p className="text-[11px] text-muted-foreground">Hoje</p>
               <p className="font-display text-sm font-semibold">
@@ -252,7 +252,7 @@ function RoutePage() {
 
           <RouteTrack steps={visible} selectedId={selected?.id ?? null} onSelect={select} />
 
-          <div className="mt-4 flex items-center justify-between rounded-2xl border border-primary/30 bg-primary/[0.06] px-4 py-3">
+           <div className="mt-4 flex items-center justify-between rounded-md border border-border bg-surface-2 px-4 py-3">
             <div>
               <p className="text-[11px] text-muted-foreground">Objetivo</p>
               <p className="font-display text-sm font-semibold text-primary">

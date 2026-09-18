@@ -100,7 +100,7 @@ function Dashboard() {
       {routeDone || (!primaryActivity && !nextAction) ? (
         <Reveal delay={140}>
           <Panel className="text-center">
-            <p className="mx-auto grid size-12 place-items-center rounded-2xl bg-primary/15 text-primary">
+            <p className="mx-auto grid size-11 place-items-center rounded-md border border-border bg-surface-2 text-foreground">
               <Sparkles className="size-6" />
             </p>
             <h2 className="mt-4 font-display text-xl font-semibold">Rota concluída</h2>
@@ -112,10 +112,10 @@ function Dashboard() {
         </Reveal>
       ) : (
         <Reveal delay={140}>
-          <Panel className="overflow-hidden border-primary/25 bg-foreground text-background shadow-[var(--shadow-lift)]">
+          <Panel className="overflow-hidden border-foreground bg-foreground text-background">
             <div className="grid gap-8 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
               <div className="min-w-0">
-                <span className="flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.12em] text-primary uppercase">
+                <span className="flex items-center gap-1.5 text-[11px] font-semibold text-background/70 uppercase">
                   <Compass className="size-3" /> Seu próximo passo
                 </span>
                 <p className="mt-4 text-sm text-background/60">
@@ -149,7 +149,7 @@ function Dashboard() {
                 <Link
                   to="/app/aprender/$activityId"
                   params={{ activityId: primaryActivity.id }}
-                  className="tap inline-flex h-12 w-full shrink-0 items-center justify-center gap-2 rounded-lg bg-primary px-6 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-glow)] hover:bg-primary/90 sm:w-auto"
+                   className="tap inline-flex h-12 w-full shrink-0 items-center justify-center gap-2 rounded-md border border-background/20 bg-background px-6 text-sm font-medium text-foreground hover:bg-background/85 sm:w-auto"
                 >
                   {learning.reviewsDue.length > 0 ? "Revisar agora" : "Começar agora"}{" "}
                   <ArrowRight className="size-4" />
@@ -157,7 +157,7 @@ function Dashboard() {
               ) : (
                 <Link
                   to="/app/rota"
-                  className="tap inline-flex h-12 w-full shrink-0 items-center justify-center gap-2 rounded-lg bg-primary px-6 text-sm font-semibold text-primary-foreground sm:w-auto"
+                  className="tap inline-flex h-12 w-full shrink-0 items-center justify-center gap-2 rounded-md border border-background/20 bg-background px-6 text-sm font-medium text-foreground hover:bg-background/85 sm:w-auto"
                 >
                   Ver caminho <ArrowRight className="size-4" />
                 </Link>
@@ -329,7 +329,7 @@ function Dashboard() {
                   );
                   return (
                     <li key={item.activityId} className="flex items-center gap-3 py-3">
-                      <span className="grid size-8 shrink-0 place-items-center rounded-xl bg-primary/12 text-primary">
+                       <span className="grid size-8 shrink-0 place-items-center rounded-md border border-border bg-surface-2 text-foreground">
                         <Check className="size-4" />
                       </span>
                       <div className="min-w-0 flex-1">

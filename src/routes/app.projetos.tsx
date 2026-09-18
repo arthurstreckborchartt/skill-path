@@ -186,7 +186,7 @@ function ProjectsPage() {
           const project = projects.find((item) => item.id === editing);
           if (!project) return null;
           return (
-            <div className="fixed inset-0 z-50 grid place-items-end bg-background/70 p-0 backdrop-blur-sm sm:place-items-center sm:p-6">
+            <div className="fixed inset-0 z-50 grid place-items-end bg-foreground/20 p-0 sm:place-items-center sm:p-6">
               <Panel className="w-full max-w-xl rounded-b-none sm:rounded-lg">
                 <div className="flex items-start justify-between gap-4">
                   <div>

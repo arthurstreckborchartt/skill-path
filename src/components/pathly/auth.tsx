@@ -46,7 +46,7 @@ export function AuthLayout({
               <span
                 className={cn(
                   "font-display text-xl font-semibold text-background",
-                  row.highlight && "text-primary",
+                   row.highlight && "underline decoration-background/40 underline-offset-8",
                 )}
               >
                 {row.label}
@@ -91,7 +91,7 @@ export function AuthField({
         required={required}
         disabled={disabled}
         // text-base no celular: abaixo de 16px o Safari do iPhone dá zoom ao focar o campo.
-        className="h-12 w-full rounded-xl border border-input bg-surface/60 px-4 text-base outline-none transition-all placeholder:text-muted-foreground focus:border-primary/50 focus:ring-4 focus:ring-primary/10 disabled:opacity-60 sm:text-sm"
+        className="h-12 w-full rounded-md border border-input bg-surface px-4 text-base outline-hidden transition-colors placeholder:text-muted-foreground focus:border-foreground/35 focus:ring-2 focus:ring-ring disabled:opacity-60 sm:text-sm"
       />
     </label>
   );
@@ -101,7 +101,7 @@ export function AuthError({ message }: { message: string }) {
   return (
     <p
       role="alert"
-      className="rounded-xl border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+      className="rounded-md border border-foreground/30 bg-surface-2 px-4 py-3 text-sm text-foreground"
     >
       {message}
     </p>
@@ -120,7 +120,7 @@ export function AuthSocial({ onGoogle, disabled }: { onGoogle: () => void; disab
         type="button"
         onClick={onGoogle}
         disabled={disabled}
-        className="tap mt-4 h-11 w-full rounded-xl border border-border text-sm text-foreground transition-colors hover:border-primary/40 hover:bg-surface/60 disabled:opacity-60"
+        className="tap mt-4 h-11 w-full rounded-md border border-border bg-surface text-sm text-foreground transition-colors hover:border-foreground/30 hover:bg-surface-2 disabled:opacity-60"
       >
         Google
       </button>

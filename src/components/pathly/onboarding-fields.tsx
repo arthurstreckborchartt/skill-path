@@ -33,10 +33,10 @@ export function CardSelect<T extends string>({
             onClick={() => onChange(option.id)}
             style={{ animationDelay: `${i * 28}ms` }}
             className={cn(
-              "tap animate-[fade-up_0.45s_cubic-bezier(0.16,1,0.3,1)_both] group flex items-center justify-between gap-3 rounded-2xl border px-4 py-3.5 text-left transition-all",
+              "tap animate-[fade-up_0.35s_cubic-bezier(0.16,1,0.3,1)_both] group flex items-center justify-between gap-3 rounded-md border px-4 py-3.5 text-left transition-colors",
               active
-                ? "border-primary/50 bg-primary/10 text-foreground shadow-[var(--shadow-glow)]"
-                : "border-border bg-surface/50 hover:border-primary/30 hover:bg-surface",
+                ? "border-foreground/35 bg-surface-2 text-foreground"
+                : "border-border bg-surface hover:border-foreground/25 hover:bg-surface-2",
             )}
           >
             <span className="min-w-0">
@@ -435,7 +435,7 @@ export function HoursSlider({
 }) {
   const pct = ((value - 1) / (30 - 1)) * 100;
   return (
-    <div className="rounded-2xl border border-border bg-surface/40 p-5">
+    <div className="rounded-md border border-border bg-surface p-5">
       <div className="flex items-baseline justify-between">
         <span className="font-display text-3xl font-semibold">
           {value % 1 === 0 ? value : value.toFixed(1)}h
@@ -450,7 +450,7 @@ export function HoursSlider({
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
         aria-label="Horas de estudo por semana"
-        className="mt-4 h-2 w-full cursor-pointer appearance-none rounded-full outline-none [&::-webkit-slider-thumb]:size-5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:shadow-[var(--shadow-glow)]"
+        className="mt-4 h-2 w-full cursor-pointer appearance-none rounded-full outline-hidden [&::-webkit-slider-thumb]:size-5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-background [&::-webkit-slider-thumb]:bg-primary"
         style={{
           background: `linear-gradient(to right, var(--primary) ${pct}%, var(--muted) ${pct}%)`,
         }}

@@ -7,8 +7,8 @@ export const THEME_STORAGE_KEY = "pathly.theme.v1";
 
 /** Cor da barra do navegador no celular — precisa bater com `--background` de cada tema. */
 const THEME_COLOR: Record<ResolvedTheme, string> = {
-  light: "#f5f7fa",
-  dark: "#080d15",
+  light: "#fafafa",
+  dark: "#111111",
 };
 
 const DARK_QUERY = "(prefers-color-scheme: dark)";

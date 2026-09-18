@@ -62,7 +62,7 @@ export function EmailLayout({
 }
 
 export const paragraph = {
-  color: "#53605c",
+  color: "#555555",
   fontFamily: "Arial, sans-serif",
   fontSize: "16px",
   lineHeight: "26px",
@@ -70,15 +70,15 @@ export const paragraph = {
 };
 
 export const inlineLink = {
-  color: "#147d64",
+  color: "#111111",
   textDecoration: "underline",
 };
 
 export const code = {
-  backgroundColor: "#edf6f1",
-  border: "1px solid #b9e7d3",
+  backgroundColor: "#f3f3f3",
+  border: "1px solid #d8d8d8",
   borderRadius: "8px",
-  color: "#111816",
+  color: "#111111",
   fontFamily: "Courier, monospace",
   fontSize: "30px",
   fontWeight: "700" as const,
@@ -89,7 +89,7 @@ export const code = {
 };
 
 const main = {
-  backgroundColor: "#f6f8f7",
+  backgroundColor: "#f5f5f5",
   fontFamily: "Arial, sans-serif",
   margin: "0",
   padding: "32px 12px",
@@ -97,7 +97,7 @@ const main = {
 
 const container = {
   backgroundColor: "#ffffff",
-  border: "1px solid #d9e2de",
+  border: "1px solid #dedede",
   borderRadius: "8px",
   margin: "0 auto",
   maxWidth: "560px",
@@ -113,7 +113,7 @@ const brandMark = {
 };
 
 const brand = {
-  color: "#111816",
+  color: "#111111",
   display: "inline-block",
   fontSize: "19px",
   fontWeight: "700" as const,
@@ -122,7 +122,7 @@ const brand = {
 };
 
 const eyebrowStyle = {
-  color: "#147d64",
+  color: "#555555",
   fontSize: "12px",
   fontWeight: "700" as const,
   letterSpacing: "1px",
@@ -131,7 +131,7 @@ const eyebrowStyle = {
 };
 
 const heading = {
-  color: "#111816",
+  color: "#111111",
   fontSize: "30px",
   fontWeight: "700" as const,
   lineHeight: "38px",
@@ -141,7 +141,7 @@ const heading = {
 const content = { margin: "0" };
 
 const button = {
-  backgroundColor: "#147d64",
+  backgroundColor: "#111111",
   borderRadius: "7px",
   color: "#ffffff",
   fontSize: "15px",
@@ -151,17 +151,17 @@ const button = {
   textDecoration: "none",
 };
 
-const divider = { borderColor: "#d9e2de", margin: "30px 0 20px" };
+const divider = { borderColor: "#dedede", margin: "30px 0 20px" };
 
 const footerStyle = {
-  color: "#718096",
+  color: "#707070",
   fontSize: "12px",
   lineHeight: "19px",
   margin: "0 0 12px",
 };
 
 const tagline = {
-  color: "#147d64",
+  color: "#555555",
   fontSize: "12px",
   fontWeight: "700" as const,
   margin: "0",

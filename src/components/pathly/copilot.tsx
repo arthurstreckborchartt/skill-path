@@ -1,17 +1,28 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouterState } from "@tanstack/react-router";
 import {
-  ArrowUp,
   Check,
   ChevronUp,
   FileCode,
-  Loader2,
   MessageSquare,
-  Sparkles,
   X,
   type LucideIcon,
 } from "lucide-react";
 import { Btn, Chip } from "./ui";
+import {
+  Conversation,
+  ConversationContent,
+  ConversationScrollButton,
+} from "@/components/ai-elements/conversation";
+import { Message, MessageContent, MessageResponse } from "@/components/ai-elements/message";
+import {
+  PromptInput,
+  PromptInputFooter,
+  PromptInputSubmit,
+  PromptInputTextarea,
+  PromptInputTools,
+} from "@/components/ai-elements/prompt-input";
+import { Shimmer } from "@/components/ai-elements/shimmer";
 import { BlocoCopiavel } from "./banco-vistas";
 import { GeradorDePrompt } from "./gerador-de-prompt";
 import { cn } from "@/lib/utils";
@@ -50,6 +61,15 @@ const FACETA_POR_ROTA: { prefixo: string; faceta: Faceta; onde: string }[] = [
   { prefixo: "/app/blueprint/", faceta: "produto", onde: "Plano do projeto" },
 ];
 
+function PathlyMark({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" aria-hidden="true">
+      <path d="M5 19c0-5 4-5 6-7s1-6-1-7" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
+      <circle cx="18" cy="6.5" r="2.6" fill="currentColor" />
+    </svg>
+  );
+}
+
 function lerRota(pathname: string): { projetoId: string; faceta: Faceta; onde: string } | null {
   for (const r of FACETA_POR_ROTA) {
     if (!pathname.startsWith(r.prefixo)) continue;
@@ -78,9 +98,9 @@ export function Copilot() {
         <button
           onClick={() => setAberto(true)}
           aria-label="Abrir o copiloto"
-          className="tap fixed right-4 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-40 flex size-13 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform active:scale-95 lg:bottom-6"
+          className="tap fixed right-4 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-40 flex size-12 items-center justify-center rounded-full border border-primary bg-primary text-primary-foreground shadow-[var(--shadow-lift)] lg:right-6 lg:bottom-6"
         >
-          <Sparkles className="size-5" />
+          <PathlyMark className="size-5" />
         </button>
       )}
 
@@ -103,12 +123,6 @@ function Painel({
   const [texto, setTexto] = useState("");
   const [modo, setModo] = useState<Modo | undefined>(undefined);
   const [vista, setVista] = useState<"conversa" | "prompt">("conversa");
-  const fim = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    fim.current?.scrollIntoView({ behavior: "smooth" });
-  }, [estado.mensagens.length, estado.respondendo]);
-
   function enviar(pergunta: string, comModo?: Modo) {
     const t = pergunta.trim();
     if (!t) return;
@@ -121,15 +135,15 @@ function Painel({
       <button
         aria-label="Fechar o copiloto"
         onClick={aoFechar}
-        className="absolute inset-0 bg-background/60 backdrop-blur-sm"
+        className="absolute inset-0 bg-foreground/20"
       />
 
-      <aside className="relative flex h-full w-full max-w-md flex-col border-l border-border bg-background shadow-2xl">
+      <aside className="relative flex h-full w-full max-w-[30rem] flex-col border-l border-border bg-background shadow-[var(--shadow-lift)]">
         <header className="border-b border-border px-4 pt-[calc(0.75rem+env(safe-area-inset-top))] pb-3">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <p className="flex items-center gap-1.5 text-sm font-medium">
-                <Sparkles className="size-3.5 text-primary" />
+                <PathlyMark className="size-4 text-foreground" />
                 Copilot · {estado.nomeProjeto || "carregando…"}
               </p>
               <p className="mt-0.5 text-xs text-muted-foreground">
@@ -148,7 +162,7 @@ function Painel({
                 title="Gerar prompt de implementação"
                 className={cn(
                   "tap rounded-lg p-1.5 transition-colors",
-                  vista === "prompt" ? "bg-primary/15 text-primary" : "text-muted-foreground",
+                   vista === "prompt" ? "bg-surface-2 text-foreground" : "text-muted-foreground",
                 )}
               >
                 <FileCode className="size-4.5" />
@@ -167,7 +181,7 @@ function Painel({
           )}
         </header>
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
+        <div className="min-h-0 flex flex-1 flex-col">
           {vista === "prompt" && estado.blueprint ? (
             <GeradorDePrompt
               fontes={{
@@ -185,9 +199,10 @@ function Painel({
               aoVoltar={() => setVista("conversa")}
             />
           ) : estado.carregando ? (
-            <p className="text-sm text-muted-foreground">Carregando…</p>
+            <div className="p-4 text-sm"><Shimmer>Carregando o contexto…</Shimmer></div>
           ) : (
-            <>
+            <Conversation>
+              <ConversationContent className="gap-5 p-4">
               {estado.anteriorA && (
                 <button
                   onClick={() => void carregarMais()}
@@ -218,68 +233,55 @@ function Painel({
                 </div>
               )}
 
-              <div className="space-y-4">
-                {estado.mensagens.map((m) => (
-                  <Mensagem key={m.id} mensagem={m} />
-                ))}
-              </div>
+              {estado.mensagens.map((m) => (
+                <Mensagem key={m.id} mensagem={m} />
+              ))}
 
               {estado.respondendo && (
-                <p className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
-                  <Loader2 className="size-4 animate-spin" /> Pensando sobre o seu projeto…
-                </p>
+                <Shimmer className="text-sm">Pensando sobre o seu projeto…</Shimmer>
               )}
 
               {estado.erro && <p className="mt-4 text-sm text-destructive">{estado.erro}</p>}
-              <div ref={fim} />
-            </>
+              </ConversationContent>
+              <ConversationScrollButton />
+            </Conversation>
           )}
         </div>
 
         <footer className="border-t border-border px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
-          <div className="mb-2 flex gap-1.5">
-            {(["explicar", "guiar", "gerar"] as const).map((x) => (
-              <button
-                key={x}
-                onClick={() => setModo(modo === x ? undefined : x)}
-                className={cn(
-                  "tap rounded-full px-3 py-1 text-xs transition-colors",
-                  modo === x
-                    ? "bg-primary/15 font-medium text-primary"
-                    : "bg-surface text-muted-foreground",
-                )}
-              >
-                {MODO_ROTULO[x]}
-              </button>
-            ))}
-          </div>
-
-          <div className="flex items-end gap-2">
-            <textarea
+          <PromptInput
+            onSubmit={({ text }) => enviar(text)}
+            className="[&_[data-slot=input-group]]:bg-surface"
+          >
+            <PromptInputTextarea
               value={texto}
               onChange={(ev) => setTexto(ev.target.value)}
-              onKeyDown={(ev) => {
-                // Enter envia, Shift+Enter quebra linha: é o que todo chat faz, e quebrar essa
-                // expectativa custa uma mensagem enviada pela metade.
-                if (ev.key === "Enter" && !ev.shiftKey) {
-                  ev.preventDefault();
-                  enviar(texto);
-                }
-              }}
-              rows={1}
               maxLength={2000}
               placeholder="Pergunte sobre o seu projeto…"
-              className="max-h-32 min-h-10 flex-1 resize-none rounded-xl border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-primary/40"
+              className="min-h-20"
             />
-            <Btn
-              size="sm"
-              disabled={estado.respondendo || !texto.trim()}
-              onClick={() => enviar(texto)}
-              aria-label="Enviar"
-            >
-              <ArrowUp className="size-4" />
-            </Btn>
-          </div>
+            <PromptInputFooter>
+              <PromptInputTools>
+                {(["explicar", "guiar", "gerar"] as const).map((x) => (
+                  <button
+                    key={x}
+                    type="button"
+                    onClick={() => setModo(modo === x ? undefined : x)}
+                    className={cn(
+                      "tap rounded-md px-2 py-1 text-[11px] transition-colors",
+                      modo === x ? "bg-foreground text-background" : "text-muted-foreground hover:bg-surface-2 hover:text-foreground",
+                    )}
+                  >
+                    {MODO_ROTULO[x]}
+                  </button>
+                ))}
+              </PromptInputTools>
+              <PromptInputSubmit
+                status={estado.respondendo ? "submitted" : "ready"}
+                disabled={estado.respondendo || !texto.trim()}
+              />
+            </PromptInputFooter>
+          </PromptInput>
         </footer>
       </aside>
     </div>
@@ -334,7 +336,7 @@ function Abertura({
             onClick={aoGerarPrompt}
             className="tap flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-medium transition-colors hover:border-primary/30"
           >
-            <Sparkles className="size-3" /> Gerar prompt
+            <FileCode className="size-3" /> Gerar prompt
           </button>
         </div>
       )}
@@ -345,11 +347,11 @@ function Abertura({
 function Mensagem({ mensagem }: { mensagem: { papel: string; texto: string; resposta: unknown } }) {
   if (mensagem.papel === "usuario") {
     return (
-      <div className="flex justify-end">
-        <p className="max-w-[85%] rounded-2xl rounded-br-sm bg-primary/12 px-3.5 py-2.5 text-sm leading-relaxed">
+      <Message from="user">
+        <MessageContent className="bg-foreground text-background">
           {mensagem.texto}
-        </p>
-      </div>
+        </MessageContent>
+      </Message>
     );
   }
 
@@ -362,11 +364,11 @@ function Mensagem({ mensagem }: { mensagem: { papel: string; texto: string; resp
   } | null;
 
   if (!r) {
-    return <p className="text-sm leading-relaxed text-foreground/90">{mensagem.texto}</p>;
+    return <Message from="assistant"><MessageContent><MessageResponse>{mensagem.texto}</MessageResponse></MessageContent></Message>;
   }
 
   return (
-    <div className="space-y-3">
+    <Message from="assistant"><MessageContent className="w-full space-y-3">
       {r.blocos.map((b, i) => (
         <p key={i} className="text-sm leading-relaxed text-foreground/90">
           {b}
@@ -405,7 +407,7 @@ function Mensagem({ mensagem }: { mensagem: { papel: string; texto: string; resp
           <span className="font-medium text-foreground/70">Depois disto:</span> {r.proximoPasso}
         </p>
       )}
-    </div>
+    </MessageContent></Message>
   );
 }
 

@@ -47,21 +47,21 @@ function NodeDot({ step, active }: { step: StepView; active: boolean }) {
   return (
     <span className="relative grid place-items-center">
       {s === "atual" && (
-        <span className="absolute inline-flex size-12 animate-[pulse_2.4s_cubic-bezier(0.4,0,0.6,1)_infinite] rounded-full bg-primary/20" />
+        <span className="absolute inline-flex size-12 rounded-md border border-foreground/20" />
       )}
       {/* Disco opaco atrás do número. Os fundos dos estados são translúcidos (bg-primary/15,
           bg-surface-2/60), então sem esta camada a espinha vertical atravessa o algarismo e os
           dois se misturam — era o que fazia os números parecerem conflitar com a linha. */}
-      <span aria-hidden className="absolute size-11 rounded-2xl bg-background" />
+      <span aria-hidden className="absolute size-11 rounded-md bg-background" />
       <span
         className={cn(
-          "relative grid size-11 place-items-center rounded-2xl border font-display text-sm font-semibold transition-all duration-300",
+          "relative grid size-11 place-items-center rounded-md border font-display text-sm font-semibold transition-colors duration-200",
           s === "concluído" && "border-primary/40 bg-primary text-primary-foreground",
           s === "atual" &&
-            "border-primary bg-primary/15 text-primary shadow-[0_0_0_4px_color-mix(in_oklab,var(--color-primary)_12%,transparent)]",
+            "border-foreground bg-surface text-foreground ring-2 ring-foreground/10",
           s === "futuro" && "border-border bg-surface-2 text-foreground/70",
           s === "bloqueado" && "border-border/60 bg-surface-2/60 text-muted-foreground",
-          active && "scale-105",
+          active && "border-foreground",
         )}
       >
         {s === "concluído" ? (
@@ -94,9 +94,9 @@ function NodeCard({
     <button
       onClick={onSelect}
       className={cn(
-        "tap group w-full rounded-lg border p-4 text-left transition-all duration-300",
-        "border-border bg-surface/70 hover:-translate-y-0.5 hover:border-primary/30",
-        active && "border-primary/50 bg-primary/[0.06] shadow-[var(--shadow-soft)]",
+        "tap group w-full rounded-md border p-4 text-left transition-colors duration-200",
+        "border-border bg-surface hover:border-foreground/25 hover:bg-surface-2",
+        active && "border-foreground/35 bg-surface-2",
         locked && "opacity-70",
         align === "right" && "lg:text-right",
       )}
@@ -161,7 +161,7 @@ export function RouteTrack({
       {/* espinha */}
       <span
         aria-hidden
-        className="absolute top-2 bottom-2 left-[22px] w-px bg-gradient-to-b from-primary/60 via-border to-border lg:left-1/2"
+        className="absolute top-2 bottom-2 left-[22px] w-px bg-border lg:left-1/2"
       />
       {steps.map((step, i) => (
         <li
@@ -225,7 +225,7 @@ function Metric({
   value: React.ReactNode;
 }) {
   return (
-    <div className="rounded-2xl bg-surface-2/50 p-3">
+    <div className="rounded-md border border-border bg-surface-2 p-3">
       <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
         {icon}
         {label}
@@ -305,8 +305,8 @@ export function StepDetail({
     <div className="relative space-y-5">
       {justCompleted && (
         <div className="pointer-events-none absolute inset-0 z-10 grid place-items-center">
-          <div className="animate-[pop_0.4s_cubic-bezier(0.34,1.56,0.64,1)_both] rounded-lg border border-primary/40 bg-surface/95 px-6 py-5 text-center backdrop-blur">
-            <div className="mx-auto grid size-12 place-items-center rounded-2xl bg-primary text-primary-foreground">
+          <div className="animate-[fade-in_0.25s_ease-out_both] rounded-md border border-border bg-surface px-6 py-5 text-center shadow-[var(--shadow-lift)]">
+            <div className="mx-auto grid size-11 place-items-center rounded-md bg-primary text-primary-foreground">
               <Check className="size-6" />
             </div>
             <p className="mt-3 font-display text-lg font-semibold">Etapa concluída</p>
@@ -330,7 +330,7 @@ export function StepDetail({
       </div>
 
       {bloqueadaPorPlano && (
-        <div className="rounded-2xl border border-accent/40 bg-accent/[0.06] p-4">
+        <div className="rounded-md border border-border bg-surface-2 p-4">
           <p className="flex items-center gap-1.5 text-sm font-semibold">
             <Gem className="size-4 text-accent" /> Etapa do plano Pro
           </p>
@@ -359,14 +359,14 @@ export function StepDetail({
         />
       </div>
 
-      <div className="rounded-2xl border border-border bg-surface-2/40 p-4">
+      <div className="rounded-md border border-border bg-surface-2 p-4">
         <p className="text-xs font-semibold tracking-[0.14em] text-primary uppercase">
           Por que aprender isso
         </p>
         <p className="mt-2 text-sm text-muted-foreground">{step.why}</p>
       </div>
 
-      <div className="rounded-2xl border border-primary/25 bg-primary/[0.06] p-4">
+      <div className="rounded-md border border-border bg-surface-2 p-4">
         {/* demandPct é um peso autoral por etapa (route-templates.ts), não medição de vagas
             abertas. O texto precisa deixar isso explícito para não virar estatística falsa. */}
         <p className="text-sm">
@@ -583,7 +583,7 @@ export function StepActions({
       <Link
         to="/app/planos"
         className={cn(
-          "tap inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-glow)] hover:bg-primary/90",
+          "tap inline-flex items-center justify-center gap-2 rounded-md border border-primary bg-primary px-5 text-sm font-medium text-primary-foreground hover:opacity-85",
           full ? "h-12 w-full" : "h-10",
         )}
       >
@@ -662,9 +662,9 @@ export function DetailSheet({
       <button
         aria-label="Fechar detalhes"
         onClick={onClose}
-        className="absolute inset-0 animate-[fade-in_0.25s_ease-out_both] bg-background/70 backdrop-blur-sm"
+        className="absolute inset-0 animate-[fade-in_0.2s_ease-out_both] bg-foreground/20"
       />
-      <div className="absolute inset-x-0 bottom-0 flex max-h-[88svh] animate-[slide-up_0.35s_cubic-bezier(0.16,1,0.3,1)_both] flex-col rounded-t-3xl border-t border-border bg-surface">
+      <div className="absolute inset-x-0 bottom-0 flex max-h-[88svh] animate-[slide-up_0.3s_cubic-bezier(0.16,1,0.3,1)_both] flex-col rounded-t-xl border-t border-border bg-surface">
         {/* Alça: o gesto de fechar puxando para baixo é o esperado num sheet de celular, e o X
             fica no canto superior, fora do alcance do polegar. */}
         <button

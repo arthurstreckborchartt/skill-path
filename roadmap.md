@@ -29,3 +29,10 @@
 - [x] Preservar o onboarding local mais recente durante a hidratação da nuvem.
 - [x] Validar banco, tipos e fluxos corrigidos.
 
+## Reestruturação visual monocromática
+
+- [x] Substituir o sistema visual verde por tokens preto, branco e cinza.
+- [x] Refazer componentes compartilhados, navegação e Copilot conforme as referências.
+- [x] Alinhar páginas públicas, áreas principais e módulos técnicos.
+- [x] Validar modos claro/escuro em desktop e celular e verificar os tipos.
+
