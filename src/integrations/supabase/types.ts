@@ -108,6 +108,182 @@ export type Database = {
           },
         ]
       }
+      pathly_copilot_decisoes: {
+        Row: {
+          chave: string
+          confirmado_em: string | null
+          criado_em: string
+          id: string
+          metadata: Json
+          motivo: string
+          origem: string
+          projeto_id: string
+          status: string
+          substitui_decisao_id: string | null
+          titulo: string
+          user_id: string
+          valor: string
+        }
+        Insert: {
+          chave: string
+          confirmado_em?: string | null
+          criado_em?: string
+          id?: string
+          metadata?: Json
+          motivo: string
+          origem?: string
+          projeto_id: string
+          status?: string
+          substitui_decisao_id?: string | null
+          titulo: string
+          user_id: string
+          valor: string
+        }
+        Update: {
+          chave?: string
+          confirmado_em?: string | null
+          criado_em?: string
+          id?: string
+          metadata?: Json
+          motivo?: string
+          origem?: string
+          projeto_id?: string
+          status?: string
+          substitui_decisao_id?: string | null
+          titulo?: string
+          user_id?: string
+          valor?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pathly_copilot_decisoes_projeto_id_fkey"
+            columns: ["projeto_id"]
+            isOneToOne: false
+            referencedRelation: "pathly_projetos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pathly_copilot_decisoes_substitui_decisao_id_fkey"
+            columns: ["substitui_decisao_id"]
+            isOneToOne: false
+            referencedRelation: "pathly_copilot_decisoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pathly_copilot_mensagens: {
+        Row: {
+          conteudo: Json
+          criado_em: string
+          id: string
+          metadata: Json
+          papel: string
+          projeto_id: string
+          user_id: string
+        }
+        Insert: {
+          conteudo?: Json
+          criado_em?: string
+          id?: string
+          metadata?: Json
+          papel: string
+          projeto_id: string
+          user_id: string
+        }
+        Update: {
+          conteudo?: Json
+          criado_em?: string
+          id?: string
+          metadata?: Json
+          papel?: string
+          projeto_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pathly_copilot_mensagens_projeto_id_fkey"
+            columns: ["projeto_id"]
+            isOneToOne: false
+            referencedRelation: "pathly_projetos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pathly_copilot_propostas: {
+        Row: {
+          atualizado_em: string
+          campo_afetado: string | null
+          confirmado_em: string | null
+          criado_em: string
+          decisao_id: string | null
+          descricao: string
+          id: string
+          impactos: string[]
+          metadata: Json
+          motivo: string
+          projeto_id: string
+          status: string
+          tipo: string
+          titulo: string
+          user_id: string
+          valor_atual: Json | null
+          valor_proposto: Json | null
+        }
+        Insert: {
+          atualizado_em?: string
+          campo_afetado?: string | null
+          confirmado_em?: string | null
+          criado_em?: string
+          decisao_id?: string | null
+          descricao: string
+          id?: string
+          impactos?: string[]
+          metadata?: Json
+          motivo: string
+          projeto_id: string
+          status?: string
+          tipo: string
+          titulo: string
+          user_id: string
+          valor_atual?: Json | null
+          valor_proposto?: Json | null
+        }
+        Update: {
+          atualizado_em?: string
+          campo_afetado?: string | null
+          confirmado_em?: string | null
+          criado_em?: string
+          decisao_id?: string | null
+          descricao?: string
+          id?: string
+          impactos?: string[]
+          metadata?: Json
+          motivo?: string
+          projeto_id?: string
+          status?: string
+          tipo?: string
+          titulo?: string
+          user_id?: string
+          valor_atual?: Json | null
+          valor_proposto?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pathly_copilot_propostas_projeto_id_fkey"
+            columns: ["projeto_id"]
+            isOneToOne: false
+            referencedRelation: "pathly_projetos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pathly_copilot_propostas_decisao_id_fkey"
+            columns: ["decisao_id"]
+            isOneToOne: false
+            referencedRelation: "pathly_copilot_decisoes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pathly_etapas: {
         Row: {
           anotacoes: string

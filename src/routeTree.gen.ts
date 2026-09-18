@@ -24,6 +24,7 @@ import { Route as ApiArquiteturaIaRouteImport } from './routes/api.arquitetura-i
 import { Route as ApiAssinaturaRouteImport } from './routes/api.assinatura'
 import { Route as ApiBancoRouteImport } from './routes/api.banco'
 import { Route as ApiBlueprintRouteImport } from './routes/api.blueprint'
+import { Route as ApiCopilotRouteImport } from './routes/api.copilot'
 import { Route as ApiEtapaRouteImport } from './routes/api.etapa'
 import { Route as ApiLicaoRouteImport } from './routes/api.licao'
 import { Route as ApiPraticaRouteImport } from './routes/api.pratica'
@@ -124,6 +125,11 @@ const ApiBancoRoute = ApiBancoRouteImport.update({
 const ApiBlueprintRoute = ApiBlueprintRouteImport.update({
   id: '/api/blueprint',
   path: '/api/blueprint',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiCopilotRoute = ApiCopilotRouteImport.update({
+  id: '/api/copilot',
+  path: '/api/copilot',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiEtapaRoute = ApiEtapaRouteImport.update({
@@ -268,6 +274,7 @@ export interface FileRoutesByFullPath {
   '/api/assinatura': typeof ApiAssinaturaRoute
   '/api/banco': typeof ApiBancoRoute
   '/api/blueprint': typeof ApiBlueprintRoute
+  '/api/copilot': typeof ApiCopilotRoute
   '/api/etapa': typeof ApiEtapaRoute
   '/api/licao': typeof ApiLicaoRoute
   '/api/pratica': typeof ApiPraticaRoute
@@ -309,6 +316,7 @@ export interface FileRoutesByTo {
   '/api/assinatura': typeof ApiAssinaturaRoute
   '/api/banco': typeof ApiBancoRoute
   '/api/blueprint': typeof ApiBlueprintRoute
+  '/api/copilot': typeof ApiCopilotRoute
   '/api/etapa': typeof ApiEtapaRoute
   '/api/licao': typeof ApiLicaoRoute
   '/api/pratica': typeof ApiPraticaRoute
@@ -352,6 +360,7 @@ export interface FileRoutesById {
   '/api/assinatura': typeof ApiAssinaturaRoute
   '/api/banco': typeof ApiBancoRoute
   '/api/blueprint': typeof ApiBlueprintRoute
+  '/api/copilot': typeof ApiCopilotRoute
   '/api/etapa': typeof ApiEtapaRoute
   '/api/licao': typeof ApiLicaoRoute
   '/api/pratica': typeof ApiPraticaRoute
@@ -396,6 +405,7 @@ export interface FileRouteTypes {
     | '/api/assinatura'
     | '/api/banco'
     | '/api/blueprint'
+    | '/api/copilot'
     | '/api/etapa'
     | '/api/licao'
     | '/api/pratica'
@@ -437,6 +447,7 @@ export interface FileRouteTypes {
     | '/api/assinatura'
     | '/api/banco'
     | '/api/blueprint'
+    | '/api/copilot'
     | '/api/etapa'
     | '/api/licao'
     | '/api/pratica'
@@ -479,6 +490,7 @@ export interface FileRouteTypes {
     | '/api/assinatura'
     | '/api/banco'
     | '/api/blueprint'
+    | '/api/copilot'
     | '/api/etapa'
     | '/api/licao'
     | '/api/pratica'
@@ -522,6 +534,7 @@ export interface RootRouteChildren {
   ApiAssinaturaRoute: typeof ApiAssinaturaRoute
   ApiBancoRoute: typeof ApiBancoRoute
   ApiBlueprintRoute: typeof ApiBlueprintRoute
+  ApiCopilotRoute: typeof ApiCopilotRoute
   ApiEtapaRoute: typeof ApiEtapaRoute
   ApiLicaoRoute: typeof ApiLicaoRoute
   ApiPraticaRoute: typeof ApiPraticaRoute
@@ -637,6 +650,13 @@ declare module '@tanstack/react-router' {
       path: '/api/blueprint'
       fullPath: '/api/blueprint'
       preLoaderRoute: typeof ApiBlueprintRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/copilot': {
+      id: '/api/copilot'
+      path: '/api/copilot'
+      fullPath: '/api/copilot'
+      preLoaderRoute: typeof ApiCopilotRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/etapa': {
@@ -876,6 +896,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAssinaturaRoute: ApiAssinaturaRoute,
   ApiBancoRoute: ApiBancoRoute,
   ApiBlueprintRoute: ApiBlueprintRoute,
+  ApiCopilotRoute: ApiCopilotRoute,
   ApiEtapaRoute: ApiEtapaRoute,
   ApiLicaoRoute: ApiLicaoRoute,
   ApiPraticaRoute: ApiPraticaRoute,

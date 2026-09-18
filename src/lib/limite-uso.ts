@@ -121,4 +121,14 @@ export const LIMITES = {
    * O plano guardado é devolvido sem chamada nenhuma — só `refazer` gasta.
    */
   arquiteturaIa: { limite: 8, janelaMinutos: 60 },
+  /**
+   * O Copilot é conversa, e conversa é o uso mais frequente que existe: a pessoa pergunta, lê,
+   * pergunta de novo. Um teto baixo aqui transformaria o recurso num brinquedo que acaba no meio
+   * da dúvida.
+   *
+   * 30 por hora é uma sessão longa de trabalho — quem passa disso não está mais conversando, está
+   * usando o Pathly como proxy de LLM. Cada mensagem é barata: o contexto fica entre 300 e 900
+   * tokens, contra os milhares dos geradores de blueprint.
+   */
+  copilot: { limite: 30, janelaMinutos: 60 },
 } as const;

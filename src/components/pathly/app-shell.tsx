@@ -10,6 +10,7 @@ import {
   Zap,
 } from "lucide-react";
 import { Btn, Logo } from "./ui";
+import { Copilot } from "./copilot";
 import { levelFromXp } from "@/lib/route-map";
 import { RouteProgressProvider, useRouteProgressContext } from "@/lib/route-progress-context";
 import { LearningSystemProvider } from "@/lib/learning-context";
@@ -181,6 +182,13 @@ function AppShellInner() {
           {!hydrated ? <RouteLoading /> : needsOnboarding ? <OnboardingGate /> : <Outlet />}
         </div>
       </main>
+
+      {/*
+        Irmão do <main>, e não filho: a animação de entrada do <main> aplica um transform, e
+        qualquer position:fixed lá dentro passaria a se posicionar em relação a ele durante a
+        animação — o botão flutuante pularia a cada troca de rota.
+      */}
+      <Copilot />
 
       {/* Mobile bottom nav */}
       <nav className="pb-safe fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background/90 backdrop-blur-xl lg:hidden">
