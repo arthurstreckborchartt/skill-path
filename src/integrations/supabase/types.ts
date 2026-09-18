@@ -269,17 +269,17 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "pathly_copilot_propostas_projeto_id_fkey"
-            columns: ["projeto_id"]
-            isOneToOne: false
-            referencedRelation: "pathly_projetos"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "pathly_copilot_propostas_decisao_id_fkey"
             columns: ["decisao_id"]
             isOneToOne: false
             referencedRelation: "pathly_copilot_decisoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pathly_copilot_propostas_projeto_id_fkey"
+            columns: ["projeto_id"]
+            isOneToOne: false
+            referencedRelation: "pathly_projetos"
             referencedColumns: ["id"]
           },
         ]
