@@ -1,0 +1,23 @@
+# Fim de linha normalizado para LF no repositório.
+#
+# Este projeto mistura duas origens de escrita: edições locais no Windows e commits que chegam
+# pelo Lovable. Sem esta regra, arquivo editado de um lado volta com CRLF do outro, o prettier do
+# projeto (que usa o padrão `endOfLine: "lf"`) passa a acusar o arquivo inteiro, e a correção
+# vira um commit de centenas de linhas que regride na sincronização seguinte.
+#
+# Já aconteceu duas vezes: o commit `959ae58` normalizou `limite-uso.ts` à mão, e o arquivo
+# voltou a CRLF depois. `text=auto eol=lf` faz o git normalizar na gravação, de uma vez.
+* text=auto eol=lf
+
+# Binários: nunca tocar.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.otf binary
+*.pdf binary
