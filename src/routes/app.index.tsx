@@ -1,358 +1,107 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import {
-  ArrowRight,
-  Brain,
-  Check,
-  Clock,
-  Compass,
-  Flame,
-  Lock,
-  Sparkles,
-  Target,
-  Zap,
-} from "lucide-react";
-import { Chip, Panel, ProgressBar, Reveal } from "@/components/pathly/ui";
-import {
-  getInsights,
-  getNextAction,
-  getWeekPlan,
-  levelFromXp,
-  type WeekPlanState,
-} from "@/lib/route-map";
-import { useRouteProgressContext } from "@/lib/route-progress-context";
-import { useLearningSystem } from "@/lib/learning-context";
-import { cn } from "@/lib/utils";
+import { useEffect, useRef, useState } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { ArrowRight, FolderKanban, Loader2, Plus, ShieldCheck } from "lucide-react";
+import { PromptInput, PromptInputFooter, PromptInputSubmit, PromptInputTextarea } from "@/components/ai-elements/prompt-input";
+import { PathlyMark } from "@/components/pathly/project-chat";
+import { Btn, Chip, Panel, Reveal } from "@/components/pathly/ui";
+import { criarProjeto, useProjetos } from "@/lib/blueprint/usar-projetos";
+import { RESPOSTAS_VAZIAS } from "@/lib/blueprint/respostas";
 
 export const Route = createFileRoute("/app/")({
   staticData: { sitemap: false },
-  head: () => ({
-    meta: [
-      { title: "Início — Pathly" },
-      {
-        name: "description",
-        content: "Seu progresso, a próxima etapa e o plano da semana em um só lugar.",
-      },
-      { property: "og:title", content: "Seu painel na Pathly" },
-      { property: "og:description", content: "Veja onde você está na rota e o próximo passo." },
-    ],
-  }),
-  component: Dashboard,
+  head: () => ({ meta: [
+    { title: "Criar um SaaS — Pathly" },
+    { name: "description", content: "Descreva sua ideia e transforme-a em um plano de SaaS executável." },
+    { property: "og:title", content: "Criar um SaaS — Pathly" },
+    { property: "og:description", content: "Planejamento, decisões e execução coordenada em uma conversa." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary_large_image" },
+  ] }),
+  component: CreateWorkspace,
 });
 
-const weekStateIcon: Record<WeekPlanState, typeof Check> = {
-  concluído: Check,
-  hoje: Sparkles,
-  próximo: Clock,
-  bloqueado: Lock,
-};
+function CreateWorkspace() {
+  const navigate = useNavigate();
+  const projects = useProjetos();
+  const [idea, setIdea] = useState("");
+  const [audience, setAudience] = useState("");
+  const [problem, setProblem] = useState("");
+  const [step, setStep] = useState<"idea" | "details">("idea");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
-const weekStateTone: Record<WeekPlanState, "primary" | "accent" | "muted" | "neutral"> = {
-  concluído: "primary",
-  hoje: "accent",
-  próximo: "neutral",
-  bloqueado: "muted",
-};
+  useEffect(() => { inputRef.current?.focus(); }, [step]);
 
-function Dashboard() {
-  const { views, currentIndex, stats, profile } = useRouteProgressContext();
-  const learning = useLearningSystem();
-  const totalXp = stats.totalXp + learning.xpTotal;
-  const level = levelFromXp(totalXp);
-  const nextAction = getNextAction(views, currentIndex);
-  const weekPlan = getWeekPlan(views);
-  const insights = getInsights(views, stats, profile.hoursPerWeek);
-  const routeDone = stats.percent >= 100 && !learning.nextActivity;
-  const learningDone = learning.progress.filter((item) => item.status === "completed");
-  const minutesStudied = learning.progress.reduce((total, item) => total + item.minutesSpent, 0);
-  const averageMastery = learning.mastery.length
-    ? Math.round(
-        learning.mastery.reduce((total, item) => total + item.mastery, 0) / learning.mastery.length,
-      )
-    : 0;
-  const primaryActivity = learning.nextActivity;
+  async function create() {
+    if (idea.trim().length < 15 || audience.trim().length < 5 || problem.trim().length < 15 || busy) return;
+    setBusy(true);
+    setError(null);
+    const result = await criarProjeto({ ...RESPOSTAS_VAZIAS, oQue: idea.trim(), paraQuem: audience.trim(), problema: problem.trim() });
+    if ("erro" in result) { setError(result.erro); setBusy(false); return; }
+    void navigate({ to: "/app/projeto/$id", params: { id: result.id } });
+  }
 
   return (
-    <div className="space-y-8">
-      <Reveal>
-        <div className="flex items-start justify-between gap-4 border-b border-border pb-6">
-          <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-              Sua evolução hoje
-            </p>
-            <h1 className="mt-2 font-display text-3xl leading-tight font-bold text-balance sm:text-4xl">
-              {profile.firstName ? `Bom dia, ${profile.firstName}.` : "Bom dia."}
-            </h1>
-          </div>
-          <div className="flex shrink-0 flex-wrap justify-end gap-2">
-            <Chip tone="primary">Nível {level.level}</Chip>
-            <Chip tone="xp">
-              <Zap className="size-3.5" /> {stats.totalXp} XP
-            </Chip>
-            {stats.streak > 0 && (
-              <Chip tone="xp">
-                <Flame className="size-3.5" /> {stats.streak} dia{stats.streak === 1 ? "" : "s"}
-              </Chip>
-            )}
-          </div>
-        </div>
-      </Reveal>
+    <div className="mx-auto max-w-5xl space-y-12 py-4 sm:py-8">
+      <section className="mx-auto max-w-3xl text-center">
+        <span className="mx-auto grid size-12 place-items-center rounded-md border border-border bg-foreground text-background"><PathlyMark className="size-5" /></span>
+        <h1 className="mt-5 font-display text-3xl font-semibold text-balance sm:text-5xl">O que vamos construir?</h1>
+        <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground sm:text-base">Descreva o SaaS com suas palavras. O Pathly organiza produto, tecnologia, segurança e execução.</p>
 
-      {routeDone || (!primaryActivity && !nextAction) ? (
-        <Reveal delay={140}>
-          <Panel className="text-center">
-            <p className="mx-auto grid size-11 place-items-center rounded-md border border-border bg-surface-2 text-foreground">
-              <Sparkles className="size-6" />
-            </p>
-            <h2 className="mt-4 font-display text-xl font-semibold">Rota concluída</h2>
-            <p className="mt-1.5 text-sm text-muted-foreground">
-              Você percorreu todas as etapas até {profile.target.toLowerCase()}. Suas habilidades e
-              projetos ficam disponíveis para revisão a qualquer momento.
-            </p>
-          </Panel>
-        </Reveal>
-      ) : (
-        <Reveal delay={140}>
-          <Panel className="overflow-hidden border-foreground bg-foreground text-background">
-            <div className="grid gap-8 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
-              <div className="min-w-0">
-                <span className="flex items-center gap-1.5 text-[11px] font-semibold text-background/70 uppercase">
-                  <Compass className="size-3" /> Seu próximo passo
-                </span>
-                <p className="mt-4 text-sm text-background/60">
-                  {primaryActivity
-                    ? views.find((step) => step.id === primaryActivity.stepId)?.title
-                    : nextAction?.stepTitle}
-                </p>
-                <p className="mt-1 font-display text-3xl font-bold text-balance sm:text-4xl">
-                  {primaryActivity?.title ?? nextAction?.label}
-                </p>
-                <p className="mt-4 flex items-center gap-4 text-sm text-background/70">
-                  <span className="flex items-center gap-1">
-                    <Clock className="size-3.5" />{" "}
-                    {primaryActivity
-                      ? `${primaryActivity.estimatedMinutes} min`
-                      : nextAction?.timeLabel}
-                  </span>
-                  <span className="flex items-center gap-1 text-xp">
-                    <Zap className="size-3.5" /> XP por evidência
-                  </span>
-                </p>
-                {insights[0] && (
-                  <p className="mt-5 max-w-2xl text-sm leading-relaxed text-background/55">
-                    {insights[0]}
-                  </p>
-                )}
-              </div>
-              {/* Largura total no celular: a ação principal da tela precisa ser fácil de acertar
-                  com o polegar, não um botão estreito no canto. */}
-              {primaryActivity ? (
-                <Link
-                  to="/app/aprender/$activityId"
-                  params={{ activityId: primaryActivity.id }}
-                   className="tap inline-flex h-12 w-full shrink-0 items-center justify-center gap-2 rounded-md border border-background/20 bg-background px-6 text-sm font-medium text-foreground hover:bg-background/85 sm:w-auto"
-                >
-                  {learning.reviewsDue.length > 0 ? "Revisar agora" : "Começar agora"}{" "}
-                  <ArrowRight className="size-4" />
-                </Link>
-              ) : (
-                <Link
-                  to="/app/rota"
-                  className="tap inline-flex h-12 w-full shrink-0 items-center justify-center gap-2 rounded-md border border-background/20 bg-background px-6 text-sm font-medium text-foreground hover:bg-background/85 sm:w-auto"
-                >
-                  Ver caminho <ArrowRight className="size-4" />
-                </Link>
-              )}
+        <div className="chat-composer-frame mt-7 rounded-lg p-px text-left">
+          <PromptInput onSubmit={({ text }) => { if (text.trim().length >= 15) { setIdea(text.trim()); setStep("details"); } }} className="border-0 bg-surface shadow-[var(--shadow-lift)]">
+            <PromptInputTextarea ref={inputRef} value={idea} onChange={(event) => setIdea(event.target.value)} placeholder="Ex.: Quero construir um ERP simples para pequenas indústrias…" className="min-h-28 text-base" />
+            <PromptInputFooter className="justify-between">
+              <span className="px-1 text-xs text-muted-foreground">Você mantém o controle de cada decisão.</span>
+              <PromptInputSubmit status="ready" disabled={idea.trim().length < 15} />
+            </PromptInputFooter>
+          </PromptInput>
+        </div>
+      </section>
+
+      {step === "details" && (
+        <Reveal>
+          <Panel className="mx-auto max-w-3xl text-left">
+            <div className="flex items-start gap-3">
+              <span className="grid size-8 shrink-0 place-items-center rounded-md bg-surface-2"><PathlyMark className="size-4" /></span>
+              <div><h2 className="font-display text-xl font-semibold">Só preciso confirmar duas coisas</h2><p className="mt-1 text-sm text-muted-foreground">Isso evita um plano genérico e define o primeiro recorte do produto.</p></div>
+            </div>
+            <div className="mt-6 grid gap-5 sm:grid-cols-2">
+              <label className="text-sm font-medium">Para quem é?<textarea value={audience} onChange={(event) => setAudience(event.target.value)} placeholder="Ex.: gestores de pequenas indústrias" className="mt-2 min-h-24 w-full resize-none rounded-md border border-input bg-background p-3 text-sm outline-none focus:ring-2 focus:ring-ring" /></label>
+              <label className="text-sm font-medium">Qual problema resolve?<textarea value={problem} onChange={(event) => setProblem(event.target.value)} placeholder="Ex.: estoque, produção e pedidos ficam espalhados em planilhas" className="mt-2 min-h-24 w-full resize-none rounded-md border border-input bg-background p-3 text-sm outline-none focus:ring-2 focus:ring-ring" /></label>
+            </div>
+            {error && <p role="alert" className="mt-4 text-sm text-destructive">{error}</p>}
+            <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <Btn variant="ghost" onClick={() => setStep("idea")} disabled={busy}>Voltar</Btn>
+              <Btn onClick={() => void create()} disabled={busy || audience.trim().length < 5 || problem.trim().length < 15}>{busy ? <><Loader2 className="size-4 animate-spin" /> Criando projeto…</> : <>Criar espaço do projeto <ArrowRight className="size-4" /></>}</Btn>
             </div>
           </Panel>
         </Reveal>
       )}
 
-      <Reveal delay={180}>
-        <section className="border-y border-border py-7">
-          <div className="flex flex-wrap items-end justify-between gap-4">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">
-                Caminho ativo
-              </p>
-              <h2 className="mt-2 font-display text-2xl font-bold">{profile.target}</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {stats.doneCount} de {stats.total} etapas · cerca de {stats.monthsLeft} meses
-                restantes
-              </p>
-            </div>
-            <span className="font-display text-3xl font-bold text-primary">{stats.percent}%</span>
-          </div>
-          <div className="relative mt-8">
-            <div className="absolute top-4 right-0 left-0 h-px bg-border" />
-            <div
-              className="absolute top-4 left-0 h-px bg-primary transition-all duration-700"
-              style={{ width: `${stats.percent}%` }}
-            />
-            <ol className="relative flex justify-between gap-2">
-              {views.map((step) => (
-                <li
-                  key={step.id}
-                  className="flex max-w-24 flex-1 flex-col items-center text-center"
-                >
-                  <span
-                    className={cn(
-                      "grid size-8 place-items-center rounded-lg border bg-background text-xs font-semibold",
-                      step.state === "concluído" &&
-                        "border-primary bg-primary text-primary-foreground",
-                      step.state === "atual" &&
-                        "border-primary text-primary ring-4 ring-primary/10",
-                      (step.state === "futuro" || step.state === "bloqueado") &&
-                        "border-border text-muted-foreground",
-                    )}
-                  >
-                    {step.state === "concluído" ? (
-                      <Check className="size-4" />
-                    ) : step.state === "bloqueado" ? (
-                      <Lock className="size-3.5" />
-                    ) : (
-                      step.order
-                    )}
-                  </span>
-                  <span className="mt-2 hidden text-[10px] leading-tight text-muted-foreground sm:line-clamp-2">
-                    {step.title}
-                  </span>
-                </li>
-              ))}
-            </ol>
-          </div>
-        </section>
-      </Reveal>
-
-      <Reveal delay={220}>
-        <div className="grid grid-cols-2 border-y border-border sm:grid-cols-4">
-          {[
-            { k: "Sessões", v: learningDone.length },
-            {
-              k: "Tempo real",
-              v: `${Math.floor(minutesStudied / 60)}h${minutesStudied % 60 ? ` ${minutesStudied % 60}min` : ""}`,
-            },
-            { k: "Domínio médio", v: `${averageMastery}%` },
-            { k: "Revisões", v: learning.reviewsDue.length },
-          ].map((m) => (
-            <div
-              key={m.k}
-              className="border-border px-4 py-5 odd:border-r sm:border-r sm:last:border-r-0"
-            >
-              <p className="font-display text-2xl font-bold">{m.v}</p>
-              <p className="mt-1 text-xs text-muted-foreground">{m.k}</p>
-            </div>
-          ))}
+      <section>
+        <div className="flex items-end justify-between gap-4 border-b border-border pb-4">
+          <div><p className="text-xs font-semibold uppercase text-muted-foreground">Continuar</p><h2 className="mt-1 font-display text-2xl font-semibold">Seus projetos</h2></div>
+          <Link to="/app/blueprints"><Btn variant="ghost" size="sm">Ver todos <ArrowRight className="size-4" /></Btn></Link>
         </div>
-      </Reveal>
-
-      {weekPlan.length > 0 && (
-        <Reveal delay={250}>
-          <div className="grid gap-5 lg:grid-cols-[1.4fr_0.6fr]">
-            <Panel>
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">
-                    Plano da semana
-                  </p>
-                  <h3 className="mt-1 font-display text-xl font-bold">
-                    Avance no seu ritmo de {profile.hoursPerWeek}h
-                  </h3>
-                </div>
-                <Chip tone={learning.reviewsDue.length ? "accent" : "primary"}>
-                  {learning.reviewsDue.length ? (
-                    <Brain className="size-3" />
-                  ) : (
-                    <Check className="size-3" />
-                  )}{" "}
-                  {learning.reviewsDue.length ? `${learning.reviewsDue.length} revisões` : "Em dia"}
-                </Chip>
-              </div>
-              <div className="mt-6 grid grid-cols-5 gap-2">
-                {weekPlan.map((item) => {
-                  const Icon = weekStateIcon[item.state];
-                  return (
-                    <div
-                      key={`${item.day}-${item.label}`}
-                      className={cn(
-                        "border-t-2 pt-3",
-                        item.state === "hoje" ? "border-primary" : "border-border",
-                      )}
-                    >
-                      <span className="text-[10px] font-semibold text-muted-foreground">
-                        {item.day}
-                      </span>
-                      <Chip
-                        tone={weekStateTone[item.state]}
-                        className="mt-2 !p-0 size-7 justify-center"
-                      >
-                        <Icon className="size-3.5" />
-                      </Chip>
-                      <p className="mt-2 line-clamp-2 text-[10px] leading-tight text-muted-foreground">
-                        {item.label}
-                      </p>
-                    </div>
-                  );
-                })}
-              </div>
-            </Panel>
-            <Panel>
-              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-                Nível {level.level}
-              </p>
-              <h3 className="mt-1 font-display text-xl font-bold">{level.name}</h3>
-              <ProgressBar value={level.progressPct} tone="xp" className="mt-5" />
-              <p className="mt-2 text-xs text-muted-foreground">
-                {level.maxed
-                  ? "Nível máximo"
-                  : `${level.xpToNext - level.xp} XP até o próximo nível`}
-              </p>
-            </Panel>
+        {projects.estado === "carregando" && <p className="py-6 text-sm text-muted-foreground">Carregando projetos…</p>}
+        {projects.estado === "erro" && <p className="py-6 text-sm text-destructive">Não foi possível carregar seus projetos.</p>}
+        {projects.estado === "pronta" && projects.projetos.length === 0 && (
+          <div className="py-8 text-center text-sm text-muted-foreground"><Plus className="mx-auto mb-2 size-5" />Seu primeiro projeto começa na conversa acima.</div>
+        )}
+        {projects.estado === "pronta" && projects.projetos.length > 0 && (
+          <div className="divide-y divide-border">
+            {projects.projetos.slice(0, 4).map((project) => (
+              <Link key={project.id} to="/app/projeto/$id" params={{ id: project.id }} className="tap grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-4 py-4">
+                <span className="grid size-10 place-items-center rounded-md border border-border bg-surface"><FolderKanban className="size-4" /></span>
+                <span className="min-w-0"><span className="block truncate text-sm font-medium">{project.nome}</span><span className="mt-0.5 block truncate text-xs text-muted-foreground">{project.ideia}</span></span>
+                <span className="flex items-center gap-1 text-xs text-muted-foreground"><ShieldCheck className="size-3.5" /> Abrir</span>
+              </Link>
+            ))}
           </div>
-        </Reveal>
-      )}
-
-      <Reveal delay={300}>
-        <Panel>
-          <h3 className="font-display text-lg font-semibold">Evidências recentes</h3>
-          {learningDone.length === 0 ? (
-            <p className="mt-3 text-sm text-muted-foreground">
-              Suas sessões concluídas, tentativas e revisões aparecem aqui.
-            </p>
-          ) : (
-            <ul className="mt-4 divide-y divide-border">
-              {learningDone
-                .slice(-5)
-                .reverse()
-                .map((item) => {
-                  const activity = learning.activities.find(
-                    (candidate) => candidate.id === item.activityId,
-                  );
-                  return (
-                    <li key={item.activityId} className="flex items-center gap-3 py-3">
-                       <span className="grid size-8 shrink-0 place-items-center rounded-md border border-border bg-surface-2 text-foreground">
-                        <Check className="size-4" />
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm">{activity?.title ?? item.activityId}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {item.score}% · {item.minutesSpent} min · {item.attempts} tentativa
-                          {item.attempts === 1 ? "" : "s"}
-                        </p>
-                      </div>
-                    </li>
-                  );
-                })}
-            </ul>
-          )}
-          {stats.projects.length > 0 && (
-            <p className="mt-4 flex items-center gap-1.5 text-xs text-muted-foreground">
-              <Target className="size-3.5 text-accent" /> {stats.projects.length} projeto
-              {stats.projects.length === 1 ? "" : "s"} entregue
-              {stats.projects.length === 1 ? "" : "s"} até agora
-            </p>
-          )}
-        </Panel>
-      </Reveal>
+        )}
+      </section>
     </div>
   );
 }

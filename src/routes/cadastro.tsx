@@ -13,12 +13,12 @@ export const Route = createFileRoute("/cadastro")({
       { title: "Criar conta na Pathly" },
       {
         name: "description",
-        content: "Crie sua conta e monte a rota entre a sua renda atual e a renda que você quer.",
+        content: "Crie sua conta e transforme uma ideia em um SaaS planejado e executável.",
       },
       { property: "og:title", content: "Criar conta na Pathly" },
       {
         property: "og:description",
-        content: "Poucas perguntas e sua rota personalizada de habilidades está pronta.",
+        content: "Descreva o produto e deixe o Pathly organizar o plano técnico.",
       },
     ],
   }),
@@ -43,7 +43,7 @@ function SignupPage() {
       password,
       options: {
         data: { full_name: name.trim() },
-        emailRedirectTo: `${window.location.origin}/onboarding`,
+        emailRedirectTo: `${window.location.origin}/app`,
       },
     });
     if (signUpError) {
@@ -52,19 +52,19 @@ function SignupPage() {
       return;
     }
     // Com confirmação de e-mail ligada no Supabase o signUp não devolve sessão: a pessoa
-    // precisa confirmar antes de entrar, então avisamos em vez de mandar pro onboarding.
+    // precisa confirmar antes de entrar, então avisamos antes de abrir o espaço de criação.
     if (!data.session) {
       setNotice("Confirme seu e-mail pelo link que enviamos para começar.");
       setBusy(false);
       return;
     }
-    navigate({ to: "/onboarding" });
+    navigate({ to: "/app" });
   }
 
   async function handleGoogle() {
     setBusy(true);
     setError(null);
-    const result = await signInWithGoogle("/onboarding");
+    const result = await signInWithGoogle("/app");
     // "redirecting" significa que o navegador já está saindo desta página: mexer no estado ou
     // navegar aqui só competiria com a saída.
     if (result.status === "redirecting") return;
@@ -73,13 +73,13 @@ function SignupPage() {
       setBusy(false);
       return;
     }
-    navigate({ to: "/onboarding" });
+    navigate({ to: "/app" });
   }
 
   return (
     <AuthLayout
-      title="Criar minha rota"
-      subtitle="Leva dois minutos. Depois você responde 10 perguntas e a rota aparece."
+      title="Criar meu workspace"
+      subtitle="Descreva seu SaaS e comece com um plano técnico organizado."
     >
       <form className="space-y-4" onSubmit={handleSubmit}>
         {error && <AuthError message={error} />}

@@ -50,8 +50,8 @@ function TelaProjetos() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Seus projetos"
-        subtitle="De uma ideia solta a um plano técnico que dá para executar"
+        title="Projetos"
+        subtitle="Cada SaaS reúne conversa, decisões, plano técnico e execução"
         action={
           lista.estado === "pronta" && lista.projetos.length > 0 && !abrindo ? (
             <Chip tone="primary">
@@ -145,7 +145,7 @@ function TelaProjetos() {
             return (
               <Reveal key={p.id} delay={i * 60}>
                 <button
-                  onClick={() => void navigate({ to: "/app/blueprint/$id", params: { id: p.id } })}
+                  void navigate({ to: "/app/projeto/$id", params: { id: p.id } })
                   className="tap grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-4 py-5 text-left"
                 >
                   <div className="min-w-0">
