@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { lerEnv } from "@/lib/server-env";
-import { LIMITES, registrarUso } from "@/lib/limite-uso";
+import { LIMITES, recusaParaResposta, registrarUso } from "@/lib/limite-uso";
 import { lerJsonLimitado, texto } from "@/lib/entrada-segura";
 import { analisar, type ContextoSeguranca } from "@/lib/seguranca/riscos";
 import { gerarExtras } from "@/lib/seguranca/extras";
@@ -111,7 +111,11 @@ export const Route = createFileRoute("/api/seguranca")({
           LIMITES.seguranca.janelaMinutos,
         );
         if (uso.permitido === false) {
-          return erro(429, "Você analisou muitas vezes em pouco tempo. Tente de novo mais tarde.", {
+          const recusa = recusaParaResposta(
+            uso,
+            "Você analisou muitas vezes em pouco tempo. Tente de novo mais tarde.",
+          );
+          return erro(recusa.status, recusa.mensagem, {
             usadas: uso.usadas,
             limite: uso.limite,
           });

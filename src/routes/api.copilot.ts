@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { lerEnv } from "@/lib/server-env";
-import { LIMITES, registrarUso } from "@/lib/limite-uso";
+import { LIMITES, recusaParaResposta, registrarUso } from "@/lib/limite-uso";
 import { lerJsonLimitado, texto } from "@/lib/entrada-segura";
 import { completarBlueprint, type Blueprint } from "@/lib/blueprint/contrato";
 import { validarModelo } from "@/lib/banco/contrato";
@@ -139,7 +139,11 @@ export const Route = createFileRoute("/api/copilot")({
           LIMITES.copilot.janelaMinutos,
         );
         if (uso.permitido === false) {
-          return erro(429, "Você conversou muito em pouco tempo. Tente de novo mais tarde.", {
+          const recusa = recusaParaResposta(
+            uso,
+            "Você conversou muito em pouco tempo. Tente de novo mais tarde.",
+          );
+          return erro(recusa.status, recusa.mensagem, {
             usadas: uso.usadas,
             limite: uso.limite,
           });

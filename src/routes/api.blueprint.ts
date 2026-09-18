@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { lerEnv } from "@/lib/server-env";
-import { LIMITES, registrarUso } from "@/lib/limite-uso";
+import { LIMITES, recusaParaResposta, registrarUso } from "@/lib/limite-uso";
 import { TETOS, lerJsonLimitado, texto } from "@/lib/entrada-segura";
 import { gerarBloco } from "@/lib/blueprint/gerar";
 import { BLOCOS, blocosProntos, type Bloco, type Blueprint } from "@/lib/blueprint/contrato";
@@ -119,7 +119,11 @@ export const Route = createFileRoute("/api/blueprint")({
           LIMITES.blueprint.janelaMinutos,
         );
         if (uso.permitido === false) {
-          return erro(429, "Você gerou muitos planos em pouco tempo. Tente de novo mais tarde.", {
+          const recusa = recusaParaResposta(
+            uso,
+            "Você gerou muitos planos em pouco tempo. Tente de novo mais tarde.",
+          );
+          return erro(recusa.status, recusa.mensagem, {
             usadas: uso.usadas,
             limite: uso.limite,
           });

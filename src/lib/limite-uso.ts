@@ -1,5 +1,6 @@
 import { lerEnv } from "@/lib/server-env";
 import { cabecalhosServico } from "@/lib/supabase-servidor";
+import { consumirTetoEmergencia, politicaDe } from "@/lib/politica-custo";
 
 /**
  * Limite de uso dos endpoints que chamam IA.
@@ -17,19 +18,27 @@ import { cabecalhosServico } from "@/lib/supabase-servidor";
  * exatamente o furo que este limite fecha.
  */
 
+/**
+ * Por que a recusa carrega um motivo.
+ *
+ * "Você usou muitas vezes" e "não consegui conferir o seu limite" são fatos diferentes, e a
+ * pessoa age diferente diante deles: no primeiro caso ela espera a janela virar, no segundo ela
+ * tenta de novo em instantes. Um 429 genérico para os dois manda quem poderia continuar embora.
+ */
+export type MotivoRecusa = "limite" | "contador-indisponivel" | "teto-emergencia";
+
 export type ResultadoLimite =
-  | { permitido: true; usadas: number }
-  | { permitido: false; usadas: number; limite: number; janelaMinutos: number }
-  /** O limite não pôde ser conferido. Quem chama decide — ver a nota em `permitir`. */
+  | { permitido: true; usadas: number; viaEmergencia?: boolean }
+  | {
+      permitido: false;
+      motivo: MotivoRecusa;
+      usadas: number;
+      limite: number;
+      janelaMinutos: number;
+    }
+  /** O contador respondeu e a política do endpoint deixou passar mesmo assim. */
   | { permitido: "indeterminado" };
 
-/**
- * Registra a chamada e diz se ela cabe no limite.
- *
- * Quando a checagem falha (banco fora, RPC ausente), devolve `indeterminado` em vez de bloquear.
- * Escolha deliberada: derrubar o estudo de todo mundo porque o contador está fora é pior do que
- * o risco de abuso durante uma indisponibilidade, que é curta e visível. Quem chama registra.
- */
 /**
  * O aviso de que o limite está desligado — e por que ele precisa existir.
  *
@@ -55,6 +64,92 @@ function avisarSemChave(): void {
   );
 }
 
+/**
+ * Quem é a pessoa. Necessário tanto para o contador central quanto para o teto de emergência.
+ */
+async function lerUserId(
+  supabaseUrl: string,
+  anonKey: string,
+  token: string,
+): Promise<string | null> {
+  try {
+    const r = await fetch(`${supabaseUrl}/auth/v1/user`, {
+      headers: { Authorization: `Bearer ${token}`, apikey: anonKey },
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!r.ok) return null;
+    const id = ((await r.json()) as { id?: unknown }).id;
+    return typeof id === "string" && id ? id : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * O contador central — a fonte oficial. `null` quando não foi possível contar.
+ *
+ * A função privilegiada não é executável por usuários autenticados: a rota valida o token e o
+ * servidor chama o RPC restrito à service role, sem expor essa credencial ao navegador.
+ */
+async function contarNoBanco(
+  supabaseUrl: string,
+  serviceRole: string,
+  userId: string,
+  endpoint: string,
+  janelaMinutos: number,
+): Promise<number | null> {
+  try {
+    const r = await fetch(`${supabaseUrl}/rest/v1/rpc/registrar_uso_ia_servidor`, {
+      method: "POST",
+      headers: cabecalhosServico(serviceRole, { "Content-Type": "application/json" }),
+      signal: AbortSignal.timeout(5000),
+      body: JSON.stringify({
+        p_user_id: userId,
+        p_endpoint: endpoint,
+        p_janela_minutos: janelaMinutos,
+      }),
+    });
+    if (!r.ok) return null;
+
+    const usadas = (await r.json()) as unknown;
+    return typeof usadas === "number" ? usadas : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * O registro de observabilidade.
+ *
+ * Sai só quando o contador central falhou — o caminho feliz não precisa de log, e poluí-lo
+ * esconderia justamente o que interessa. Nunca carrega prompt, token ou conteúdo: só o suficiente
+ * para responder "quantas vezes o contador caiu, em qual endpoint, e o que o produto fez".
+ */
+function registrarFalhaDeContagem(dados: {
+  endpoint: string;
+  classe: string;
+  modoDeFalha: string;
+  fallbackAtivado: boolean;
+  resultado: string;
+}): void {
+  console.warn(
+    "[Pathly] limite-uso " +
+      JSON.stringify({
+        ...dados,
+        contadorDisponivel: false,
+        em: new Date().toISOString(),
+        requestId: crypto.randomUUID(),
+      }),
+  );
+}
+
+/**
+ * Registra a chamada e diz se ela cabe no limite.
+ *
+ * Com o contador central respondendo, a resposta é a dele. Quando ele não responde, quem decide é
+ * a política do endpoint em `politica-custo.ts` — e é lá que está escrito por que cada um tolera
+ * mais ou menos essa falha.
+ */
 export async function registrarUso(
   supabaseUrl: string,
   anonKey: string,
@@ -63,47 +158,118 @@ export async function registrarUso(
   limite: number,
   janelaMinutos: number,
 ): Promise<ResultadoLimite> {
-  try {
-    const serviceRole = lerEnv("SUPABASE_SERVICE_ROLE_KEY");
-    if (!serviceRole) {
-      avisarSemChave();
-      return { permitido: "indeterminado" };
+  const politica = politicaDe(endpoint);
+
+  // Endpoint sem custo externo não precisa de contagem nem de fallback.
+  if (!politica.exigeContador) return { permitido: "indeterminado" };
+
+  const serviceRole = lerEnv("SUPABASE_SERVICE_ROLE_KEY");
+  if (!serviceRole) avisarSemChave();
+
+  const userId = await lerUserId(supabaseUrl, anonKey, token);
+
+  const usadas =
+    serviceRole && userId
+      ? await contarNoBanco(supabaseUrl, serviceRole, userId, endpoint, janelaMinutos)
+      : null;
+
+  if (usadas !== null) {
+    if (usadas > limite) {
+      return { permitido: false, motivo: "limite", usadas, limite, janelaMinutos };
     }
-
-    // A função privilegiada não é mais executável por usuários autenticados. Primeiro obtemos a
-    // identidade diretamente do Auth com o token já validado pela rota; depois o servidor chama
-    // o RPC restrito à service role, sem expor essa credencial ao navegador.
-    const usuario = await fetch(`${supabaseUrl}/auth/v1/user`, {
-      headers: { Authorization: `Bearer ${token}`, apikey: anonKey },
-      signal: AbortSignal.timeout(5000),
-    });
-    if (!usuario.ok) return { permitido: "indeterminado" };
-    const userId = ((await usuario.json()) as { id?: unknown }).id;
-    if (typeof userId !== "string" || !userId) return { permitido: "indeterminado" };
-
-    const r = await fetch(`${supabaseUrl}/rest/v1/rpc/registrar_uso_ia_servidor`, {
-      method: "POST",
-      headers: cabecalhosServico(serviceRole, {
-        "Content-Type": "application/json",
-      }),
-      signal: AbortSignal.timeout(5000),
-      body: JSON.stringify({
-        p_user_id: userId,
-        p_endpoint: endpoint,
-        p_janela_minutos: janelaMinutos,
-      }),
-    });
-
-    if (!r.ok) return { permitido: "indeterminado" };
-
-    const usadas = (await r.json()) as number;
-    if (typeof usadas !== "number") return { permitido: "indeterminado" };
-
-    if (usadas > limite) return { permitido: false, usadas, limite, janelaMinutos };
     return { permitido: true, usadas };
-  } catch {
+  }
+
+  // Daqui para baixo, o contador central não respondeu.
+
+  if (politica.modoDeFalha === "open") {
+    registrarFalhaDeContagem({
+      endpoint,
+      classe: politica.classe,
+      modoDeFalha: "open",
+      fallbackAtivado: false,
+      resultado: "permitido",
+    });
     return { permitido: "indeterminado" };
   }
+
+  /**
+   * Sem identificar a pessoa, o teto de emergência não tem por quem contar.
+   *
+   * Cair para `closed` aqui é o certo: um teto por usuário que não sabe quem é o usuário não
+   * limita nada, e deixar passar seria o mesmo que `open` num endpoint que a política disse que
+   * não pode ficar aberto.
+   */
+  if (politica.modoDeFalha === "closed" || !userId || !politica.tetoEmergencia) {
+    registrarFalhaDeContagem({
+      endpoint,
+      classe: politica.classe,
+      modoDeFalha: politica.modoDeFalha,
+      fallbackAtivado: false,
+      resultado: "bloqueado",
+    });
+    return {
+      permitido: false,
+      motivo: "contador-indisponivel",
+      usadas: 0,
+      limite,
+      janelaMinutos,
+    };
+  }
+
+  const emergencia = consumirTetoEmergencia(userId, endpoint, politica.tetoEmergencia);
+
+  registrarFalhaDeContagem({
+    endpoint,
+    classe: politica.classe,
+    modoDeFalha: "local_cap",
+    fallbackAtivado: true,
+    resultado: emergencia.permitido ? "permitido-em-emergencia" : "bloqueado-por-teto-emergencia",
+  });
+
+  if (!emergencia.permitido) {
+    return {
+      permitido: false,
+      motivo: "teto-emergencia",
+      usadas: emergencia.usadas,
+      limite: emergencia.teto,
+      janelaMinutos: 60,
+    };
+  }
+
+  return { permitido: true, usadas: emergencia.usadas, viaEmergencia: true };
+}
+
+/**
+ * O status e o texto de uma recusa.
+ *
+ * Existe para a pessoa nunca ler o motivo técnico. "Contador indisponível", "RPC ausente" ou
+ * "service role não configurada" não são informação para quem está tentando usar o produto — são
+ * informação para o log, e é lá que ficam.
+ *
+ * O status também muda: estourar o limite é 429 (culpa do uso, a janela vai virar), não conseguir
+ * conferir é 503 (culpa nossa, tente de novo já). Mandar 429 nos dois faria quem poderia
+ * continuar em instantes esperar uma hora à toa.
+ */
+export function recusaParaResposta(
+  uso: { motivo: MotivoRecusa },
+  mensagemDoLimite: string,
+): { status: number; mensagem: string } {
+  if (uso.motivo === "limite") return { status: 429, mensagem: mensagemDoLimite };
+
+  if (uso.motivo === "teto-emergencia") {
+    return {
+      status: 503,
+      mensagem:
+        "Estamos com uma instabilidade e reduzimos temporariamente as chamadas. Tente de novo em alguns minutos.",
+    };
+  }
+
+  return {
+    status: 503,
+    mensagem:
+      "Não foi possível verificar o seu limite de uso agora. Tente de novo em alguns instantes.",
+  };
 }
 
 /**

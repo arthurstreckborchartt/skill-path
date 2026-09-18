@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { gerarRota, type Plano } from "@/lib/ia/gerar-rota";
 import { SERVICOS_COMPAT } from "@/lib/ia/provedor-openai-compat";
-import { LIMITES, registrarUso } from "@/lib/limite-uso";
+import { LIMITES, recusaParaResposta, registrarUso } from "@/lib/limite-uso";
 import { lerJsonLimitado } from "@/lib/entrada-segura";
 import { paraRouteSteps } from "@/lib/ia/contrato";
 import type { OnboardingProfile } from "@/lib/onboarding";
@@ -99,7 +99,11 @@ export const Route = createFileRoute("/api/rota")({
           LIMITES.rota.janelaMinutos,
         );
         if (uso.permitido === false) {
-          return erro(429, "Você gerou muitas rotas em pouco tempo. Tente de novo mais tarde.", {
+          const recusa = recusaParaResposta(
+            uso,
+            "Você gerou muitas rotas em pouco tempo. Tente de novo mais tarde.",
+          );
+          return erro(recusa.status, recusa.mensagem, {
             usadas: uso.usadas,
             limite: uso.limite,
           });

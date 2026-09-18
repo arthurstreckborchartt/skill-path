@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { lerEnv } from "@/lib/server-env";
 import { gerarLicao, type ContextoLicao } from "@/lib/ia/gerar-licao";
-import { LIMITES, registrarUso } from "@/lib/limite-uso";
+import { LIMITES, recusaParaResposta, registrarUso } from "@/lib/limite-uso";
 import { TETOS, lerJsonLimitado, listaDeTextos, texto } from "@/lib/entrada-segura";
 import { cabecalhosServico } from "@/lib/supabase-servidor";
 
@@ -127,14 +127,14 @@ export const Route = createFileRoute("/api/licao")({
           LIMITES.licao.janelaMinutos,
         );
         if (uso.permitido === false) {
-          return erro(
-            429,
+          const recusa = recusaParaResposta(
+            uso,
             "Você abriu muitas aulas novas em pouco tempo. Tente de novo mais tarde.",
-            {
-              usadas: uso.usadas,
-              limite: uso.limite,
-            },
           );
+          return erro(recusa.status, recusa.mensagem, {
+            usadas: uso.usadas,
+            limite: uso.limite,
+          });
         }
 
         const gerada = await gerarLicao(contexto, lerEnv);

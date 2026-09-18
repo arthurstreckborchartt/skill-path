@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { lerEnv } from "@/lib/server-env";
-import { LIMITES, registrarUso } from "@/lib/limite-uso";
+import { LIMITES, recusaParaResposta, registrarUso } from "@/lib/limite-uso";
 import { lerJsonLimitado, texto } from "@/lib/entrada-segura";
 import { gerarMapaApi } from "@/lib/api/gerar";
 import { validarModelo, type ModeloDeDados } from "@/lib/banco/contrato";
@@ -111,7 +111,11 @@ export const Route = createFileRoute("/api/apis")({
           LIMITES.api.janelaMinutos,
         );
         if (uso.permitido === false) {
-          return erro(429, "Você projetou muitas APIs em pouco tempo. Tente de novo mais tarde.", {
+          const recusa = recusaParaResposta(
+            uso,
+            "Você projetou muitas APIs em pouco tempo. Tente de novo mais tarde.",
+          );
+          return erro(recusa.status, recusa.mensagem, {
             usadas: uso.usadas,
             limite: uso.limite,
           });

@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { lerEnv } from "@/lib/server-env";
 import { avaliarPratica, type EnvioPratica } from "@/lib/ia/avaliar-pratica";
-import { LIMITES, registrarUso } from "@/lib/limite-uso";
+import { LIMITES, recusaParaResposta, registrarUso } from "@/lib/limite-uso";
 import { TETOS, lerJsonLimitado, texto } from "@/lib/entrada-segura";
 
 /**
@@ -86,14 +86,14 @@ export const Route = createFileRoute("/api/pratica")({
           LIMITES.pratica.janelaMinutos,
         );
         if (uso.permitido === false) {
-          return erro(
-            429,
+          const recusa = recusaParaResposta(
+            uso,
             "Você enviou muitas correções em pouco tempo. Tente de novo mais tarde.",
-            {
-              usadas: uso.usadas,
-              limite: uso.limite,
-            },
           );
+          return erro(recusa.status, recusa.mensagem, {
+            usadas: uso.usadas,
+            limite: uso.limite,
+          });
         }
 
         const saida = await avaliarPratica(envio, lerEnv);
