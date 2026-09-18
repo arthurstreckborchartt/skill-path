@@ -20,7 +20,8 @@ export const Route = createFileRoute("/app/perfil")({
 function ProfilePage() {
   const { session } = useSession();
   const projects = useProjetos();
-  const name = typeof session?.user.user_metadata?.full_name === "string" ? session.user.user_metadata.full_name : "Sua conta";
+  const fullName = session?.user.user_metadata?.["full_name"];
+  const name = typeof fullName === "string" ? fullName : "Sua conta";
   const initials = name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase()).join("");
   const count = projects.estado === "pronta" ? projects.projetos.length : 0;
 
