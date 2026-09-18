@@ -116,4 +116,9 @@ export const LIMITES = {
    * e a detecção rodam sem chamada nenhuma.
    */
   seguranca: { limite: 12, janelaMinutos: 60 },
+  /**
+   * Mesmo raciocínio do banco e da API: um projeto tem uma arquitetura de IA, e refazer é exceção.
+   * O plano guardado é devolvido sem chamada nenhuma — só `refazer` gasta.
+   */
+  arquiteturaIa: { limite: 8, janelaMinutos: 60 },
 } as const;

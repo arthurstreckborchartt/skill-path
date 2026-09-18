@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ArrowLeft,
+  Brain,
   Check,
   Database,
   Loader2,
@@ -261,6 +262,38 @@ function TelaBlueprint() {
               <p className="mt-1 text-sm text-muted-foreground">
                 Cada endpoint com contrato, erros e segurança — e os conceitos de API explicados no
                 seu projeto.
+              </p>
+            </div>
+            <span className="shrink-0 rounded-lg border border-border px-4 py-2.5 text-sm font-medium transition-transform group-hover:translate-x-0.5">
+              Abrir
+            </span>
+          </Link>
+        </Reveal>
+      )}
+
+      {/*
+        A arquitetura de IA aparece para TODO projeto, inclusive os que não marcaram IA no
+        questionário. A pergunta que ela responde é "eu preciso disso?", e quem mais precisa da
+        resposta é justamente quem ainda não decidiu — esconder o card de quem não marcou seria
+        mostrá-lo só para quem já se convenceu.
+      */}
+      {conteudo.produto && (
+        <Reveal>
+          <Link
+            to="/app/arquitetura-ia/$id"
+            params={{ id }}
+            className="tap group flex items-center justify-between gap-4 rounded-xl border border-border bg-surface/50 p-5 transition-colors hover:border-primary/30"
+          >
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <Brain className="size-4 text-primary" />
+                <h2 className="font-display text-lg font-semibold">
+                  {respostas?.temIa ? "Arquitetura de IA" : "Você precisa de IA?"}
+                </h2>
+              </div>
+              <p className="mt-1 text-sm text-muted-foreground">
+                O que resolve sem IA, o que resolve com uma chamada só, e o que precisa de mais —
+                com custo por mês e o prompt de implementação de cada um.
               </p>
             </div>
             <span className="shrink-0 rounded-lg border border-border px-4 py-2.5 text-sm font-medium transition-transform group-hover:translate-x-0.5">

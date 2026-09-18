@@ -20,6 +20,7 @@ import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as TermosRouteImport } from './routes/termos'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as ApiApisRouteImport } from './routes/api.apis'
+import { Route as ApiArquiteturaIaRouteImport } from './routes/api.arquitetura-ia'
 import { Route as ApiAssinaturaRouteImport } from './routes/api.assinatura'
 import { Route as ApiBancoRouteImport } from './routes/api.banco'
 import { Route as ApiBlueprintRouteImport } from './routes/api.blueprint'
@@ -41,6 +42,7 @@ import { Route as AppRevisarRouteImport } from './routes/app.revisar'
 import { Route as AppRotaRouteImport } from './routes/app.rota'
 import { Route as AppApiIdRouteImport } from './routes/app.api.$id'
 import { Route as AppAprenderActivityIdRouteImport } from './routes/app.aprender.$activityId'
+import { Route as AppArquiteturaIaIdRouteImport } from './routes/app.arquitetura-ia.$id'
 import { Route as AppBancoIdRouteImport } from './routes/app.banco.$id'
 import { Route as AppBlueprintIdRouteImport } from './routes/app.blueprint.$id'
 import { Route as AppRoadmapIdRouteImport } from './routes/app.roadmap.$id'
@@ -102,6 +104,11 @@ const Char91DotwellKnownChar93OauthProtectedResourceRoute =
 const ApiApisRoute = ApiApisRouteImport.update({
   id: '/api/apis',
   path: '/api/apis',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiArquiteturaIaRoute = ApiArquiteturaIaRouteImport.update({
+  id: '/api/arquitetura-ia',
+  path: '/api/arquitetura-ia',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAssinaturaRoute = ApiAssinaturaRouteImport.update({
@@ -209,6 +216,11 @@ const AppAprenderActivityIdRoute = AppAprenderActivityIdRouteImport.update({
   path: '/aprender/$activityId',
   getParentRoute: () => AppRoute,
 } as any)
+const AppArquiteturaIaIdRoute = AppArquiteturaIaIdRouteImport.update({
+  id: '/arquitetura-ia/$id',
+  path: '/arquitetura-ia/$id',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppBancoIdRoute = AppBancoIdRouteImport.update({
   id: '/banco/$id',
   path: '/banco/$id',
@@ -252,6 +264,7 @@ export interface FileRoutesByFullPath {
   '/termos': typeof TermosRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/api/apis': typeof ApiApisRoute
+  '/api/arquitetura-ia': typeof ApiArquiteturaIaRoute
   '/api/assinatura': typeof ApiAssinaturaRoute
   '/api/banco': typeof ApiBancoRoute
   '/api/blueprint': typeof ApiBlueprintRoute
@@ -273,6 +286,7 @@ export interface FileRoutesByFullPath {
   '/app/': typeof AppIndexRoute
   '/app/api/$id': typeof AppApiIdRoute
   '/app/aprender/$activityId': typeof AppAprenderActivityIdRoute
+  '/app/arquitetura-ia/$id': typeof AppArquiteturaIaIdRoute
   '/app/banco/$id': typeof AppBancoIdRoute
   '/app/blueprint/$id': typeof AppBlueprintIdRoute
   '/app/roadmap/$id': typeof AppRoadmapIdRoute
@@ -291,6 +305,7 @@ export interface FileRoutesByTo {
   '/termos': typeof TermosRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/api/apis': typeof ApiApisRoute
+  '/api/arquitetura-ia': typeof ApiArquiteturaIaRoute
   '/api/assinatura': typeof ApiAssinaturaRoute
   '/api/banco': typeof ApiBancoRoute
   '/api/blueprint': typeof ApiBlueprintRoute
@@ -312,6 +327,7 @@ export interface FileRoutesByTo {
   '/app': typeof AppIndexRoute
   '/app/api/$id': typeof AppApiIdRoute
   '/app/aprender/$activityId': typeof AppAprenderActivityIdRoute
+  '/app/arquitetura-ia/$id': typeof AppArquiteturaIaIdRoute
   '/app/banco/$id': typeof AppBancoIdRoute
   '/app/blueprint/$id': typeof AppBlueprintIdRoute
   '/app/roadmap/$id': typeof AppRoadmapIdRoute
@@ -332,6 +348,7 @@ export interface FileRoutesById {
   '/termos': typeof TermosRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/api/apis': typeof ApiApisRoute
+  '/api/arquitetura-ia': typeof ApiArquiteturaIaRoute
   '/api/assinatura': typeof ApiAssinaturaRoute
   '/api/banco': typeof ApiBancoRoute
   '/api/blueprint': typeof ApiBlueprintRoute
@@ -353,6 +370,7 @@ export interface FileRoutesById {
   '/app/': typeof AppIndexRoute
   '/app/api/$id': typeof AppApiIdRoute
   '/app/aprender/$activityId': typeof AppAprenderActivityIdRoute
+  '/app/arquitetura-ia/$id': typeof AppArquiteturaIaIdRoute
   '/app/banco/$id': typeof AppBancoIdRoute
   '/app/blueprint/$id': typeof AppBlueprintIdRoute
   '/app/roadmap/$id': typeof AppRoadmapIdRoute
@@ -374,6 +392,7 @@ export interface FileRouteTypes {
     | '/termos'
     | '/.well-known/oauth-protected-resource'
     | '/api/apis'
+    | '/api/arquitetura-ia'
     | '/api/assinatura'
     | '/api/banco'
     | '/api/blueprint'
@@ -395,6 +414,7 @@ export interface FileRouteTypes {
     | '/app/'
     | '/app/api/$id'
     | '/app/aprender/$activityId'
+    | '/app/arquitetura-ia/$id'
     | '/app/banco/$id'
     | '/app/blueprint/$id'
     | '/app/roadmap/$id'
@@ -413,6 +433,7 @@ export interface FileRouteTypes {
     | '/termos'
     | '/.well-known/oauth-protected-resource'
     | '/api/apis'
+    | '/api/arquitetura-ia'
     | '/api/assinatura'
     | '/api/banco'
     | '/api/blueprint'
@@ -434,6 +455,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/app/api/$id'
     | '/app/aprender/$activityId'
+    | '/app/arquitetura-ia/$id'
     | '/app/banco/$id'
     | '/app/blueprint/$id'
     | '/app/roadmap/$id'
@@ -453,6 +475,7 @@ export interface FileRouteTypes {
     | '/termos'
     | '/.well-known/oauth-protected-resource'
     | '/api/apis'
+    | '/api/arquitetura-ia'
     | '/api/assinatura'
     | '/api/banco'
     | '/api/blueprint'
@@ -474,6 +497,7 @@ export interface FileRouteTypes {
     | '/app/'
     | '/app/api/$id'
     | '/app/aprender/$activityId'
+    | '/app/arquitetura-ia/$id'
     | '/app/banco/$id'
     | '/app/blueprint/$id'
     | '/app/roadmap/$id'
@@ -494,6 +518,7 @@ export interface RootRouteChildren {
   TermosRoute: typeof TermosRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   ApiApisRoute: typeof ApiApisRoute
+  ApiArquiteturaIaRoute: typeof ApiArquiteturaIaRoute
   ApiAssinaturaRoute: typeof ApiAssinaturaRoute
   ApiBancoRoute: typeof ApiBancoRoute
   ApiBlueprintRoute: typeof ApiBlueprintRoute
@@ -584,6 +609,13 @@ declare module '@tanstack/react-router' {
       path: '/api/apis'
       fullPath: '/api/apis'
       preLoaderRoute: typeof ApiApisRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/arquitetura-ia': {
+      id: '/api/arquitetura-ia'
+      path: '/api/arquitetura-ia'
+      fullPath: '/api/arquitetura-ia'
+      preLoaderRoute: typeof ApiArquiteturaIaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/assinatura': {
@@ -733,6 +765,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAprenderActivityIdRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/arquitetura-ia/$id': {
+      id: '/app/arquitetura-ia/$id'
+      path: '/arquitetura-ia/$id'
+      fullPath: '/app/arquitetura-ia/$id'
+      preLoaderRoute: typeof AppArquiteturaIaIdRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/banco/$id': {
       id: '/app/banco/$id'
       path: '/banco/$id'
@@ -791,6 +830,7 @@ interface AppRouteChildren {
   AppIndexRoute: typeof AppIndexRoute
   AppApiIdRoute: typeof AppApiIdRoute
   AppAprenderActivityIdRoute: typeof AppAprenderActivityIdRoute
+  AppArquiteturaIaIdRoute: typeof AppArquiteturaIaIdRoute
   AppBancoIdRoute: typeof AppBancoIdRoute
   AppBlueprintIdRoute: typeof AppBlueprintIdRoute
   AppRoadmapIdRoute: typeof AppRoadmapIdRoute
@@ -810,6 +850,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppIndexRoute: AppIndexRoute,
   AppApiIdRoute: AppApiIdRoute,
   AppAprenderActivityIdRoute: AppAprenderActivityIdRoute,
+  AppArquiteturaIaIdRoute: AppArquiteturaIaIdRoute,
   AppBancoIdRoute: AppBancoIdRoute,
   AppBlueprintIdRoute: AppBlueprintIdRoute,
   AppRoadmapIdRoute: AppRoadmapIdRoute,
@@ -831,6 +872,7 @@ const rootRouteChildren: RootRouteChildren = {
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
   ApiApisRoute: ApiApisRoute,
+  ApiArquiteturaIaRoute: ApiArquiteturaIaRoute,
   ApiAssinaturaRoute: ApiAssinaturaRoute,
   ApiBancoRoute: ApiBancoRoute,
   ApiBlueprintRoute: ApiBlueprintRoute,

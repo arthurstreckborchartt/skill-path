@@ -76,6 +76,38 @@ export type Database = {
           },
         ]
       }
+      pathly_arquitetura_ia: {
+        Row: {
+          atualizado_em: string
+          criado_em: string
+          plano: Json
+          projeto_id: string
+          user_id: string
+        }
+        Insert: {
+          atualizado_em?: string
+          criado_em?: string
+          plano?: Json
+          projeto_id: string
+          user_id: string
+        }
+        Update: {
+          atualizado_em?: string
+          criado_em?: string
+          plano?: Json
+          projeto_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pathly_arquitetura_ia_projeto_id_fkey"
+            columns: ["projeto_id"]
+            isOneToOne: true
+            referencedRelation: "pathly_projetos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pathly_etapas: {
         Row: {
           anotacoes: string
