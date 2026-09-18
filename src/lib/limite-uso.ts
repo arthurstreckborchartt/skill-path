@@ -30,6 +30,31 @@ export type ResultadoLimite =
  * Escolha deliberada: derrubar o estudo de todo mundo porque o contador está fora é pior do que
  * o risco de abuso durante uma indisponibilidade, que é curta e visível. Quem chama registra.
  */
+/**
+ * O aviso de que o limite está desligado — e por que ele precisa existir.
+ *
+ * `indeterminado` foi pensado para indisponibilidade: banco fora, RPC com erro. Nesse caso a
+ * escolha de deixar passar é boa, porque a falha é curta e alguém percebe.
+ *
+ * Faltar `SUPABASE_SERVICE_ROLE_KEY` não é isso. É configuração ausente: permanente, silenciosa,
+ * e com o efeito exato que este arquivo existe para impedir — todo endpoint de IA vira um proxy
+ * de LLM ilimitado, e ninguém descobre até a fatura. Sem este aviso, os dois casos são
+ * indistinguíveis no log.
+ *
+ * Uma vez por processo, não por requisição: o objetivo é aparecer no início do log de um deploy
+ * mal configurado, não afogar o log de um que está certo.
+ */
+let jaAvisou = false;
+
+function avisarSemChave(): void {
+  if (jaAvisou) return;
+  jaAvisou = true;
+  console.error(
+    "[Pathly] SUPABASE_SERVICE_ROLE_KEY ausente: o limite de uso de IA está DESLIGADO. " +
+      "Todos os endpoints de IA vão aceitar chamadas sem teto até a variável ser configurada.",
+  );
+}
+
 export async function registrarUso(
   supabaseUrl: string,
   anonKey: string,
@@ -40,7 +65,10 @@ export async function registrarUso(
 ): Promise<ResultadoLimite> {
   try {
     const serviceRole = lerEnv("SUPABASE_SERVICE_ROLE_KEY");
-    if (!serviceRole) return { permitido: "indeterminado" };
+    if (!serviceRole) {
+      avisarSemChave();
+      return { permitido: "indeterminado" };
+    }
 
     // A função privilegiada não é mais executável por usuários autenticados. Primeiro obtemos a
     // identidade diretamente do Auth com o token já validado pela rota; depois o servidor chama
