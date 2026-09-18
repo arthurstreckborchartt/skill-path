@@ -36,3 +36,12 @@
 - [x] Alinhar páginas públicas, áreas principais e módulos técnicos.
 - [x] Validar modos claro/escuro em desktop e celular e verificar os tipos.
 
+## Pathly para criação de SaaS
+
+- [ ] Remover estudo, habilidades, XP e rotas educacionais da experiência visível.
+- [ ] Transformar cada projeto em uma conversa persistente com contexto próprio.
+- [ ] Fazer o início abrir na criação de um SaaS por conversa.
+- [ ] Reaproveitar Blueprint, Banco, API, Segurança, Arquitetura de IA e Roadmap como plano do SaaS.
+- [ ] Adicionar conexões de ferramentas por usuário e exigir aprovação antes de cada ação externa.
+- [ ] Validar autenticação, persistência, projetos, celular e desktop sem alterar Cloud, Stripe ou regras existentes.
+
