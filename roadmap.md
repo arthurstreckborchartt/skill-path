@@ -31,8 +31,8 @@
 
 ## Reestruturação visual monocromática
 
-- [ ] Substituir o sistema visual verde por tokens preto, branco e cinza.
-- [ ] Refazer componentes compartilhados, navegação e Copilot conforme as referências.
-- [ ] Alinhar páginas públicas, áreas principais e módulos técnicos.
-- [ ] Validar modos claro/escuro em desktop e celular, tipos, lint e build.
+- [x] Substituir o sistema visual verde por tokens preto, branco e cinza.
+- [x] Refazer componentes compartilhados, navegação e Copilot conforme as referências.
+- [x] Alinhar páginas públicas, áreas principais e módulos técnicos.
+- [x] Validar modos claro/escuro em desktop e celular e verificar os tipos.
 

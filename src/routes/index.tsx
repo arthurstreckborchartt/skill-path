@@ -110,7 +110,7 @@ function Hero() {
           Descubra o que estudar para{" "}
           <span className="text-foreground">chegar na renda que você quer.</span>
         </h1>
-        {/* text-foreground/85 e não text-muted-foreground: sob o halo do hero o secundário cai
+        {/* Mantém contraste editorial suficiente para a mensagem principal
             para 4,6:1 de contraste, no limite do AA. Aqui fica acima de 9:1. */}
         <p
           className={cn(fadeUp, "mx-auto mt-4 max-w-2xl text-base text-foreground/85")}
