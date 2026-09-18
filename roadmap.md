@@ -21,9 +21,11 @@
 
 ## Correções de confiabilidade
 
-- [ ] Restaurar permissões mínimas das tabelas centrais.
-- [ ] Corrigir persistência do checklist de segurança.
-- [ ] Preservar o dialeto ao regenerar o banco.
-- [ ] Manter o relatório de segurança após falha da IA.
-- [ ] Validar banco, tipos e fluxos corrigidos.
+- [x] Restaurar permissões mínimas das tabelas centrais.
+- [x] Corrigir persistência do checklist de segurança.
+- [x] Preservar o dialeto ao regenerar o banco.
+- [x] Manter o relatório de segurança após falha da IA.
+- [x] Reverter atualizações otimistas quando Banco, API ou Segurança não conseguem salvar.
+- [x] Preservar o onboarding local mais recente durante a hidratação da nuvem.
+- [x] Validar banco, tipos e fluxos corrigidos.
 
