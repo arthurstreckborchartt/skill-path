@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, LayoutPanelTop } from "lucide-react";
+import { ArrowLeft, LayoutPanelTop, ShieldCheck } from "lucide-react";
 import { ProjectChat } from "@/components/pathly/project-chat";
 import { Btn } from "@/components/pathly/ui";
 
@@ -10,7 +10,10 @@ export const Route = createFileRoute("/app/projeto/$id")({
       { title: "Projeto — Pathly" },
       { name: "description", content: "Planeje e coordene a criação do seu SaaS com o Pathly." },
       { property: "og:title", content: "Projeto — Pathly" },
-      { property: "og:description", content: "Conversa, decisões e execução do seu SaaS em um só lugar." },
+      {
+        property: "og:description",
+        content: "Conversa, decisões e execução do seu SaaS em um só lugar.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -23,12 +26,29 @@ function ProjectPage() {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between gap-3">
-        <Link to="/app/blueprints" className="tap inline-flex min-h-10 items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
+        <Link
+          to="/app/blueprints"
+          className="tap inline-flex min-h-10 items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+        >
           <ArrowLeft className="size-4" /> Projetos
         </Link>
-        <Link to="/app/blueprint/$id" params={{ id }}>
-          <Btn variant="outline" size="sm"><LayoutPanelTop className="size-4" /> Ver plano</Btn>
-        </Link>
+        {/*
+          A validação fica ao lado do plano, e não dentro dele: conferir enquanto se constrói é o
+          ponto. Escondida um nível abaixo, ela só seria aberta no fim — que é quando conserto já
+          custa caro.
+        */}
+        <div className="flex shrink-0 items-center gap-2">
+          <Link to="/app/validacao/$id" params={{ id }}>
+            <Btn variant="ghost" size="sm">
+              <ShieldCheck className="size-4" /> Validação
+            </Btn>
+          </Link>
+          <Link to="/app/blueprint/$id" params={{ id }}>
+            <Btn variant="outline" size="sm">
+              <LayoutPanelTop className="size-4" /> Ver plano
+            </Btn>
+          </Link>
+        </div>
       </div>
       <ProjectChat projetoId={id} />
     </div>

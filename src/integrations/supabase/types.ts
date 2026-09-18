@@ -809,6 +809,38 @@ export type Database = {
         }
         Relationships: []
       }
+      pathly_validacoes: {
+        Row: {
+          atualizado_em: string
+          confirmacoes: Json
+          criado_em: string
+          projeto_id: string
+          user_id: string
+        }
+        Insert: {
+          atualizado_em?: string
+          confirmacoes?: Json
+          criado_em?: string
+          projeto_id: string
+          user_id: string
+        }
+        Update: {
+          atualizado_em?: string
+          confirmacoes?: Json
+          criado_em?: string
+          projeto_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pathly_validacoes_projeto_id_fkey"
+            columns: ["projeto_id"]
+            isOneToOne: true
+            referencedRelation: "pathly_projetos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pathly_xp_events: {
         Row: {
           amount: number

@@ -162,20 +162,41 @@ export const CATALOGO: Verificacao[] = [
     comoValidar:
       "Rode o SQL gerado no seu banco e sonde: uma consulta simples responde, ou dá 'relation does not exist'?",
     aplicaSe: temModelo,
+    fonte: "sonda",
     verificar: (c) => {
       if (c.tabelasNoBanco.length === 0) {
         return { estado: "atencao", evidencia: "Ninguém sondou o banco ainda." };
       }
+
       const faltam = c.tabelasNoBanco.filter((t) => t.existeNoBanco === false);
-      return faltam.length === 0
-        ? {
-            estado: "passou",
-            evidencia: `As ${c.tabelasNoBanco.length} tabelas sondadas respondem no banco.`,
-          }
-        : {
-            estado: "atencao",
-            evidencia: `Ainda não existem: ${faltam.map((t) => t.nome).join(", ")}.`,
-          };
+      /**
+       * Indeterminada não entra em `faltam` — e também não pode entrar no silêncio.
+       *
+       * Sem esta linha, uma sonda que voltou inconclusiva em TODAS as tabelas (wifi fora, sessão
+       * expirada) daria `faltam.length === 0` e o relatório anunciaria "as 5 tabelas respondem no
+       * banco". A regra do projeto é que inconclusivo não é ausência; o inverso também vale, e é
+       * pior: inconclusivo virando presença é o app afirmando que conferiu o que não conferiu.
+       */
+      const indeterminadas = c.tabelasNoBanco.filter((t) => t.existeNoBanco === null);
+
+      if (faltam.length > 0) {
+        return {
+          estado: "atencao",
+          evidencia: `Ainda não existem: ${faltam.map((t) => t.nome).join(", ")}.`,
+        };
+      }
+
+      if (indeterminadas.length > 0) {
+        return {
+          estado: "atencao",
+          evidencia: `A sonda não conseguiu determinar ${indeterminadas.length} de ${c.tabelasNoBanco.length} tabelas (${indeterminadas.map((t) => t.nome).join(", ")}). Não dá para afirmar que existem nem que faltam — sonde de novo.`,
+        };
+      }
+
+      return {
+        estado: "passou",
+        evidencia: `As ${c.tabelasNoBanco.length} tabelas sondadas respondem no banco.`,
+      };
     },
   },
 

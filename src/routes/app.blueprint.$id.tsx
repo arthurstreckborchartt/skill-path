@@ -11,6 +11,7 @@ import {
   Pencil,
   RefreshCw,
   ShieldAlert,
+  ShieldCheck,
   Sparkles,
 } from "lucide-react";
 import { Btn, Chip, Panel, Reveal } from "@/components/pathly/ui";
@@ -270,6 +271,33 @@ function TelaBlueprint() {
           </Link>
         </Reveal>
       )}
+
+      {/*
+        A validação aparece junto dos outros módulos, e não só no fim: o valor dela é conferir
+        enquanto se constrói. Deixá-la para o final faria dela uma auditoria, que é quando já é
+        caro consertar.
+      */}
+      <Reveal>
+        <Link
+          to="/app/validacao/$id"
+          params={{ id }}
+          className="panel panel-hover tap group grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 p-5 sm:p-6"
+        >
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="size-4" />
+              <h2 className="font-display text-lg font-semibold">Validação</h2>
+            </div>
+            <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+              O que o app consegue conferir no seu plano — e o que só você pode confirmar. Com
+              bloqueios que precisam ser resolvidos antes de seguir.
+            </p>
+          </div>
+          <span className="shrink-0 rounded-md border border-border px-4 py-2.5 text-sm font-medium transition-transform group-hover:translate-x-0.5">
+            Abrir
+          </span>
+        </Link>
+      </Reveal>
 
       {/*
         A arquitetura de IA aparece para TODO projeto, inclusive os que não marcaram IA no

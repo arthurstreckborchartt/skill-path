@@ -50,6 +50,7 @@ import { Route as AppBlueprintIdRouteImport } from './routes/app.blueprint.$id'
 import { Route as AppProjetoIdRouteImport } from './routes/app.projeto.$id'
 import { Route as AppRoadmapIdRouteImport } from './routes/app.roadmap.$id'
 import { Route as AppSegurancaIdRouteImport } from './routes/app.seguranca.$id'
+import { Route as AppValidacaoIdRouteImport } from './routes/app.validacao.$id'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 
@@ -259,6 +260,11 @@ const AppSegurancaIdRoute = AppSegurancaIdRouteImport.update({
   path: '/seguranca/$id',
   getParentRoute: () => AppRoute,
 } as any)
+const AppValidacaoIdRoute = AppValidacaoIdRouteImport.update({
+  id: '/validacao/$id',
+  path: '/validacao/$id',
+  getParentRoute: () => AppRoute,
+} as any)
 const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
   id: '/lovable/email/auth/preview',
   path: '/lovable/email/auth/preview',
@@ -312,6 +318,7 @@ export interface FileRoutesByFullPath {
   '/app/projeto/$id': typeof AppProjetoIdRoute
   '/app/roadmap/$id': typeof AppRoadmapIdRoute
   '/app/seguranca/$id': typeof AppSegurancaIdRoute
+  '/app/validacao/$id': typeof AppValidacaoIdRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
 }
@@ -356,6 +363,7 @@ export interface FileRoutesByTo {
   '/app/projeto/$id': typeof AppProjetoIdRoute
   '/app/roadmap/$id': typeof AppRoadmapIdRoute
   '/app/seguranca/$id': typeof AppSegurancaIdRoute
+  '/app/validacao/$id': typeof AppValidacaoIdRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
 }
@@ -402,6 +410,7 @@ export interface FileRoutesById {
   '/app/projeto/$id': typeof AppProjetoIdRoute
   '/app/roadmap/$id': typeof AppRoadmapIdRoute
   '/app/seguranca/$id': typeof AppSegurancaIdRoute
+  '/app/validacao/$id': typeof AppValidacaoIdRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
 }
@@ -449,6 +458,7 @@ export interface FileRouteTypes {
     | '/app/projeto/$id'
     | '/app/roadmap/$id'
     | '/app/seguranca/$id'
+    | '/app/validacao/$id'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
   fileRoutesByTo: FileRoutesByTo
@@ -493,6 +503,7 @@ export interface FileRouteTypes {
     | '/app/projeto/$id'
     | '/app/roadmap/$id'
     | '/app/seguranca/$id'
+    | '/app/validacao/$id'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
   id:
@@ -538,6 +549,7 @@ export interface FileRouteTypes {
     | '/app/projeto/$id'
     | '/app/roadmap/$id'
     | '/app/seguranca/$id'
+    | '/app/validacao/$id'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
   fileRoutesById: FileRoutesById
@@ -858,6 +870,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSegurancaIdRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/validacao/$id': {
+      id: '/app/validacao/$id'
+      path: '/validacao/$id'
+      fullPath: '/app/validacao/$id'
+      preLoaderRoute: typeof AppValidacaoIdRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/lovable/email/auth/preview': {
       id: '/lovable/email/auth/preview'
       path: '/lovable/email/auth/preview'
@@ -895,6 +914,7 @@ interface AppRouteChildren {
   AppProjetoIdRoute: typeof AppProjetoIdRoute
   AppRoadmapIdRoute: typeof AppRoadmapIdRoute
   AppSegurancaIdRoute: typeof AppSegurancaIdRoute
+  AppValidacaoIdRoute: typeof AppValidacaoIdRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
@@ -917,6 +937,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppProjetoIdRoute: AppProjetoIdRoute,
   AppRoadmapIdRoute: AppRoadmapIdRoute,
   AppSegurancaIdRoute: AppSegurancaIdRoute,
+  AppValidacaoIdRoute: AppValidacaoIdRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)

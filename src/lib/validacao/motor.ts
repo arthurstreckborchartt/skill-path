@@ -31,7 +31,7 @@ function rodarUma(v: Verificacao, c: ContextoValidacao, confirmacoes: Confirmaco
       verificacao: v,
       estado: r.estado,
       // `sonda` quando a conclusão veio do banco real; `automatica` quando veio do plano.
-      fonte: v.id === "banco-existe-de-verdade" ? "sonda" : "automatica",
+      fonte: v.fonte ?? "automatica",
       evidencia: r.evidencia,
       // Verificação automática não aceita confirmação: não há o que a pessoa acrescente.
       aceitaConfirmacao: false,

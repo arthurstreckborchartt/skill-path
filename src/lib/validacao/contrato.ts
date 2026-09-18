@@ -100,6 +100,15 @@ export type Verificacao = {
    */
   verificar?: (c: ContextoValidacao) => { estado: Estado; evidencia: string };
   /**
+   * De onde a verificação tira a conclusão. Só faz sentido junto de `verificar`.
+   *
+   * O padrão é `automatica` — derivado do plano. `sonda` é para o que pergunta ao banco real, e
+   * pesa igual no progresso mas vale mais na leitura: é a única evidência que não depende do que
+   * a pessoa escreveu no plano. Fica declarado aqui, e não deduzido do `id`, porque o motor não
+   * deve conhecer nomes de verificações específicas.
+   */
+  fonte?: Extract<Fonte, "automatica" | "sonda">;
+  /**
    * `true` quando falhar impede concluir a etapa.
    *
    * Reservado para o que quebra o produto ou vaza dado. Marcar tudo como bloqueio é o mesmo que
