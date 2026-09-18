@@ -13,7 +13,7 @@ export function AuthLayout({
   children: ReactNode;
 }) {
   return (
-    <div className="relative grid min-h-screen lg:grid-cols-[0.9fr_1.1fr]">
+    <div className="relative grid min-h-screen bg-[var(--gradient-page)] lg:grid-cols-[0.9fr_1.1fr]">
       {/* Form side */}
       <div className="flex flex-col px-5 pt-[calc(2rem+env(safe-area-inset-top))] pb-[calc(2rem+env(safe-area-inset-bottom))] sm:px-10">
         <Link to="/" className="tap">
@@ -29,7 +29,7 @@ export function AuthLayout({
       </div>
 
       {/* Visual side */}
-      <aside className="relative hidden overflow-hidden border-l border-border bg-foreground text-background lg:block">
+       <aside className="relative hidden overflow-hidden border-l border-border bg-[var(--gradient-panel-strong)] text-foreground lg:block">
         <div className="relative flex h-full flex-col justify-center gap-0 p-14">
           {[
             { label: "R$ 2.600", note: "onde você está" },
@@ -40,18 +40,18 @@ export function AuthLayout({
           ].map((row, i) => (
             <div
               key={row.label}
-              className="animate-[fade-up_0.7s_cubic-bezier(0.16,1,0.3,1)_both] flex items-center justify-between border-b border-background/10 px-1 py-6"
+               className="animate-[fade-up_0.7s_cubic-bezier(0.16,1,0.3,1)_both] flex items-center justify-between border-b border-foreground/10 px-1 py-6"
               style={{ animationDelay: `${i * 110}ms` }}
             >
               <span
                 className={cn(
-                  "font-display text-xl font-semibold text-background",
-                   row.highlight && "underline decoration-background/40 underline-offset-8",
+                   "font-display text-xl font-semibold text-foreground",
+                    row.highlight && "underline decoration-foreground/40 underline-offset-8",
                 )}
               >
                 {row.label}
               </span>
-              <span className="text-xs text-background/50">{row.note}</span>
+               <span className="text-xs text-muted-foreground">{row.note}</span>
             </div>
           ))}
         </div>
@@ -91,7 +91,7 @@ export function AuthField({
         required={required}
         disabled={disabled}
         // text-base no celular: abaixo de 16px o Safari do iPhone dá zoom ao focar o campo.
-        className="h-12 w-full rounded-md border border-input bg-surface px-4 text-base outline-hidden transition-colors placeholder:text-muted-foreground focus:border-foreground/35 focus:ring-2 focus:ring-ring disabled:opacity-60 sm:text-sm"
+         className="h-12 w-full rounded-md border border-input bg-surface-2 px-4 text-base outline-hidden transition-colors placeholder:text-muted-foreground focus:border-foreground/35 focus:ring-2 focus:ring-ring disabled:opacity-60 sm:text-sm"
       />
     </label>
   );
