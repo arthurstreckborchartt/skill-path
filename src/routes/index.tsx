@@ -1,534 +1,110 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import {
-  ArrowRight,
-  BriefcaseBusiness,
-  Check,
-  Compass,
-  FolderKanban,
-  LineChart,
-  Sparkles,
-  Target,
-  Zap,
-} from "lucide-react";
-import {
-  AnimatedNumber,
-  Btn,
-  Chip,
-  Logo,
-  Panel,
-  ProgressBar,
-  Reveal,
-  SectionLabel,
-} from "@/components/pathly/ui";
-import { steps } from "@/lib/mock";
-import { cn } from "@/lib/utils";
+import { ArrowRight, Braces, Check, Database, Plug, ShieldCheck, Workflow } from "lucide-react";
+import { Btn, Chip, Logo, Panel, Reveal, SectionLabel } from "@/components/pathly/ui";
+import { PathlyMark } from "@/components/pathly/project-chat";
 
 export const Route = createFileRoute("/")({
   staticData: { sitemap: true },
-  head: () => ({
-    meta: [
-      { title: "Pathly — Aprenda o que realmente importa para ganhar mais" },
-      {
-        name: "description",
-        content:
-          "Conte onde você está e onde quer chegar. A Pathly monta sua sequência de habilidades e projetos de portfólio, com progresso etapa a etapa.",
-      },
-      { property: "og:title", content: "Pathly — sua rota até a renda que você quer" },
-      {
-        property: "og:description",
-        content:
-          "Pare de aprender coisas aleatórias. Descubra exatamente o que aprender para chegar na renda que você quer.",
-      },
-    ],
-  }),
+  head: () => ({ meta: [
+    { title: "Pathly — Da ideia ao SaaS" },
+    { name: "description", content: "Descreva o SaaS que quer criar. A Pathly organiza produto, arquitetura, segurança e execução." },
+    { property: "og:title", content: "Pathly — Da ideia ao SaaS" },
+    { property: "og:description", content: "Um workspace para planejar, decidir e coordenar a criação do seu SaaS." },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary_large_image" },
+  ] }),
   component: Landing,
 });
 
-const transformation = [
-  { label: "Habilidades", note: "o que aprender, na ordem certa" },
-  { label: "Projetos", note: "portfólio que prova o que você sabe" },
-  { label: "Freelas", note: "primeiras entregas pagas" },
-  { label: "Candidaturas", note: "currículo e portfólio prontos" },
+const stages = [
+  { title: "Produto", note: "problema, público e MVP" },
+  { title: "Arquitetura", note: "stack, dados, API e segurança" },
+  { title: "Execução", note: "roadmap, prompts e validação" },
+  { title: "Ferramentas", note: "conexões com aprovação" },
 ];
-
-function Nav() {
-  return (
-    <header className="sticky top-0 z-40 border-b border-border bg-background pt-[env(safe-area-inset-top)]">
-      <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-5 py-3.5 sm:px-8">
-        <Logo />
-        <nav className="hidden items-center gap-7 text-sm text-muted-foreground md:flex">
-          <a href="#como-funciona" className="transition-colors hover:text-foreground">
-            Como funciona
-          </a>
-          <a href="#rota" className="transition-colors hover:text-foreground">
-            Exemplo de rota
-          </a>
-          <a href="#beneficios" className="transition-colors hover:text-foreground">
-            Benefícios
-          </a>
-          <a href="#quem" className="transition-colors hover:text-foreground">
-            Para quem é
-          </a>
-        </nav>
-        <div className="flex items-center gap-2">
-          <Link to="/login" className="hidden sm:block">
-            <Btn variant="ghost" size="sm">
-              Entrar
-            </Btn>
-          </Link>
-          <Link to="/cadastro">
-            <Btn size="sm">Criar minha rota</Btn>
-          </Link>
-        </div>
-      </div>
-    </header>
-  );
-}
-
-/**
- * Primeira dobra. Usa animação de CSS (`fade-up`) em vez do <Reveal>, que só revela o conteúdo
- * depois que o JS hidrata e o IntersectionObserver dispara — no HTML do servidor o texto sai com
- * opacidade zero, e numa conexão ruim a dobra mais importante do site aparece em branco.
- */
-const fadeUp = "animate-[fade-up_0.6s_cubic-bezier(0.16,1,0.3,1)_both]";
-
-function Hero() {
-  return (
-    <section className="relative overflow-hidden border-b border-border px-5 pt-16 pb-16 sm:px-8 sm:pt-20">
-      <div className="mx-auto w-full max-w-4xl text-center">
-        <div className={fadeUp}>
-          <Chip tone="primary" className="mb-4">
-            <Sparkles className="size-3.5" /> Para quem quer migrar para tecnologia
-          </Chip>
-        </div>
-        <h1
-          className={cn(fadeUp, "font-display text-4xl leading-[1.05] font-semibold sm:text-5xl")}
-          style={{ animationDelay: "80ms" }}
-        >
-          Pare de aprender <span className="text-foreground/60">coisas aleatórias.</span>
-          <br />
-          Descubra o que estudar para{" "}
-          <span className="text-foreground">chegar na renda que você quer.</span>
-        </h1>
-        {/* Mantém contraste editorial suficiente para a mensagem principal
-            para 4,6:1 de contraste, no limite do AA. Aqui fica acima de 9:1. */}
-        <p
-          className={cn(fadeUp, "mx-auto mt-4 max-w-2xl text-base text-foreground/85")}
-          style={{ animationDelay: "160ms" }}
-        >
-          Se você quer entrar ou crescer em tecnologia mas não sabe por onde começar: responda onde
-          está e onde quer chegar, e receba a sequência de habilidades e os projetos de portfólio
-          que levam até lá — na ordem, com prazo calculado no seu tempo livre.
-        </p>
-        <div className={cn(fadeUp, "mt-6")} style={{ animationDelay: "240ms" }}>
-          <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-            <Link to="/onboarding" className="w-full sm:w-auto">
-              <Btn size="lg" className="w-full sm:w-auto">
-                Criar minha rota <ArrowRight className="size-4" />
-              </Btn>
-            </Link>
-            <a href="#rota" className="w-full sm:w-auto">
-              <Btn variant="outline" size="lg" className="w-full sm:w-auto">
-                Ver exemplo de rota
-              </Btn>
-            </a>
-          </div>
-          <p className="mt-3.5 text-xs text-foreground/70">
-            Cerca de 2 minutos · sem cartão de crédito · dá para ajustar depois
-          </p>
-          <p className="mt-1.5 text-xs text-muted-foreground">
-            Sem promessa de emprego ou renda garantida — clareza sobre o próximo passo.
-          </p>
-        </div>
-      </div>
-
-      {/* Prévia compacta da rota — precisa caber na primeira dobra, junto do CTA. */}
-      <div
-        className={cn(fadeUp, "mx-auto mt-6 w-full max-w-3xl")}
-        style={{ animationDelay: "320ms" }}
-      >
-        <div className="panel p-3 sm:p-4">
-          <div className="grid gap-2 sm:grid-cols-4">
-            {transformation.map((item, i) => (
-              <div
-                key={item.label}
-                className="rounded-md border border-border bg-surface px-3 py-2.5 text-left sm:text-center"
-              >
-                <span className="text-[10px] font-semibold tracking-[0.14em] text-primary">
-                  {String(i + 1).padStart(2, "0")}
-                </span>
-                <p className="font-display text-base font-semibold">{item.label}</p>
-                <p className="mt-0.5 text-xs text-foreground/70">{item.note}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-const howItWorks = [
-  {
-    icon: Compass,
-    title: "Você conta o cenário",
-    body: "Renda atual, meta, profissão, habilidades, tempo livre e prazo. Nada de formulário infinito.",
-  },
-  {
-    icon: Sparkles,
-    title: "A Pathly monta a rota",
-    body: "Uma sequência de etapas ligadas ao seu objetivo financeiro, com prazo, dificuldade e impacto.",
-  },
-  {
-    icon: LineChart,
-    title: "Você avança e mede",
-    body: "Checklists, XP e projetos entregues em cada etapa concluída — dá para ver o quanto já andou.",
-  },
-];
-
-const benefits = [
-  {
-    icon: Target,
-    title: "Foco no que paga",
-    body: "Cada habilidade da rota existe porque aumenta sua chance de renda — não porque está na moda.",
-  },
-  {
-    icon: FolderKanban,
-    title: "Projetos que provam",
-    body: "Você termina com portfólio, não com certificados guardados na gaveta.",
-  },
-  {
-    icon: BriefcaseBusiness,
-    title: "Ordem que faz sentido",
-    body: "Cada etapa só abre depois da anterior, com o pré-requisito explícito. Você nunca fica sem saber o próximo passo.",
-  },
-  {
-    icon: Zap,
-    title: "Progresso viciante",
-    body: "Sequências, XP e níveis com estética adulta e minimalista. Nada infantil.",
-  },
-];
-
-/**
- * No celular a landing longa dá lugar a uma entrada de app: logo, promessa em uma linha e as
- * duas ações. A landing continua inteira no desktop — as duas convivem por CSS, sem redirecionar
- * nem detectar aparelho no servidor, o que evitaria cache errado e piscada na hidratação.
- */
-function MobileHome() {
-  return (
-    <div className="flex min-h-svh flex-col px-6 pt-[calc(2.5rem+env(safe-area-inset-top))] pb-[calc(2rem+env(safe-area-inset-bottom))] lg:hidden">
-      <Logo />
-
-      <div className="flex flex-1 flex-col justify-center py-8">
-        <Chip tone="primary" className="mb-4 self-start">
-          <Sparkles className="size-3.5" /> Para quem quer migrar para tecnologia
-        </Chip>
-        <h1 className="font-display text-4xl leading-[1.08] font-semibold text-balance">
-          Descubra o que estudar para{" "}
-          <span className="text-foreground">chegar na renda que você quer.</span>
-        </h1>
-        <p className="mt-4 text-base text-foreground/85">
-          Responda onde está e onde quer chegar. A Pathly monta a sequência de habilidades e os
-          projetos que levam até lá, no seu tempo livre.
-        </p>
-
-        <ul className="mt-8 space-y-3">
-          {transformation.map((item) => (
-            <li key={item.label} className="flex items-start gap-3">
-              <span className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-primary/15 text-primary">
-                <Check className="size-3" strokeWidth={3} />
-              </span>
-              <span className="min-w-0">
-                <span className="block text-sm font-medium">{item.label}</span>
-                <span className="block text-xs text-muted-foreground">{item.note}</span>
-              </span>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      <div className="space-y-3">
-        <Link to="/onboarding" className="block">
-          <Btn size="lg" className="w-full">
-            Criar minha rota <ArrowRight className="size-4" />
-          </Btn>
-        </Link>
-        <Link to="/login" className="block">
-          <Btn variant="outline" size="lg" className="w-full">
-            Já tenho conta
-          </Btn>
-        </Link>
-        <p className="pt-1 text-center text-xs text-foreground/70">
-          Cerca de 2 minutos · sem cartão · dá para ajustar depois
-        </p>
-        <p className="text-center text-xs text-muted-foreground">
-          Sem promessa de emprego ou renda garantida.
-        </p>
-      </div>
-    </div>
-  );
-}
 
 function Landing() {
   return (
-    <>
-      <MobileHome />
-      <DesktopLanding />
-    </>
-  );
-}
-
-function DesktopLanding() {
-  const sample = steps.slice(0, 5);
-
-  return (
-    <div className="hidden min-h-screen lg:block">
-      <Nav />
-      <Hero />
-
-      {/* Como funciona */}
-      <section id="como-funciona" className="px-5 py-20 sm:px-8">
-        <div className="mx-auto w-full max-w-6xl">
-          <Reveal>
-            <SectionLabel>Como funciona</SectionLabel>
-            <h2 className="mt-3 max-w-2xl font-display text-3xl font-semibold sm:text-4xl">
-              Três passos entre onde você está e onde quer chegar
-            </h2>
-          </Reveal>
-          <div className="mt-10 grid gap-4 md:grid-cols-3">
-            {howItWorks.map((item, i) => (
-              <Reveal key={item.title} delay={i * 90}>
-                <Panel hover className="h-full">
-                  <span className="grid size-10 place-items-center rounded-md border border-border bg-surface-2 text-foreground">
-                    <item.icon className="size-5" />
-                  </span>
-                  <h3 className="mt-5 text-lg font-semibold">{item.title}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{item.body}</p>
-                </Panel>
-              </Reveal>
-            ))}
+    <div className="min-h-screen">
+      <header className="sticky top-0 z-40 border-b border-border bg-background/90 pt-[env(safe-area-inset-top)]">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-3.5 sm:px-8">
+          <Logo />
+          <nav className="hidden items-center gap-7 text-sm text-muted-foreground md:flex">
+            <a href="#como-funciona" className="hover:text-foreground">Como funciona</a>
+            <a href="#workspace" className="hover:text-foreground">Workspace</a>
+            <a href="#controle" className="hover:text-foreground">Controle</a>
+          </nav>
+          <div className="flex items-center gap-2">
+            <Link to="/login" className="hidden sm:block"><Btn variant="ghost" size="sm">Entrar</Btn></Link>
+            <Link to="/cadastro"><Btn size="sm">Começar</Btn></Link>
           </div>
         </div>
-      </section>
+      </header>
 
-      {/* Exemplo de rota */}
-      <section id="rota" className="px-5 py-20 sm:px-8">
-        <div className="mx-auto w-full max-w-6xl">
-          <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
-            <Reveal>
-              <SectionLabel>Exemplo de rota</SectionLabel>
-              <h2 className="mt-3 font-display text-3xl font-semibold sm:text-4xl">
-                De R$ 2.600 a R$ 8.000 em 10 meses
-              </h2>
-              <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-                Este é um exemplo real de rota gerada para alguém em trabalho administrativo com 12
-                horas livres por semana. A sua será diferente — ela nasce do seu cenário.
-              </p>
-              <div className="mt-8 grid grid-cols-2 gap-3">
-                {[
-                  { k: "Etapas", v: 9 },
-                  { k: "Semanas", v: 41 },
-                  { k: "Projetos", v: 5 },
-                  { k: "XP total", v: 4840 },
-                ].map((m) => (
-                  <div key={m.k} className="rounded-md border border-border bg-surface p-4">
-                    <div className="font-display text-2xl font-semibold">
-                      <AnimatedNumber value={m.v} />
-                    </div>
-                    <div className="text-xs text-muted-foreground">{m.k}</div>
+      <main>
+        <section className="border-b border-border px-5 pt-16 pb-14 sm:px-8 sm:pt-24">
+          <div className="mx-auto max-w-5xl text-center">
+            <Chip tone="primary"><Workflow className="size-3.5" /> Seu SaaS, do pedido à execução</Chip>
+            <h1 className="mx-auto mt-5 max-w-4xl font-display text-4xl leading-[1.04] font-semibold text-balance sm:text-6xl">
+              Diga o que quer construir. <span className="text-foreground/55">O Pathly organiza o resto.</span>
+            </h1>
+            <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-foreground/75 sm:text-lg">
+              Transforme uma ideia em produto, arquitetura e plano de execução. Conecte suas ferramentas e aprove cada ação antes que ela aconteça.
+            </p>
+            <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+              <Link to="/cadastro"><Btn size="lg" className="w-full sm:w-auto">Criar meu SaaS <ArrowRight className="size-4" /></Btn></Link>
+              <Link to="/login"><Btn variant="outline" size="lg" className="w-full sm:w-auto">Abrir meus projetos</Btn></Link>
+            </div>
+
+            <div className="chat-composer-frame mx-auto mt-10 max-w-3xl rounded-lg p-px text-left">
+              <div className="rounded-[calc(var(--radius-lg)-1px)] bg-surface p-4 shadow-[var(--shadow-lift)] sm:p-5">
+                <div className="flex gap-3">
+                  <span className="grid size-9 shrink-0 place-items-center rounded-md bg-foreground text-background"><PathlyMark className="size-4" /></span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm text-muted-foreground">Quero construir um ERP simples para uma pequena indústria gerenciar estoque, produção e pedidos.</p>
+                    <div className="mt-5 flex items-center justify-between border-t border-border pt-3"><span className="text-xs text-muted-foreground">Produto · tecnologia · execução</span><span className="grid size-8 place-items-center rounded-md bg-foreground text-background"><ArrowRight className="size-4" /></span></div>
                   </div>
-                ))}
+                </div>
               </div>
-            </Reveal>
-
-            <div className="space-y-3">
-              {sample.map((step, i) => (
-                <Reveal key={step.id} delay={i * 70}>
-                  <Panel tilt className="p-4 sm:p-5">
-                    <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-4">
-                      <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-surface-2 font-display text-sm font-semibold text-primary">
-                        {step.order}
-                      </span>
-                      <div className="min-w-0">
-                        <p className="truncate font-medium">{step.title}</p>
-                        <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                          {step.eta} · {step.difficulty} · +{step.xp} XP
-                        </p>
-                      </div>
-                      <span className="shrink-0 text-right">
-                        <span className="block text-[10px] text-muted-foreground">
-                          meta parcial
-                        </span>
-                        <span className="font-display text-sm text-primary">
-                          R$ {step.incomeAfter.toLocaleString("pt-BR")}
-                        </span>
-                      </span>
-                    </div>
-                  </Panel>
-                </Reveal>
-              ))}
-              <Reveal delay={400}>
-                <p className="px-2 pt-2 text-sm text-muted-foreground">
-                  + 4 etapas até a especialização final
-                </p>
-                <p className="px-2 pt-2 text-xs text-muted-foreground">
-                  Exemplo de rota para quem quer migrar para back-end. A meta parcial divide a
-                  distância entre a renda que você informa hoje e a meta que você mesmo define — é
-                  um marco do seu objetivo, não previsão de salário.
-                </p>
-              </Reveal>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Benefícios */}
-      <section id="beneficios" className="px-5 py-20 sm:px-8">
-        <div className="mx-auto w-full max-w-6xl">
-          <Reveal>
-            <SectionLabel>Benefícios</SectionLabel>
-            <h2 className="mt-3 max-w-2xl font-display text-3xl font-semibold sm:text-4xl">
-              Aprender sem direção é caro. A Pathly resolve a direção.
-            </h2>
-          </Reveal>
-          <div className="mt-10 grid gap-4 sm:grid-cols-2">
-            {benefits.map((b, i) => (
-              <Reveal key={b.title} delay={i * 80}>
-                <Panel hover className="flex h-full gap-4">
-                  <span className="grid size-10 shrink-0 place-items-center rounded-md border border-border bg-surface-2 text-foreground">
-                    <b.icon className="size-5" />
-                  </span>
-                  <div className="min-w-0">
-                    <h3 className="font-semibold">{b.title}</h3>
-                    <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{b.body}</p>
-                  </div>
-                </Panel>
-              </Reveal>
-            ))}
+        <section id="como-funciona" className="px-5 py-20 sm:px-8">
+          <div className="mx-auto max-w-6xl">
+            <Reveal><SectionLabel>Como funciona</SectionLabel><h2 className="mt-3 max-w-2xl font-display text-3xl font-semibold sm:text-4xl">Uma conversa vira um plano que dá para executar</h2></Reveal>
+            <div className="mt-10 grid gap-4 md:grid-cols-3">
+              {[
+                { icon: PathlyMark, title: "Você descreve", body: "Explique a ideia com suas palavras. O Pathly pergunta apenas o que faltar para tomar boas decisões." },
+                { icon: Braces, title: "O plano toma forma", body: "Produto, dados, API, autenticação, segurança, operação e roadmap ficam conectados no mesmo projeto." },
+                { icon: Plug, title: "As ferramentas executam", body: "Quando uma conexão estiver disponível, o Pathly prepara a ação e só envia depois da sua aprovação." },
+              ].map((item, index) => <Reveal key={item.title} delay={index * 80}><Panel className="h-full"><span className="grid size-10 place-items-center rounded-md border border-border bg-surface-2"><item.icon className="size-5" /></span><h3 className="mt-5 text-lg font-semibold">{item.title}</h3><p className="mt-2 text-sm leading-relaxed text-muted-foreground">{item.body}</p></Panel></Reveal>)}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Progresso + IA */}
-      <section className="px-5 py-20 sm:px-8">
-        <div className="mx-auto grid w-full max-w-6xl gap-4 lg:grid-cols-2">
-          <Reveal>
-            <Panel className="h-full">
-              <SectionLabel>Progresso</SectionLabel>
-              <h3 className="mt-3 font-display text-2xl font-semibold">
-                Você vê o quanto já andou
-              </h3>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Cada tarefa marcada atualiza o progresso da etapa, as horas estudadas e o XP.
-              </p>
-              <div className="mt-7 space-y-4">
-                {[
-                  { k: "Habilidades da rota", v: 38 },
-                  { k: "Projetos no portfólio", v: 45 },
-                  { k: "Etapas concluídas", v: 62 },
-                ].map((row, i) => (
-                  <div key={row.k}>
-                    <div className="mb-2 flex justify-between text-xs">
-                      <span className="text-muted-foreground">{row.k}</span>
-                      <span className="font-medium">{row.v}%</span>
-                    </div>
-                    <ProgressBar value={row.v} delay={300 + i * 160} />
-                  </div>
-                ))}
-              </div>
-            </Panel>
-          </Reveal>
-          <Reveal delay={120}>
-            <Panel className="h-full">
-              <SectionLabel>Como a rota é montada</SectionLabel>
-              <h3 className="mt-3 font-display text-2xl font-semibold">
-                Regras claras, não caixa-preta
-              </h3>
-              <p className="mt-2 text-sm text-muted-foreground">
-                A rota sai da área que você escolhe, da sua experiência e das horas que você tem por
-                semana. Mesma resposta, mesma rota — sem sorteio e sem IA opinando.
-              </p>
-              <ul className="mt-7 space-y-3 text-sm">
-                {[
-                  "A área escolhida define o conteúdo das etapas",
-                  "Quem já tem experiência começa adiante, sem repetir fundamento",
-                  "Suas horas por semana definem o ritmo e o prazo estimado",
-                ].map((t) => (
-                  <li key={t} className="flex gap-3">
-                    <span className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-primary/15 text-primary">
-                      <Check className="size-3" />
-                    </span>
-                    <span className="text-muted-foreground">{t}</span>
-                  </li>
-                ))}
-              </ul>
-            </Panel>
-          </Reveal>
-        </div>
-      </section>
-
-      {/* Quem pode usar */}
-      <section id="quem" className="px-5 py-20 sm:px-8">
-        <div className="mx-auto w-full max-w-6xl">
-          <Reveal>
-            <SectionLabel>Para quem é</SectionLabel>
-            <h2 className="mt-3 font-display text-3xl font-semibold sm:text-4xl">
-              Se você quer ganhar mais, existe uma rota
-            </h2>
-          </Reveal>
-          <div className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {[
-              "Quem está começando do zero",
-              "Quem quer migrar de área",
-              "Quem trava na hora de escolher o que estudar",
-              "Quem quer sair do estágio para efetivação",
-              "Quem quer complementar renda com freelas",
-              "Quem quer chegar a nível pleno ou remoto",
-            ].map((t, i) => (
-              <Reveal key={t} delay={i * 60}>
-                <div className="flex items-center gap-3 rounded-md border border-border bg-surface px-4 py-4 text-sm transition-colors hover:bg-surface-2">
-                  <span className="size-1.5 shrink-0 rounded-full bg-primary" />
-                  <span className="text-muted-foreground">{t}</span>
-                </div>
-              </Reveal>
-            ))}
+        <section id="workspace" className="border-y border-border px-5 py-20 sm:px-8">
+          <div className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
+            <Reveal><SectionLabel>Workspace do projeto</SectionLabel><h2 className="mt-3 font-display text-3xl font-semibold sm:text-4xl">Tudo o que define seu SaaS fica no mesmo contexto</h2><p className="mt-4 text-sm leading-relaxed text-muted-foreground">A conversa não começa do zero a cada mensagem. O Pathly usa o plano, as decisões aprovadas e o estado de cada parte do projeto.</p></Reveal>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {stages.map((stage, index) => <Reveal key={stage.title} delay={index * 60}><div className="rounded-md border border-border bg-surface p-5"><span className="text-xs font-semibold text-muted-foreground">0{index + 1}</span><h3 className="mt-3 font-display text-xl font-semibold">{stage.title}</h3><p className="mt-1 text-sm text-muted-foreground">{stage.note}</p></div></Reveal>)}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* CTA final */}
-      <section className="px-5 pt-10 pb-24 sm:px-8">
-        <Reveal>
-          <div className="relative mx-auto w-full max-w-4xl overflow-hidden rounded-lg border border-border bg-surface p-10 text-center sm:p-16">
-            <h2 className="mx-auto max-w-2xl font-display text-3xl font-semibold sm:text-5xl">
-              Sua rota até <span className="text-foreground">R$ 8.000</span> começa com 10 perguntas
-            </h2>
-            <p className="mx-auto mt-4 max-w-xl text-sm text-muted-foreground sm:text-base">
-              Sem promessa mágica. Só clareza sobre a próxima coisa certa a fazer.
-            </p>
-            <Link to="/onboarding" className="mt-8 inline-block">
-              <Btn size="lg">
-                Criar minha rota <ArrowRight className="size-4" />
-              </Btn>
-            </Link>
+        <section id="controle" className="px-5 py-20 sm:px-8">
+          <div className="mx-auto grid max-w-6xl gap-4 lg:grid-cols-2">
+            <Reveal><Panel className="h-full border-foreground/20 bg-foreground text-background"><ShieldCheck className="size-6" /><h2 className="mt-5 font-display text-2xl font-semibold">Você aprova antes de executar</h2><p className="mt-3 text-sm leading-relaxed text-background/70">Mudanças no plano e ações em serviços externos mostram destino, impacto e conteúdo antes da confirmação.</p></Panel></Reveal>
+            <Reveal delay={100}><Panel className="h-full"><Database className="size-6" /><h2 className="mt-5 font-display text-2xl font-semibold">Histórico por projeto</h2><p className="mt-3 text-sm leading-relaxed text-muted-foreground">Conversas, decisões e artefatos ficam salvos na sua conta e separados entre os seus SaaS.</p><ul className="mt-5 space-y-2 text-sm text-muted-foreground">{["Contexto próprio por projeto", "Decisões rastreáveis", "Nenhuma execução silenciosa"].map((item) => <li key={item} className="flex gap-2"><Check className="mt-0.5 size-4 shrink-0 text-foreground" />{item}</li>)}</ul></Panel></Reveal>
           </div>
-        </Reveal>
-      </section>
+        </section>
 
-      <footer className="border-t border-border px-5 py-10 sm:px-8">
-        <div className="mx-auto flex w-full max-w-6xl flex-col items-center justify-between gap-4 text-xs text-muted-foreground sm:flex-row">
-          <Logo />
-          <span>Pathly · Aprenda o que realmente importa para ganhar mais.</span>
-          <div className="flex items-center gap-4">
-            <Link to="/termos" className="transition-colors hover:text-foreground">
-              Termos de Uso
-            </Link>
-            <Link to="/privacidade" className="transition-colors hover:text-foreground">
-              Política de Privacidade
-            </Link>
-          </div>
-        </div>
-      </footer>
+        <section className="px-5 pb-24 sm:px-8">
+          <Reveal><div className="mx-auto max-w-4xl rounded-lg border border-border bg-surface p-10 text-center sm:p-16"><h2 className="font-display text-3xl font-semibold sm:text-5xl">Comece pela ideia. O plano vem depois.</h2><p className="mx-auto mt-4 max-w-xl text-sm text-muted-foreground sm:text-base">Crie um espaço para o seu SaaS e avance com contexto, controle e decisões claras.</p><Link to="/cadastro" className="mt-8 inline-block"><Btn size="lg">Criar meu primeiro projeto <ArrowRight className="size-4" /></Btn></Link></div></Reveal>
+        </section>
+      </main>
+
+      <footer className="border-t border-border px-5 py-10 sm:px-8"><div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 text-xs text-muted-foreground sm:flex-row"><Logo /><span>Pathly · Da ideia ao SaaS.</span><div className="flex gap-4"><Link to="/termos">Termos de Uso</Link><Link to="/privacidade">Política de Privacidade</Link></div></div></footer>
     </div>
   );
 }

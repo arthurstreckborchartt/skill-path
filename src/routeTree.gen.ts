@@ -35,6 +35,7 @@ import { Route as AppIndexRouteImport } from './routes/app.index'
 import { Route as AppBlueprintsRouteImport } from './routes/app.blueprints'
 import { Route as AppConfiguracoesRouteImport } from './routes/app.configuracoes'
 import { Route as AppHabilidadesRouteImport } from './routes/app.habilidades'
+import { Route as AppIntegracoesRouteImport } from './routes/app.integracoes'
 import { Route as AppOportunidadesRouteImport } from './routes/app.oportunidades'
 import { Route as AppPerfilRouteImport } from './routes/app.perfil'
 import { Route as AppPlanosRouteImport } from './routes/app.planos'
@@ -46,6 +47,7 @@ import { Route as AppAprenderActivityIdRouteImport } from './routes/app.aprender
 import { Route as AppArquiteturaIaIdRouteImport } from './routes/app.arquitetura-ia.$id'
 import { Route as AppBancoIdRouteImport } from './routes/app.banco.$id'
 import { Route as AppBlueprintIdRouteImport } from './routes/app.blueprint.$id'
+import { Route as AppProjetoIdRouteImport } from './routes/app.projeto.$id'
 import { Route as AppRoadmapIdRouteImport } from './routes/app.roadmap.$id'
 import { Route as AppSegurancaIdRouteImport } from './routes/app.seguranca.$id'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
@@ -182,6 +184,11 @@ const AppHabilidadesRoute = AppHabilidadesRouteImport.update({
   path: '/habilidades',
   getParentRoute: () => AppRoute,
 } as any)
+const AppIntegracoesRoute = AppIntegracoesRouteImport.update({
+  id: '/integracoes',
+  path: '/integracoes',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppOportunidadesRoute = AppOportunidadesRouteImport.update({
   id: '/oportunidades',
   path: '/oportunidades',
@@ -237,6 +244,11 @@ const AppBlueprintIdRoute = AppBlueprintIdRouteImport.update({
   path: '/blueprint/$id',
   getParentRoute: () => AppRoute,
 } as any)
+const AppProjetoIdRoute = AppProjetoIdRouteImport.update({
+  id: '/projeto/$id',
+  path: '/projeto/$id',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppRoadmapIdRoute = AppRoadmapIdRouteImport.update({
   id: '/roadmap/$id',
   path: '/roadmap/$id',
@@ -284,6 +296,7 @@ export interface FileRoutesByFullPath {
   '/app/blueprints': typeof AppBlueprintsRoute
   '/app/configuracoes': typeof AppConfiguracoesRoute
   '/app/habilidades': typeof AppHabilidadesRoute
+  '/app/integracoes': typeof AppIntegracoesRoute
   '/app/oportunidades': typeof AppOportunidadesRoute
   '/app/perfil': typeof AppPerfilRoute
   '/app/planos': typeof AppPlanosRoute
@@ -296,6 +309,7 @@ export interface FileRoutesByFullPath {
   '/app/arquitetura-ia/$id': typeof AppArquiteturaIaIdRoute
   '/app/banco/$id': typeof AppBancoIdRoute
   '/app/blueprint/$id': typeof AppBlueprintIdRoute
+  '/app/projeto/$id': typeof AppProjetoIdRoute
   '/app/roadmap/$id': typeof AppRoadmapIdRoute
   '/app/seguranca/$id': typeof AppSegurancaIdRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -326,6 +340,7 @@ export interface FileRoutesByTo {
   '/app/blueprints': typeof AppBlueprintsRoute
   '/app/configuracoes': typeof AppConfiguracoesRoute
   '/app/habilidades': typeof AppHabilidadesRoute
+  '/app/integracoes': typeof AppIntegracoesRoute
   '/app/oportunidades': typeof AppOportunidadesRoute
   '/app/perfil': typeof AppPerfilRoute
   '/app/planos': typeof AppPlanosRoute
@@ -338,6 +353,7 @@ export interface FileRoutesByTo {
   '/app/arquitetura-ia/$id': typeof AppArquiteturaIaIdRoute
   '/app/banco/$id': typeof AppBancoIdRoute
   '/app/blueprint/$id': typeof AppBlueprintIdRoute
+  '/app/projeto/$id': typeof AppProjetoIdRoute
   '/app/roadmap/$id': typeof AppRoadmapIdRoute
   '/app/seguranca/$id': typeof AppSegurancaIdRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -370,6 +386,7 @@ export interface FileRoutesById {
   '/app/blueprints': typeof AppBlueprintsRoute
   '/app/configuracoes': typeof AppConfiguracoesRoute
   '/app/habilidades': typeof AppHabilidadesRoute
+  '/app/integracoes': typeof AppIntegracoesRoute
   '/app/oportunidades': typeof AppOportunidadesRoute
   '/app/perfil': typeof AppPerfilRoute
   '/app/planos': typeof AppPlanosRoute
@@ -382,6 +399,7 @@ export interface FileRoutesById {
   '/app/arquitetura-ia/$id': typeof AppArquiteturaIaIdRoute
   '/app/banco/$id': typeof AppBancoIdRoute
   '/app/blueprint/$id': typeof AppBlueprintIdRoute
+  '/app/projeto/$id': typeof AppProjetoIdRoute
   '/app/roadmap/$id': typeof AppRoadmapIdRoute
   '/app/seguranca/$id': typeof AppSegurancaIdRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -415,6 +433,7 @@ export interface FileRouteTypes {
     | '/app/blueprints'
     | '/app/configuracoes'
     | '/app/habilidades'
+    | '/app/integracoes'
     | '/app/oportunidades'
     | '/app/perfil'
     | '/app/planos'
@@ -427,6 +446,7 @@ export interface FileRouteTypes {
     | '/app/arquitetura-ia/$id'
     | '/app/banco/$id'
     | '/app/blueprint/$id'
+    | '/app/projeto/$id'
     | '/app/roadmap/$id'
     | '/app/seguranca/$id'
     | '/lovable/email/auth/preview'
@@ -457,6 +477,7 @@ export interface FileRouteTypes {
     | '/app/blueprints'
     | '/app/configuracoes'
     | '/app/habilidades'
+    | '/app/integracoes'
     | '/app/oportunidades'
     | '/app/perfil'
     | '/app/planos'
@@ -469,6 +490,7 @@ export interface FileRouteTypes {
     | '/app/arquitetura-ia/$id'
     | '/app/banco/$id'
     | '/app/blueprint/$id'
+    | '/app/projeto/$id'
     | '/app/roadmap/$id'
     | '/app/seguranca/$id'
     | '/lovable/email/auth/preview'
@@ -500,6 +522,7 @@ export interface FileRouteTypes {
     | '/app/blueprints'
     | '/app/configuracoes'
     | '/app/habilidades'
+    | '/app/integracoes'
     | '/app/oportunidades'
     | '/app/perfil'
     | '/app/planos'
@@ -512,6 +535,7 @@ export interface FileRouteTypes {
     | '/app/arquitetura-ia/$id'
     | '/app/banco/$id'
     | '/app/blueprint/$id'
+    | '/app/projeto/$id'
     | '/app/roadmap/$id'
     | '/app/seguranca/$id'
     | '/lovable/email/auth/preview'
@@ -729,6 +753,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppHabilidadesRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/integracoes': {
+      id: '/app/integracoes'
+      path: '/integracoes'
+      fullPath: '/app/integracoes'
+      preLoaderRoute: typeof AppIntegracoesRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/oportunidades': {
       id: '/app/oportunidades'
       path: '/oportunidades'
@@ -806,6 +837,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppBlueprintIdRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/projeto/$id': {
+      id: '/app/projeto/$id'
+      path: '/projeto/$id'
+      fullPath: '/app/projeto/$id'
+      preLoaderRoute: typeof AppProjetoIdRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/roadmap/$id': {
       id: '/app/roadmap/$id'
       path: '/roadmap/$id'
@@ -841,6 +879,7 @@ interface AppRouteChildren {
   AppBlueprintsRoute: typeof AppBlueprintsRoute
   AppConfiguracoesRoute: typeof AppConfiguracoesRoute
   AppHabilidadesRoute: typeof AppHabilidadesRoute
+  AppIntegracoesRoute: typeof AppIntegracoesRoute
   AppOportunidadesRoute: typeof AppOportunidadesRoute
   AppPerfilRoute: typeof AppPerfilRoute
   AppPlanosRoute: typeof AppPlanosRoute
@@ -853,6 +892,7 @@ interface AppRouteChildren {
   AppArquiteturaIaIdRoute: typeof AppArquiteturaIaIdRoute
   AppBancoIdRoute: typeof AppBancoIdRoute
   AppBlueprintIdRoute: typeof AppBlueprintIdRoute
+  AppProjetoIdRoute: typeof AppProjetoIdRoute
   AppRoadmapIdRoute: typeof AppRoadmapIdRoute
   AppSegurancaIdRoute: typeof AppSegurancaIdRoute
 }
@@ -861,6 +901,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppBlueprintsRoute: AppBlueprintsRoute,
   AppConfiguracoesRoute: AppConfiguracoesRoute,
   AppHabilidadesRoute: AppHabilidadesRoute,
+  AppIntegracoesRoute: AppIntegracoesRoute,
   AppOportunidadesRoute: AppOportunidadesRoute,
   AppPerfilRoute: AppPerfilRoute,
   AppPlanosRoute: AppPlanosRoute,
@@ -873,6 +914,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppArquiteturaIaIdRoute: AppArquiteturaIaIdRoute,
   AppBancoIdRoute: AppBancoIdRoute,
   AppBlueprintIdRoute: AppBlueprintIdRoute,
+  AppProjetoIdRoute: AppProjetoIdRoute,
   AppRoadmapIdRoute: AppRoadmapIdRoute,
   AppSegurancaIdRoute: AppSegurancaIdRoute,
 }

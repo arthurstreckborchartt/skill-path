@@ -8,7 +8,6 @@ import {
   Monitor,
   Moon,
   Palette,
-  RefreshCcw,
   Shield,
   Sliders,
   Sun,
@@ -32,10 +31,10 @@ export const Route = createFileRoute("/app/configuracoes")({
       { title: "Configurações — Pathly" },
       {
         name: "description",
-        content: "Refaça sua rota, envie feedback e gerencie sua conta na Pathly.",
+        content: "Gerencie aparência, privacidade e sua conta na Pathly.",
       },
       { property: "og:title", content: "Configurações — Pathly" },
-      { property: "og:description", content: "Recalcule a rota quando o seu cenário mudar." },
+      { property: "og:description", content: "Ajuste sua experiência e gerencie sua conta." },
     ],
   }),
   component: SettingsPage,
@@ -125,29 +124,11 @@ function SettingsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Configurações" subtitle="Ajuste a rota ao seu momento" />
+      <PageHeader title="Configurações" subtitle="Aparência, privacidade e conta" />
 
       <Reveal>
         <Section icon={Palette} title="Aparência">
           <ThemePicker />
-        </Section>
-      </Reveal>
-
-      <Reveal delay={60}>
-        <Section icon={Sliders} title="Rota e ritmo">
-          <p className="py-4 text-sm text-muted-foreground">
-            O conteúdo e o ritmo da sua rota vêm das respostas do onboarding — principalmente a área
-            escolhida, sua experiência e as horas que você tem por semana. Para mudar qualquer uma
-            delas, refaça o onboarding.
-          </p>
-          <div className="pb-4">
-            <Btn variant="outline" size="sm" onClick={() => navigate({ to: "/onboarding" })}>
-              <RefreshCcw className="size-4" /> Refazer onboarding
-            </Btn>
-            <p className="mt-2 text-xs text-muted-foreground">
-              Gera uma rota nova. O progresso da rota atual não é transferido.
-            </p>
-          </div>
         </Section>
       </Reveal>
 

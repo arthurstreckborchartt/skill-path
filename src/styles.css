@@ -83,6 +83,11 @@
   }
 }
 
+@keyframes composer-border {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
 /*
  * Tema claro é o padrão do :root; o escuro vive em .dark. Quem decide qual classe entra no <html>
  * é o script inline do __root.tsx, que roda antes da primeira pintura lendo a preferência salva e,
@@ -236,6 +241,12 @@
     background-attachment: fixed;
     color: var(--color-foreground);
     font-family: var(--font-sans);
+  }
+
+  .chat-composer-frame {
+    background: linear-gradient(110deg, var(--foreground), color-mix(in oklab, var(--foreground) 28%, transparent), var(--foreground));
+    background-size: 220% 220%;
+    animation: composer-border 7s ease-in-out infinite;
   }
 
   h1,

@@ -11,9 +11,9 @@ export const Route = createFileRoute("/login")({
   head: () => ({
     meta: [
       { title: "Entrar na Pathly" },
-      { name: "description", content: "Acesse sua rota personalizada de habilidades na Pathly." },
+      { name: "description", content: "Acesse seus projetos e continue construindo com a Pathly." },
       { property: "og:title", content: "Entrar na Pathly" },
-      { property: "og:description", content: "Continue de onde parou na sua rota." },
+      { property: "og:description", content: "Continue de onde parou nos seus projetos." },
     ],
   }),
   component: LoginPage,
@@ -171,7 +171,7 @@ function LoginPage() {
       <p className="text-center text-sm text-muted-foreground">
         Ainda não tem conta?{" "}
         <Link to="/cadastro" className="font-medium text-primary hover:underline">
-          Criar minha rota
+          Criar minha conta
         </Link>
       </p>
     </AuthLayout>

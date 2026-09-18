@@ -28,7 +28,7 @@ export const Route = createFileRoute("/app/planos")({
       { property: "og:title", content: "Planos — Pathly" },
       {
         property: "og:description",
-        content: "Compare os planos da Pathly e libere sua rota profissional completa.",
+        content: "Compare os planos da Pathly para planejar e coordenar seus projetos.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -102,11 +102,11 @@ function CheckoutPathly({
               id="checkout-title"
               className="max-w-xl font-display text-4xl font-semibold leading-tight sm:text-5xl"
             >
-              Sua rota inteira, sem bloqueios.
+              Seus projetos, sem bloqueios.
             </h1>
             <p className="mt-4 max-w-lg text-base leading-relaxed text-muted-foreground sm:text-lg">
-              Acesse cada etapa, projeto e habilidade que liga sua situação atual à sua próxima meta
-              profissional.
+              Planeje produtos completos, mantenha decisões no contexto e coordene a execução dos
+              seus SaaS.
             </p>
 
             <div className="mt-8 grid gap-3 sm:grid-cols-2">
