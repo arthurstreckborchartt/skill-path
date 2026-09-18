@@ -18,7 +18,7 @@ import { cn } from "@/lib/utils";
 // "Projetos" aponta para /app/blueprints, a tela nova. A antiga (/app/projetos) segue
 // existindo e funcionando, só saiu do menu — mesmo tratamento dado a oportunidades. Ela
 // lista projetos de portfólio derivados das etapas da rota, e será removida junto com o
-// resto do domínio de estudo, não antes.
+// restante do workspace, não antes.
 const primaryNav = [
   { to: "/app", label: "Criar", icon: Home, exact: true },
   { to: "/app/blueprints", label: "Projetos", icon: FolderKanban },

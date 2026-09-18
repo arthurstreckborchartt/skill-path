@@ -171,7 +171,7 @@ function LoginPage() {
       <p className="text-center text-sm text-muted-foreground">
         Ainda não tem conta?{" "}
         <Link to="/cadastro" className="font-medium text-primary hover:underline">
-          Criar minha rota
+          Criar minha conta
         </Link>
       </p>
     </AuthLayout>
