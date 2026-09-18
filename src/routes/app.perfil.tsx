@@ -103,7 +103,7 @@ function ProfilePage() {
       <Reveal>
         <Panel>
           <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-            <span className="grid size-16 shrink-0 place-items-center rounded-3xl bg-signal font-display text-xl font-semibold text-primary-foreground shadow-[var(--shadow-glow)]">
+            <span className="grid size-14 shrink-0 place-items-center rounded-md bg-primary font-display text-lg font-semibold text-primary-foreground">
               {initials ?? <User className="size-6" />}
             </span>
             <div className="min-w-0 flex-1">

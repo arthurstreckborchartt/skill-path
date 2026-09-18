@@ -55,7 +55,7 @@ export function CartaoAtual({
   return (
     <button
       onClick={aoAbrir}
-      className="tap group relative w-full overflow-hidden rounded-xl border border-primary/30 bg-gradient-to-br from-primary/10 via-surface to-surface p-5 text-left transition-colors hover:border-primary/50 sm:p-6"
+      className="tap group relative w-full overflow-hidden rounded-md border border-foreground/20 bg-surface p-5 text-left transition-colors hover:bg-surface-2 sm:p-6"
     >
       <div className="flex flex-wrap items-center gap-2">
         <Chip tone="primary">Você está aqui</Chip>

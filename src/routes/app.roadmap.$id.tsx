@@ -188,7 +188,7 @@ function TelaRoadmap() {
         Assim a pessoa não perde o lugar na trilha ao fechar — e "onde estou" continua verdadeiro.
       */}
       {etapaAberta && (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-background/80 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-foreground/20">
           <div className="mx-auto min-h-full w-full max-w-3xl px-4 py-6 sm:px-6 sm:py-10">
             <Panel>
               <header className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 border-b border-border pb-5">

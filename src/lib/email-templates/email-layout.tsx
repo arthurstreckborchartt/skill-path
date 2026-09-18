@@ -154,7 +154,7 @@ const button = {
 const divider = { borderColor: "#dedede", margin: "30px 0 20px" };
 
 const footerStyle = {
-  color: "#718096",
+  color: "#707070",
   fontSize: "12px",
   lineHeight: "19px",
   margin: "0 0 12px",
