@@ -15,8 +15,11 @@ import { acharAcao, acharProvedor } from "./provedores";
  * ## O que este hook nunca vê
  *
  * O token. A consulta pede colunas nomeadas e `token_cifrado` não está entre elas — e mesmo que
- * estivesse, o `REVOKE SELECT` na coluna recusaria. As duas defesas existem de propósito: a
- * primeira é intenção, a segunda é garantia.
+ * estivesse, o privilégio recusaria: `authenticated` recebe `select` **por coluna**, sem o token
+ * na lista. As duas defesas existem de propósito: a primeira é intenção, a segunda é garantia.
+ *
+ * Consequência que morde quem não souber: `select("*")` nesta tabela devolve `42501`, porque o
+ * `*` expande para a coluna negada. Aqui as colunas são nomeadas por necessidade, não por estilo.
  *
  * ## Por que aprovar não executa
  *
@@ -84,6 +87,7 @@ export function useIntegracoes(projetoId?: string) {
         .map((linha) =>
           validarAcao({
             ...linha,
+            acaoId: linha.acao_id,
             projetoId: linha.projeto_id,
             criadoEm: linha.criado_em,
             decididoEm: linha.decidido_em,
@@ -176,6 +180,64 @@ export function useIntegracoes(projetoId?: string) {
     [carregar, ocupado],
   );
 
+  /**
+   * Manda executar uma ação já aprovada.
+   *
+   * O navegador só entrega o `id`. Quem lê destino e payload é o servidor, da linha gravada no
+   * momento da aprovação — se o corpo desta chamada pudesse carregar o que enviar, aprovar algo
+   * inofensivo e mandar outra coisa seria trivial.
+   *
+   * `207` é caso próprio: a ação saiu e o resultado não foi gravado. Dizer "falhou" ali seria
+   * mentira, e uma mentira que convida a pessoa a tentar de novo — justamente o que o portão
+   * existe para impedir.
+   */
+  const executar = useCallback(
+    async (acao: AcaoExterna) => {
+      if (acao.estado !== "aprovada" || ocupado) return;
+      setOcupado(acao.id);
+
+      try {
+        const { data } = await supabase.auth.getSession();
+        const token = data.session?.access_token;
+        if (!token) {
+          setEstado((a) =>
+            a.estado === "pronto" ? { ...a, erro: "Sua sessão expirou. Entre de novo." } : a,
+          );
+          return;
+        }
+
+        const resposta = await fetch("/api/integracoes/executar", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ acaoId: acao.id }),
+        });
+
+        const corpo = (await resposta.json().catch(() => ({}))) as {
+          erro?: string;
+          aviso?: string;
+          motivo?: string;
+        };
+
+        if (resposta.status === 207) {
+          setEstado((a) => (a.estado === "pronto" ? { ...a, erro: corpo.aviso ?? "" } : a));
+        } else if (!resposta.ok) {
+          setEstado((a) =>
+            a.estado === "pronto"
+              ? { ...a, erro: corpo.erro ?? "Não consegui executar a ação." }
+              : a,
+          );
+        }
+
+        // Recarrega nos dois casos: mesmo falhando, o estado da linha mudou para `falhou` e a
+        // pessoa precisa ver isso na tela, e não continuar olhando "aprovada".
+        await carregar();
+      } finally {
+        setOcupado(null);
+      }
+    },
+    [carregar, ocupado],
+  );
+
   const desconectar = useCallback(
     async (provedor: Provedor) => {
       const { error } = await supabase.from("pathly_conexoes").delete().eq("provedor", provedor);
@@ -188,5 +250,5 @@ export function useIntegracoes(projetoId?: string) {
     [carregar],
   );
 
-  return { estado, ocupado, pedir, decidir, desconectar, recarregar: carregar };
+  return { estado, ocupado, pedir, decidir, executar, desconectar, recarregar: carregar };
 }

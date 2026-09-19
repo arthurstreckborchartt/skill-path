@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Check, Lock, Plug, ShieldCheck, TriangleAlert, X } from "lucide-react";
+import { Check, Lock, Play, Plug, ShieldCheck, TriangleAlert, X } from "lucide-react";
 import { Btn, Chip, PageHeader, Panel, Reveal } from "@/components/pathly/ui";
 import { cn } from "@/lib/utils";
 import { useIntegracoes } from "@/lib/integracoes/usar-integracoes";
@@ -47,7 +47,7 @@ export const Route = createFileRoute("/app/integracoes")({
  * é o que o olho acha primeiro.
  */
 function IntegrationsPage() {
-  const { estado, ocupado, pedir, decidir, desconectar } = useIntegracoes();
+  const { estado, ocupado, pedir, decidir, executar, desconectar } = useIntegracoes();
 
   if (estado.estado === "carregando") {
     return <p className="text-sm text-muted-foreground">Carregando suas integrações…</p>;
@@ -63,7 +63,13 @@ function IntegrationsPage() {
 
   const conectados = new Set(estado.conexoes.map((c) => c.provedor));
   const pendentes = estado.acoes.filter((a) => a.estado === "pendente");
-  const historico = estado.acoes.filter((a) => a.estado !== "pendente");
+  /*
+   * `aprovada` tem seção própria, entre as pendentes e o histórico, porque é o único estado em que
+   * a pessoa ainda precisa fazer algo. Misturá-lo ao histórico esconderia trabalho por fazer numa
+   * lista chamada "o que já foi decidido" — decidido está, feito não.
+   */
+  const aprovadas = estado.acoes.filter((a) => a.estado === "aprovada");
+  const historico = estado.acoes.filter((a) => a.estado !== "pendente" && a.estado !== "aprovada");
 
   return (
     <div className="space-y-8">
@@ -130,6 +136,26 @@ function IntegrationsPage() {
               ocupado={ocupado === acao.id}
               onAprovar={() => void decidir(acao, "aprovada")}
               onRecusar={() => void decidir(acao, "recusada")}
+            />
+          ))}
+        </section>
+      )}
+
+      {/* ---------- Aprovadas, esperando execução ---------- */}
+      {aprovadas.length > 0 && (
+        <section className="space-y-3">
+          <h2 className="font-display text-xl font-semibold">
+            Aprovadas, esperando execução {aprovadas.length > 1 && `(${aprovadas.length})`}
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Aprovar e executar são dois gestos de propósito. Uma aprovação vale uma execução só.
+          </p>
+          {aprovadas.map((acao) => (
+            <CartaoAcao
+              key={acao.id}
+              acao={acao}
+              ocupado={ocupado === acao.id}
+              onExecutar={() => void executar(acao)}
             />
           ))}
         </section>
@@ -238,11 +264,13 @@ function CartaoAcao({
   ocupado,
   onAprovar,
   onRecusar,
+  onExecutar,
 }: {
   acao: AcaoExterna;
   ocupado: boolean;
   onAprovar?: () => void;
   onRecusar?: () => void;
+  onExecutar?: () => void;
 }) {
   const pendente = acao.estado === "pendente";
   const invertido = acao.impacto === "destrutiva";
@@ -280,10 +308,31 @@ function CartaoAcao({
         {acao.destino}
       </p>
 
+      {/*
+        A cor do texto secundário segue a do cartão, e não o token do tema: num cartão invertido,
+        `text-muted-foreground` é cinza médio sobre fundo claro. Mesma armadilha do painel
+        invertido, e ela reaparece em todo lugar onde o fundo deixa de ser o do tema.
+      */}
       {acao.resultado && (
-        <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{acao.resultado}</p>
+        <p
+          className={cn(
+            "mt-2 text-xs leading-relaxed",
+            invertido ? "text-background/70" : "text-muted-foreground",
+          )}
+        >
+          {acao.resultado}
+        </p>
       )}
       {acao.erro && <p className="mt-2 text-xs leading-relaxed font-medium">{acao.erro}</p>}
+
+      {onExecutar && acao.estado === "aprovada" && (
+        <div className="mt-4">
+          <Btn size="sm" disabled={ocupado} onClick={onExecutar}>
+            {ocupado ? <Spinner className="size-4" /> : <Play className="size-4" />}
+            Executar agora
+          </Btn>
+        </div>
+      )}
 
       {pendente && onAprovar && onRecusar && (
         <div className="mt-4 flex gap-2">

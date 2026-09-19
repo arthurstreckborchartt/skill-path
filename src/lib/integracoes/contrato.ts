@@ -78,6 +78,14 @@ export const ROTULO_IMPACTO: Record<Impacto, string> = {
 export type AcaoExterna = {
   id: string;
   provedor: Provedor;
+  /**
+   * Qual ação do catálogo é esta (`demo-criar`, `github-repos`). É por ele que o executor decide
+   * o que fazer — sem ele, a linha descreve uma intenção que ninguém sabe cumprir.
+   *
+   * Note que o executor usa **este** campo e o `payload`, nunca o `destino`: `destino` é texto
+   * para a pessoa ler antes de aprovar, e texto não é endereço de chamada.
+   */
+  acaoId: string;
   /** `null` para ação que não pertence a um projeto. */
   projetoId: string | null;
   /** Uma frase, em português, do que vai acontecer. É o que a pessoa lê antes de aprovar. */
@@ -134,10 +142,14 @@ export function validarAcao(valor: unknown): AcaoExterna | null {
   if (!ESTADOS_ACAO.includes(a.estado as EstadoAcao)) return null;
   if (typeof a.resumo !== "string" || !a.resumo) return null;
   if (typeof a.destino !== "string" || !a.destino) return null;
+  // Obrigatório: uma linha sem `acaoId` não é executável, e deixá-la passar adiaria o erro até o
+  // executor — onde ele apareceria como "ação desconhecida" em vez de "linha malformada".
+  if (typeof a.acaoId !== "string" || !a.acaoId) return null;
 
   return {
     id: a.id,
     provedor: a.provedor as Provedor,
+    acaoId: a.acaoId,
     projetoId: typeof a.projetoId === "string" ? a.projetoId : null,
     resumo: a.resumo,
     destino: a.destino,

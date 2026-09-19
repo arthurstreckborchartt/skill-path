@@ -42,6 +42,7 @@ import { Route as AppPlanosRouteImport } from './routes/app.planos'
 import { Route as AppProjetosRouteImport } from './routes/app.projetos'
 import { Route as AppRevisarRouteImport } from './routes/app.revisar'
 import { Route as AppRotaRouteImport } from './routes/app.rota'
+import { Route as ApiIntegracoesExecutarRouteImport } from './routes/api.integracoes.executar'
 import { Route as AppApiIdRouteImport } from './routes/app.api.$id'
 import { Route as AppAprenderActivityIdRouteImport } from './routes/app.aprender.$activityId'
 import { Route as AppArquiteturaIaIdRouteImport } from './routes/app.arquitetura-ia.$id'
@@ -220,6 +221,11 @@ const AppRotaRoute = AppRotaRouteImport.update({
   path: '/rota',
   getParentRoute: () => AppRoute,
 } as any)
+const ApiIntegracoesExecutarRoute = ApiIntegracoesExecutarRouteImport.update({
+  id: '/api/integracoes/executar',
+  path: '/api/integracoes/executar',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppApiIdRoute = AppApiIdRouteImport.update({
   id: '/api/$id',
   path: '/api/$id',
@@ -310,6 +316,7 @@ export interface FileRoutesByFullPath {
   '/app/revisar': typeof AppRevisarRoute
   '/app/rota': typeof AppRotaRoute
   '/app/': typeof AppIndexRoute
+  '/api/integracoes/executar': typeof ApiIntegracoesExecutarRoute
   '/app/api/$id': typeof AppApiIdRoute
   '/app/aprender/$activityId': typeof AppAprenderActivityIdRoute
   '/app/arquitetura-ia/$id': typeof AppArquiteturaIaIdRoute
@@ -355,6 +362,7 @@ export interface FileRoutesByTo {
   '/app/revisar': typeof AppRevisarRoute
   '/app/rota': typeof AppRotaRoute
   '/app': typeof AppIndexRoute
+  '/api/integracoes/executar': typeof ApiIntegracoesExecutarRoute
   '/app/api/$id': typeof AppApiIdRoute
   '/app/aprender/$activityId': typeof AppAprenderActivityIdRoute
   '/app/arquitetura-ia/$id': typeof AppArquiteturaIaIdRoute
@@ -402,6 +410,7 @@ export interface FileRoutesById {
   '/app/revisar': typeof AppRevisarRoute
   '/app/rota': typeof AppRotaRoute
   '/app/': typeof AppIndexRoute
+  '/api/integracoes/executar': typeof ApiIntegracoesExecutarRoute
   '/app/api/$id': typeof AppApiIdRoute
   '/app/aprender/$activityId': typeof AppAprenderActivityIdRoute
   '/app/arquitetura-ia/$id': typeof AppArquiteturaIaIdRoute
@@ -450,6 +459,7 @@ export interface FileRouteTypes {
     | '/app/revisar'
     | '/app/rota'
     | '/app/'
+    | '/api/integracoes/executar'
     | '/app/api/$id'
     | '/app/aprender/$activityId'
     | '/app/arquitetura-ia/$id'
@@ -495,6 +505,7 @@ export interface FileRouteTypes {
     | '/app/revisar'
     | '/app/rota'
     | '/app'
+    | '/api/integracoes/executar'
     | '/app/api/$id'
     | '/app/aprender/$activityId'
     | '/app/arquitetura-ia/$id'
@@ -541,6 +552,7 @@ export interface FileRouteTypes {
     | '/app/revisar'
     | '/app/rota'
     | '/app/'
+    | '/api/integracoes/executar'
     | '/app/api/$id'
     | '/app/aprender/$activityId'
     | '/app/arquitetura-ia/$id'
@@ -577,6 +589,7 @@ export interface RootRouteChildren {
   ApiRotaRoute: typeof ApiRotaRoute
   ApiSegurancaRoute: typeof ApiSegurancaRoute
   ApiStripeWebhookRoute: typeof ApiStripeWebhookRoute
+  ApiIntegracoesExecutarRoute: typeof ApiIntegracoesExecutarRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
 }
@@ -814,6 +827,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppRotaRouteImport
       parentRoute: typeof AppRoute
     }
+    '/api/integracoes/executar': {
+      id: '/api/integracoes/executar'
+      path: '/api/integracoes/executar'
+      fullPath: '/api/integracoes/executar'
+      preLoaderRoute: typeof ApiIntegracoesExecutarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/app/api/$id': {
       id: '/app/api/$id'
       path: '/api/$id'
@@ -966,6 +986,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiRotaRoute: ApiRotaRoute,
   ApiSegurancaRoute: ApiSegurancaRoute,
   ApiStripeWebhookRoute: ApiStripeWebhookRoute,
+  ApiIntegracoesExecutarRoute: ApiIntegracoesExecutarRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
 }

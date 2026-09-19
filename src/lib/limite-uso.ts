@@ -325,4 +325,14 @@ export const LIMITES = {
    * tokens, contra os milhares dos geradores de blueprint.
    */
   copilot: { limite: 30, janelaMinutos: 60 },
+  /**
+   * O único teto aqui que não é sobre dinheiro.
+   *
+   * Executar ação externa não custa chamada de IA; custa reputação no outro lado. Sem teto, um
+   * laço no Pathly viraria um laço na conta de GitHub da pessoa — e quem seria bloqueado por abuso
+   * é ela, não nós.
+   *
+   * 30 por hora é muito para quem aprova uma por uma, que é o desenho, e pouco para um laço.
+   */
+  integracoes: { limite: 30, janelaMinutos: 60 },
 } as const;

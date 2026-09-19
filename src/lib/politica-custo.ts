@@ -91,6 +91,31 @@ export const POLITICAS: Record<string, PoliticaCusto> = {
   licao: { classe: "medium", exigeContador: true, modoDeFalha: "local_cap", tetoEmergencia: 5 },
   pratica: { classe: "medium", exigeContador: true, modoDeFalha: "local_cap", tetoEmergencia: 5 },
   rota: { classe: "medium", exigeContador: true, modoDeFalha: "local_cap", tetoEmergencia: 2 },
+
+  /**
+   * O único endpoint aqui cujo risco não é a nossa fatura.
+   *
+   * Executar ação externa não chama provedor pago: custo financeiro nosso, zero. O que está em
+   * jogo é a conta da pessoa no outro lado — cota gastada, e no limite um bloqueio por abuso que
+   * recai sobre ela, não sobre nós.
+   *
+   * Por isso não é `open`, apesar do custo zero. A aprovação humana antes de cada execução é a
+   * defesa principal, mas ela protege contra o Pathly agir sozinho — não contra um script com o
+   * token da pessoa, que criaria, aprovaria e executaria em laço pelos mesmos caminhos.
+   *
+   * E não é `closed`, apesar do efeito externo, porque `closed` aqui significa produto fora do ar
+   * em qualquer ambiente sem `SUPABASE_SERVICE_ROLE_KEY` — inclusive desenvolvimento. O que se
+   * ganharia é pequeno: sem contador, o teto por isolate ainda limita a explosão, e cada execução
+   * continua exigindo uma linha `aprovada` que vale uma vez só.
+   *
+   * Teto baixo, 3: quem aprova uma por uma nunca encosta nele numa janela degradada.
+   */
+  integracoes: {
+    classe: "medium",
+    exigeContador: true,
+    modoDeFalha: "local_cap",
+    tetoEmergencia: 3,
+  },
 };
 
 /**
