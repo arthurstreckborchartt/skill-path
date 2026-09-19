@@ -9,6 +9,7 @@ import {
 } from "@/components/ai-elements/prompt-input";
 import { PathlyMark } from "@/components/pathly/project-chat";
 import { Btn, Chip, Panel, Reveal } from "@/components/pathly/ui";
+import { useDigitando } from "@/components/pathly/usar-digitando";
 import { criarProjeto, useProjetos } from "@/lib/blueprint/usar-projetos";
 import { RESPOSTAS_VAZIAS } from "@/lib/blueprint/respostas";
 
@@ -43,6 +44,7 @@ function CreateWorkspace() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const { ref: moldura, aoDigitar } = useDigitando();
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -82,7 +84,11 @@ function CreateWorkspace() {
           execução.
         </p>
 
-        <div className="chat-composer-frame mt-7 rounded-lg p-px text-left">
+        <div
+          ref={moldura}
+          className="chat-composer-frame mt-7 p-px text-left shadow-[var(--shadow-lift)]"
+          data-processing={busy ? "true" : undefined}
+        >
           <PromptInput
             onSubmit={({ text }) => {
               if (text.trim().length >= 15) {
@@ -90,12 +96,14 @@ function CreateWorkspace() {
                 setStep("details");
               }
             }}
-            className="border-0 bg-surface shadow-[var(--shadow-lift)]"
           >
             <PromptInputTextarea
               ref={inputRef}
               value={idea}
-              onChange={(event) => setIdea(event.target.value)}
+              onChange={(event) => {
+                setIdea(event.target.value);
+                aoDigitar();
+              }}
               placeholder="Ex.: Quero construir um ERP simples para pequenas indústrias…"
               className="min-h-28 text-base"
             />

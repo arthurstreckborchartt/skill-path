@@ -83,9 +83,26 @@
   }
 }
 
-@keyframes composer-border {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
+/*
+ * O ângulo do `conic-gradient` da moldura do compositor.
+ *
+ * Precisa de `@property` porque o navegador só interpola uma propriedade personalizada se souber
+ * o tipo dela. Sem esta declaração, `--composer-angle` seria um texto qualquer e a animação daria
+ * saltos de 0deg para 360deg em vez de girar.
+ *
+ * `inherits: false` de propósito: cada elemento que gira tem o próprio ângulo, e é isso que deixa
+ * o brilho acelerar no estado de processamento sem arrastar o anel junto.
+ */
+@property --composer-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes composer-spin {
+  to {
+    --composer-angle: 360deg;
+  }
 }
 
 /*
@@ -147,6 +164,19 @@
   --shadow-soft: 0 1px 2px oklch(0 0 0 / 0.035);
   --shadow-lift: 0 4px 12px oklch(0 0 0 / 0.07);
   --shadow-glow: none;
+
+  /*
+   * A única cor do sistema, e ela mora num lugar só: a moldura do compositor de chat.
+   *
+   * Croma entre 0.09 e 0.13 — cerca de um terço do máximo destes matizes. É o que separa
+   * "tecnologia integrada à interface" de fita de LED: as cores se distinguem entre si e
+   * continuam perdendo para o preto e branco em qualquer olhada rápida.
+   */
+  --composer-1: oklch(0.62 0.13 295); /* roxo */
+  --composer-2: oklch(0.64 0.12 255); /* azul */
+  --composer-3: oklch(0.7 0.1 210); /* ciano */
+  --composer-4: oklch(0.7 0.09 165); /* verde */
+  --composer-5: oklch(0.66 0.12 350); /* rosa */
 }
 
 .dark {
@@ -200,6 +230,13 @@
   --shadow-soft: 0 1px 2px oklch(0 0 0 / 0.32);
   --shadow-lift: 0 4px 14px oklch(0 0 0 / 0.42);
   --shadow-glow: none;
+
+  /* Mesmos matizes, mais claros: sobre o fundo escuro do app um croma igual apagaria. */
+  --composer-1: oklch(0.7 0.13 295);
+  --composer-2: oklch(0.72 0.12 255);
+  --composer-3: oklch(0.78 0.1 210);
+  --composer-4: oklch(0.78 0.09 165);
+  --composer-5: oklch(0.74 0.12 350);
 }
 
 @layer base {
@@ -243,12 +280,6 @@
     font-family: var(--font-sans);
   }
 
-  .chat-composer-frame {
-    background: linear-gradient(110deg, var(--foreground), color-mix(in oklab, var(--foreground) 28%, transparent), var(--foreground));
-    background-size: 220% 220%;
-    animation: composer-border 7s ease-in-out infinite;
-  }
-
   h1,
   h2,
   h3,
@@ -259,6 +290,202 @@
 
   ::selection {
     background: color-mix(in oklab, var(--foreground) 22%, transparent);
+  }
+}
+
+/*
+ * A moldura do compositor de chat.
+ *
+ * ## Por que não existe `border`, nem sombra, nem brilho externo
+ *
+ * O anel é o próprio fundo do elemento. O `p-px` da marcação deixa 1px dele aparecendo em volta do
+ * campo, que tem fundo opaco por cima. Tudo o que pinta cor vive em pseudo-elementos com
+ * `inset: 0` e `border-radius: inherit`, ou seja, dentro do mesmo retângulo arredondado do pai.
+ *
+ * Uma versão anterior tinha um `::before` com `inset: -3px` e `blur(9px)` fazendo halo por fora.
+ * Foi removido: o desfoque escapava do `border-radius` e sujava as quinas com manchas claras. Não
+ * existe mais nada aqui que pinte fora do contorno — nem `filter`, nem `box-shadow`, nem `inset`
+ * negativo. Se voltar a aparecer mancha, é porque alguém reintroduziu um dos três.
+ *
+ * ## O que anima
+ *
+ * Só `--composer-angle` (um ângulo registrado por `@property`, que repinta uma faixa de 1px) e
+ * `opacity`. Nada de `width`, `filter` ou `box-shadow` animados: o custo fica em composição, e
+ * some por inteiro quando a pessoa pede menos movimento.
+ *
+ * ## Por que a luz é um arco, e não um anel inteiro
+ *
+ * Um `conic-gradient` com as cinco cores ao redor de todo o contorno lê como arco-íris. Aqui o
+ * gradiente é quase todo transparente e carrega **um único arco** de luz, que dá a volta. O que se
+ * vê é uma luz percorrendo a borda — o resto do contorno continua sendo o cinza de sempre.
+ */
+.chat-composer-frame {
+  --composer-radius: 1.375rem;
+  /* Intensidade do arco que viaja. 0 = a borda é só o cinza do sistema. */
+  --composer-luz: 0;
+
+  /*
+   * `isolation` é o que faz os pseudo-elementos com `z-index` negativo funcionarem: sem contexto
+   * de empilhamento próprio, eles atravessariam a moldura e parariam atrás do fundo da página.
+   */
+  position: relative;
+  isolation: isolate;
+  border-radius: var(--composer-radius);
+  /* Em repouso a moldura é exatamente a borda que o resto do app usa. */
+  background: var(--border);
+  transition: background 0.4s ease;
+}
+
+/*
+ * O arco de luz.
+ *
+ * `in oklab` para a passagem por `transparent` não escurecer no meio: em sRGB o navegador
+ * interpola até preto transparente e sobra uma faixa acinzentada nas pontas do arco.
+ */
+.chat-composer-frame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: conic-gradient(
+    in oklab from var(--composer-angle),
+    transparent 0deg,
+    transparent 186deg,
+    var(--composer-1) 232deg,
+    var(--composer-2) 262deg,
+    var(--composer-3) 292deg,
+    var(--composer-4) 318deg,
+    transparent 356deg,
+    transparent 360deg
+  );
+  opacity: var(--composer-luz);
+  /*
+   * Assimetrica de proposito: 0.2s para acender, 0.7s para apagar.
+   *
+   * A luz e resposta ao teclado, entao precisa chegar junto com a tecla — com os 0.55s simetricos
+   * de antes, uma palavra curta terminava antes de a luz aparecer. Na saida o inverso: sumir
+   * depressa entregaria o cronometro por tras do efeito.
+   */
+  transition: opacity 0.7s ease;
+  animation: composer-spin 3.2s linear infinite;
+  pointer-events: none;
+}
+
+.chat-composer-frame[data-typing="true"]::after,
+.chat-composer-frame[data-processing="true"]::after,
+.chat-composer-frame[data-processing="true"]::before {
+  transition-duration: 0.2s;
+}
+
+/*
+ * O segundo arco, só no processamento.
+ *
+ * Ele existe para o efeito ganhar ritmo sem que o primeiro mude de velocidade. Trocar
+ * `animation-duration` faz o ângulo saltar — o navegador remapeia o tempo decorrido — e num anel
+ * nítido o salto aparece. Como este arco entra vindo de `opacity: 0`, a descontinuidade acontece
+ * enquanto ele ainda está invisível.
+ */
+.chat-composer-frame::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: conic-gradient(
+    in oklab from var(--composer-angle),
+    transparent 0deg,
+    transparent 250deg,
+    var(--composer-5) 300deg,
+    var(--composer-1) 330deg,
+    transparent 358deg,
+    transparent 360deg
+  );
+  opacity: 0;
+  transition: opacity 0.55s ease;
+  animation: composer-spin 1.7s linear infinite;
+  pointer-events: none;
+}
+
+/*
+ * Foco sem digitação: nenhuma cor ainda, só a borda subindo de tom. A cor é reservada para
+ * quando a pessoa está de fato escrevendo — é isso que a torna um sinal, e não decoração.
+ */
+.chat-composer-frame:focus-within {
+  background: color-mix(in oklab, var(--foreground) 26%, var(--border));
+}
+
+/* Digitando: o arco acende e dá a volta. É o estado que a tela inteira existe para servir. */
+.chat-composer-frame[data-typing="true"] {
+  --composer-luz: 0.9;
+}
+
+/* Processando: o primeiro arco continua, o segundo entra por cima e o conjunto ganha ritmo. */
+.chat-composer-frame[data-processing="true"] {
+  --composer-luz: 1;
+}
+
+.chat-composer-frame[data-processing="true"]::before {
+  opacity: 0.75;
+}
+
+/*
+ * Desativado: sem cor e sem movimento. O `:has` cobre quem desabilita o campo por dentro sem
+ * saber da moldura; o atributo cobre quem sabe.
+ */
+.chat-composer-frame[data-disabled="true"],
+.chat-composer-frame:has(textarea:disabled) {
+  --composer-luz: 0;
+}
+
+.chat-composer-frame[data-disabled="true"]::before,
+.chat-composer-frame[data-disabled="true"]::after,
+.chat-composer-frame:has(textarea:disabled)::before,
+.chat-composer-frame:has(textarea:disabled)::after {
+  animation: none;
+  opacity: 0;
+}
+
+/*
+ * O campo por dentro: arredondamento do anel menos 1px, sem borda própria e com fundo opaco.
+ *
+ * ## Por que as três coisas moram aqui, e não numa `className`
+ *
+ * O `PromptInput` passa a `className` recebida para o `<form>`, e é o `InputGroup` **dentro** dele
+ * que desenha a caixa. Então `border-0 bg-surface` escrito na chamada nunca chegava ao lugar certo:
+ * o `InputGroup` seguia com a borda dele (1px) e com `dark:bg-input/30`, um fundo translúcido.
+ *
+ * O resultado eram dois contornos concêntricos — o anel a 22px e a borda do InputGroup a 21px — e
+ * um interior semitransparente deixando a moldura aparecer por baixo. Era isto que marcava as
+ * bordas da caixa.
+ *
+ * `background` opaco também é o que faz o anel existir: a moldura inteira é pintada, e só sobra
+ * visível a faixa de 1px que o `p-px` deixa de fora do campo.
+ */
+.chat-composer-frame [data-slot="input-group"] {
+  border-radius: calc(var(--composer-radius) - 1px);
+  border: 0;
+  background: var(--surface);
+}
+
+/*
+ * O anel já diz que o campo está ativo. O `ring` padrão do InputGroup por cima dele viraria dois
+ * contornos concêntricos dizendo a mesma coisa.
+ */
+.chat-composer-frame
+  [data-slot="input-group"]:has([data-slot="input-group-control"]:focus-visible) {
+  --tw-ring-shadow: 0 0 #0000;
+  box-shadow: none;
+}
+
+/*
+ * Sem movimento: os dois arcos somem e fica só a borda cinza. Um arco colorido parado numa quina
+ * é mancha, não informação — exatamente o que esta versão veio consertar.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .chat-composer-frame::after,
+  .chat-composer-frame::before {
+    display: none;
   }
 }
 

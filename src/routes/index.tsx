@@ -89,8 +89,13 @@ function Landing() {
               </Link>
             </div>
 
-            <div className="chat-composer-frame mx-auto mt-10 max-w-3xl rounded-lg p-px text-left">
-              <div className="rounded-[calc(var(--radius-lg)-1px)] bg-surface p-4 shadow-[var(--shadow-lift)] sm:p-5">
+            {/*
+              A vitrine da landing imita o compositor, mas não é um `PromptInput` — não tem
+              `data-slot="input-group"`, então o raio interno é escrito aqui à mão. Sai do mesmo
+              `--composer-radius` para não descolar do anel se ele mudar.
+            */}
+            <div className="chat-composer-frame mx-auto mt-10 max-w-3xl p-px text-left">
+              <div className="rounded-[calc(var(--composer-radius)-1px)] bg-surface p-4 shadow-[var(--shadow-lift)] sm:p-5">
                 <div className="flex gap-3">
                   <span className="grid size-9 shrink-0 place-items-center rounded-md bg-foreground text-background">
                     <PathlyMark className="size-4" />

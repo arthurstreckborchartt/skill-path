@@ -16,6 +16,7 @@ import {
 import { Shimmer } from "@/components/ai-elements/shimmer";
 import { BlocoCopiavel } from "@/components/pathly/banco-vistas";
 import { Btn, Chip } from "@/components/pathly/ui";
+import { useDigitando } from "@/components/pathly/usar-digitando";
 import { useCopilot } from "@/lib/copilot/usar-copilot";
 import {
   MODO_ROTULO,
@@ -45,6 +46,7 @@ export function ProjectChat({ projetoId }: { projetoId: string }) {
   const [texto, setTexto] = useState("");
   const [modo, setModo] = useState<Modo | undefined>();
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const { ref: moldura, aoDigitar } = useDigitando();
 
   useEffect(() => {
     if (!estado.respondendo) inputRef.current?.focus();
@@ -110,9 +112,11 @@ export function ProjectChat({ projetoId }: { projetoId: string }) {
                     <PathlyMark className="size-5" />
                   </span>
                   <h2 className="mt-4 font-display text-2xl font-semibold">
+                    {" "}
                     Vamos construir este SaaS
                   </h2>
                   <p className="mx-auto mt-2 max-w-lg text-sm leading-relaxed text-muted-foreground">
+                    {" "}
                     Conte o que precisa existir, o que já decidiu ou onde travou. O Pathly organiza
                     o plano e pede sua confirmação antes de qualquer mudança.
                   </p>
@@ -147,16 +151,27 @@ export function ProjectChat({ projetoId }: { projetoId: string }) {
       </div>
 
       <footer className="border-t border-border bg-background/70 p-3 sm:p-4">
-        <div className="chat-composer-frame mx-auto max-w-3xl rounded-lg p-px">
-          <PromptInput
-            onSubmit={({ text }) => enviar(text)}
-            className="border-0 bg-surface shadow-none"
-          >
+        {/*
+          O `rounded-lg` saiu: quem manda no arredondamento agora é `--composer-radius`, no CSS,
+          para o anel e o campo nunca discordarem do raio.
+        */}
+        <div
+          ref={moldura}
+          className="chat-composer-frame mx-auto max-w-3xl p-px"
+          data-processing={estado.respondendo ? "true" : undefined}
+        >
+          {/* Sem `className`: quem estiliza a caixa e o CSS da moldura. A `className` do
+              `PromptInput` vai para o <form>, que nao tem raio — pintar fundo ali cobria o anel
+              nas quinas e deixava a caixa com cantos quadrados. */}
+          <PromptInput onSubmit={({ text }) => enviar(text)}>
             <PromptInputTextarea
               ref={inputRef}
               autoFocus
               value={texto}
-              onChange={(event) => setTexto(event.target.value)}
+              onChange={(event) => {
+                setTexto(event.target.value);
+                aoDigitar();
+              }}
               maxLength={2000}
               placeholder="Descreva o que quer criar ou mudar…"
               className="min-h-24"
