@@ -17,6 +17,7 @@ import { Shimmer } from "@/components/ai-elements/shimmer";
 import { BlocoCopiavel } from "@/components/pathly/banco-vistas";
 import { Btn, Chip } from "@/components/pathly/ui";
 import { useDigitando } from "@/components/pathly/usar-digitando";
+import { WordsStagger } from "@/components/ui/words-stagger";
 import { useCopilot } from "@/lib/copilot/usar-copilot";
 import {
   MODO_ROTULO,
@@ -47,6 +48,22 @@ export function ProjectChat({ projetoId }: { projetoId: string }) {
   const [modo, setModo] = useState<Modo | undefined>();
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const { ref: moldura, aoDigitar } = useDigitando();
+
+  /*
+   * Quais mensagens ja estavam na tela quando ela abriu.
+   *
+   * Sem isto, abrir um projeto com 22 mensagens anima as 22 de uma vez — o historico inteiro
+   * subindo junto, somado a animacao de entrada da propria rota. O efeito e para o que acabou de
+   * chegar, nao para o que ja estava la.
+   *
+   * Preenchido no primeiro render em que o carregamento terminou. Escrever num ref durante o
+   * render e seguro aqui porque e idempotente: so acontece enquanto o valor for `null`.
+   */
+  const jaEstavam = useRef<Set<string> | null>(null);
+  if (jaEstavam.current === null && !estado.carregando) {
+    jaEstavam.current = new Set(estado.mensagens.map((m) => m.id));
+  }
+  const chegouAgora = (id: string) => jaEstavam.current !== null && !jaEstavam.current.has(id);
 
   useEffect(() => {
     if (!estado.respondendo) inputRef.current?.focus();
@@ -111,15 +128,26 @@ export function ProjectChat({ projetoId }: { projetoId: string }) {
                   <span className="mx-auto grid size-12 place-items-center rounded-md border border-border bg-surface-2">
                     <PathlyMark className="size-5" />
                   </span>
-                  <h2 className="mt-4 font-display text-2xl font-semibold">
-                    {" "}
+                  {/*
+                    O texto se forma palavra a palavra. Aparece uma vez por projeto, na tela vazia
+                    — não no histórico: o efeito é boas-vindas, e boas-vindas que se repetem a cada
+                    rolagem viram tique.
+                  */}
+                  <WordsStagger
+                    className="mt-4 justify-center font-display text-2xl font-semibold"
+                    stagger={0.07}
+                  >
                     Vamos construir este SaaS
-                  </h2>
-                  <p className="mx-auto mt-2 max-w-lg text-sm leading-relaxed text-muted-foreground">
-                    {" "}
+                  </WordsStagger>
+                  <WordsStagger
+                    className="mx-auto mt-2 max-w-lg justify-center text-sm leading-relaxed text-muted-foreground"
+                    delay={0.35}
+                    stagger={0.018}
+                    speed={0.4}
+                  >
                     Conte o que precisa existir, o que já decidiu ou onde travou. O Pathly organiza
                     o plano e pede sua confirmação antes de qualquer mudança.
-                  </p>
+                  </WordsStagger>
                 </div>
               )}
 
@@ -133,7 +161,11 @@ export function ProjectChat({ projetoId }: { projetoId: string }) {
               ))}
 
               {estado.mensagens.map((mensagem) => (
-                <ChatMessage key={mensagem.id} mensagem={mensagem} />
+                <ChatMessage
+                  key={mensagem.id}
+                  mensagem={mensagem}
+                  animar={chegouAgora(mensagem.id)}
+                />
               ))}
 
               {estado.respondendo && (
@@ -208,12 +240,16 @@ export function ProjectChat({ projetoId }: { projetoId: string }) {
 
 function ChatMessage({
   mensagem,
+  animar,
 }: {
   mensagem: { papel: string; texto: string; resposta: RespostaCopilot | null };
+  /** `false` para o que ja estava na tela quando ela abriu. */
+  animar: boolean;
 }) {
+  const entrada = animar ? "entra-mensagem" : undefined;
   if (mensagem.papel === "usuario") {
     return (
-      <Message from="user">
+      <Message from="user" className={entrada}>
         <MessageContent className="bg-foreground text-background">{mensagem.texto}</MessageContent>
       </Message>
     );
@@ -222,7 +258,7 @@ function ChatMessage({
   const resposta = mensagem.resposta;
   if (!resposta)
     return (
-      <Message from="assistant">
+      <Message from="assistant" className={entrada}>
         <MessageContent>
           <MessageResponse>{mensagem.texto}</MessageResponse>
         </MessageContent>
@@ -230,7 +266,11 @@ function ChatMessage({
     );
 
   return (
-    <Message from="assistant">
+    /*
+      A animacao roda uma vez, no nascimento do no. Como a chave do React e o `id` da mensagem, o
+      historico nao reanima a cada render — so o que acabou de chegar se move.
+    */
+    <Message from="assistant" className={entrada}>
       <MessageContent className="w-full space-y-4">
         {resposta.blocos.map((bloco, index) => (
           <MessageResponse key={index}>{bloco}</MessageResponse>
@@ -281,7 +321,7 @@ function ProposalCard({
 }) {
   const [busy, setBusy] = useState(false);
   return (
-    <div className="rounded-md border border-foreground/20 bg-surface-2 p-4">
+    <div className="entra-mensagem rounded-md border border-foreground/20 bg-surface-2 p-4">
       <div className="flex flex-wrap items-center gap-2">
         <Chip tone="primary">{ROTULO_TIPO_PROPOSTA[proposta.tipo]}</Chip>
         <p className="text-sm font-semibold">{proposta.titulo}</p>

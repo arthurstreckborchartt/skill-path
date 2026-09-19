@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Braces, Check, Database, Plug, ShieldCheck, Workflow } from "lucide-react";
 import { Btn, Chip, Logo, Panel, Reveal, SectionLabel } from "@/components/pathly/ui";
+import { HighlightedText } from "@/components/ui/highlighted-text";
 import { PathlyMark } from "@/components/pathly/project-chat";
 
 export const Route = createFileRoute("/")({
@@ -68,8 +69,13 @@ function Landing() {
             <Chip tone="primary">
               <Workflow className="size-3.5" /> Seu SaaS, do pedido à execução
             </Chip>
+            {/*
+              O destaque desliza por trás de "construir" e o texto vira negativo por
+              `mix-blend-difference` — preto e branco, sem cor nenhuma. É a única palavra marcada
+              da página: marcar duas seria não marcar nenhuma.
+            */}
             <h1 className="mx-auto mt-5 max-w-4xl font-display text-4xl leading-[1.04] font-semibold text-balance sm:text-6xl">
-              Diga o que quer construir.{" "}
+              Diga o que quer <HighlightedText delay={0.45}>construir</HighlightedText>.{" "}
               <span className="text-foreground/55">O Pathly organiza o resto.</span>
             </h1>
             <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-foreground/75 sm:text-lg">

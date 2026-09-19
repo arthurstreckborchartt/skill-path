@@ -106,6 +106,26 @@
 }
 
 /*
+ * O destaque que desliza por trás de uma palavra. Ver `components/ui/highlighted-text.tsx`.
+ *
+ * Um keyframe só para as quatro direções: quem chama define de onde a barra vem em `--hl-x` e
+ * `--hl-y`. O estado final é `translate(0, 0)`, que é a barra cobrindo a palavra — ou seja, o
+ * estado correto é o padrão, e a animação só descreve a entrada.
+ *
+ * Isso importa: a regra global de `prefers-reduced-motion` zera a duração, e sem duração o
+ * elemento fica no fim da animação. Quem pediu menos movimento vê a palavra já destacada em vez de
+ * uma barra parada no lugar errado.
+ */
+@keyframes highlight-sweep {
+  from {
+    transform: translate(var(--hl-x, 0), var(--hl-y, 100%));
+  }
+  to {
+    transform: translate(0, 0);
+  }
+}
+
+/*
  * Tema claro é o padrão do :root; o escuro vive em .dark. Quem decide qual classe entra no <html>
  * é o script inline do __root.tsx, que roda antes da primeira pintura lendo a preferência salva e,
  * na falta dela, o `prefers-color-scheme` do sistema. Sem JavaScript o app fica no tema claro.
@@ -489,10 +509,55 @@
   }
 }
 
+/*
+ * `both` para a barra respeitar o deslocamento inicial durante o `animation-delay` e ficar no
+ * estado final depois. Sem ele, ela apareceria coberta, sumiria para o ponto de partida quando a
+ * animação começasse, e voltaria — um pisca no meio do título.
+ */
+.highlight-sweep {
+  animation: highlight-sweep 0.65s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
 @keyframes fade-up {
   from {
     opacity: 0;
     transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/*
+ * Entrada das mensagens do chat, das propostas e das linhas de lista.
+ *
+ * ## Por que animação CSS, e não `motion`
+ *
+ * A animação roda uma vez, quando o elemento nasce. Como as chaves do React são estáveis (o `id`
+ * da mensagem), rerenderizar a lista não recria os nós e nada reanima — o histórico fica parado,
+ * e só o que acabou de chegar se move. Com JavaScript isso precisaria de estado para lembrar o que
+ * já entrou.
+ *
+ * E a regra global de `prefers-reduced-motion` já neutraliza tudo isto de graça, sem uma linha a
+ * mais em cada componente.
+ */
+@keyframes entrada-mensagem {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Deslocamento menor que o das mensagens: linha de lista que salta muito parece instável. */
+@keyframes entrada-linha {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
   }
   to {
     opacity: 1;
@@ -587,6 +652,22 @@
 /* Áreas seguras do iPhone (notch em cima, barra de gestos embaixo). */
 @utility pt-safe {
   padding-top: env(safe-area-inset-top, 0px);
+}
+
+/*
+ * As entradas do chat e das listas.
+ *
+ * `backwards`, nunca `both`: com `both` o transform da animação fica aplicado para sempre, e um
+ * transform faz o elemento virar o containing block de qualquer `position: fixed` dentro dele. É o
+ * mesmo motivo já anotado no `<main>` do app-shell. Com `backwards` o visual de entrada é idêntico
+ * e o transform some quando acaba.
+ */
+@utility entra-mensagem {
+  animation: entrada-mensagem 0.45s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+
+@utility entra-linha {
+  animation: entrada-linha 0.4s cubic-bezier(0.16, 1, 0.3, 1) backwards;
 }
 
 @utility pb-safe {

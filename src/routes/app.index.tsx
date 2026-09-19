@@ -207,12 +207,14 @@ function CreateWorkspace() {
         )}
         {projects.estado === "pronta" && projects.projetos.length > 0 && (
           <div className="divide-y divide-border">
-            {projects.projetos.slice(0, 4).map((project) => (
+            {projects.projetos.slice(0, 4).map((project, index) => (
               <Link
                 key={project.id}
                 to="/app/projeto/$id"
                 params={{ id: project.id }}
-                className="tap grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-4 py-4"
+                /* Escada curta: 55ms por linha. Passa disso e a lista parece carregando devagar. */
+                style={{ animationDelay: `${index * 55}ms` }}
+                className="tap entra-linha grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-4 py-4"
               >
                 <span className="grid size-10 place-items-center rounded-md border border-border bg-surface">
                   <FolderKanban className="size-4" />
