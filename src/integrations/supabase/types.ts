@@ -41,6 +41,68 @@ export type Database = {
         }
         Relationships: []
       }
+      pathly_acoes_externas: {
+        Row: {
+          acao_id: string
+          criado_em: string
+          decidido_em: string | null
+          destino: string
+          erro: string | null
+          estado: string
+          executado_em: string | null
+          id: string
+          impacto: string
+          payload: Json
+          projeto_id: string | null
+          provedor: string
+          resultado: string | null
+          resumo: string
+          user_id: string
+        }
+        Insert: {
+          acao_id: string
+          criado_em?: string
+          decidido_em?: string | null
+          destino: string
+          erro?: string | null
+          estado?: string
+          executado_em?: string | null
+          id?: string
+          impacto?: string
+          payload?: Json
+          projeto_id?: string | null
+          provedor: string
+          resultado?: string | null
+          resumo: string
+          user_id: string
+        }
+        Update: {
+          acao_id?: string
+          criado_em?: string
+          decidido_em?: string | null
+          destino?: string
+          erro?: string | null
+          estado?: string
+          executado_em?: string | null
+          id?: string
+          impacto?: string
+          payload?: Json
+          projeto_id?: string | null
+          provedor?: string
+          resultado?: string | null
+          resumo?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pathly_acoes_externas_projeto_id_fkey"
+            columns: ["projeto_id"]
+            isOneToOne: false
+            referencedRelation: "pathly_projetos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pathly_apis: {
         Row: {
           atualizado_em: string
@@ -107,6 +169,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      pathly_conexoes: {
+        Row: {
+          atualizado_em: string
+          conta: string
+          criado_em: string
+          escopos: string[]
+          expira_em: string | null
+          provedor: string
+          token_cifrado: string
+          user_id: string
+        }
+        Insert: {
+          atualizado_em?: string
+          conta?: string
+          criado_em?: string
+          escopos?: string[]
+          expira_em?: string | null
+          provedor: string
+          token_cifrado: string
+          user_id: string
+        }
+        Update: {
+          atualizado_em?: string
+          conta?: string
+          criado_em?: string
+          escopos?: string[]
+          expira_em?: string | null
+          provedor?: string
+          token_cifrado?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       pathly_copilot_decisoes: {
         Row: {
@@ -805,98 +900,6 @@ export type Database = {
           chamadas?: number
           endpoint?: string
           janela?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      pathly_acoes_externas: {
-        Row: {
-          acao_id: string
-          criado_em: string
-          decidido_em: string | null
-          destino: string
-          erro: string | null
-          estado: string
-          executado_em: string | null
-          id: string
-          impacto: string
-          payload: Json
-          projeto_id: string | null
-          provedor: string
-          resultado: string | null
-          resumo: string
-          user_id: string
-        }
-        Insert: {
-          acao_id: string
-          criado_em?: string
-          decidido_em?: string | null
-          destino: string
-          erro?: string | null
-          estado?: string
-          executado_em?: string | null
-          id?: string
-          impacto?: string
-          payload?: Json
-          projeto_id?: string | null
-          provedor: string
-          resultado?: string | null
-          resumo: string
-          user_id: string
-        }
-        Update: {
-          acao_id?: string
-          criado_em?: string
-          decidido_em?: string | null
-          destino?: string
-          erro?: string | null
-          estado?: string
-          executado_em?: string | null
-          id?: string
-          impacto?: string
-          payload?: Json
-          projeto_id?: string | null
-          provedor?: string
-          resultado?: string | null
-          resumo?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "pathly_acoes_externas_projeto_id_fkey"
-            columns: ["projeto_id"]
-            isOneToOne: false
-            referencedRelation: "pathly_projetos"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      pathly_conexoes: {
-        Row: {
-          atualizado_em: string
-          conta: string
-          criado_em: string
-          escopos: string[]
-          expira_em: string | null
-          provedor: string
-          user_id: string
-        }
-        Insert: {
-          atualizado_em?: string
-          conta?: string
-          criado_em?: string
-          escopos?: string[]
-          expira_em?: string | null
-          provedor: string
-          user_id: string
-        }
-        Update: {
-          atualizado_em?: string
-          conta?: string
-          criado_em?: string
-          escopos?: string[]
-          expira_em?: string | null
-          provedor?: string
           user_id?: string
         }
         Relationships: []
