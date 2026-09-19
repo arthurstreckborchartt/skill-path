@@ -14,12 +14,19 @@
 --   1. Cifrado pela aplicação (AES-GCM, chave num secret do Worker). Vazar o banco sem vazar o
 --      Worker não entrega token nenhum.
 --   2. RLS por dono, como o resto do app.
---   3. `REVOKE SELECT (token_cifrado)` de `authenticated` — e esta é a que mais importa. O
+--   3. `GRANT SELECT` **por coluna**, sem o token na lista — e esta é a que mais importa. O
 --      navegador pode ler QUE existe conexão, com quais escopos e de qual conta. O token, não.
 --      Sem isso, um XSS no app viraria roubo do GitHub da pessoa.
 --
--- O `REVOKE` por coluna é privilégio, não policy: acontece antes da RLS e não depende de ninguém
+-- Privilégio de coluna é privilégio, não policy: acontece antes da RLS e não depende de ninguém
 -- lembrar de filtrar `select`.
+--
+-- ATENÇÃO — a primeira versão deste script fazia `grant select` na tabela inteira e depois
+-- `revoke select (token_cifrado)`, achando que bastava o revoke vir por último. Não bastou: a
+-- sonda mostrou o token legível por `authenticated`. A documentação do Postgres, em REVOKE, diz
+-- por quê: "if a role has been granted privileges on a table, then revoking the same privileges
+-- from individual columns will have no effect." Privilégio de tabela não se corta por coluna.
+-- Por isso o `select` aqui nunca é concedido na tabela: só na lista de colunas permitidas.
 
 -- ============================================================================================
 -- CONEXÕES
@@ -56,12 +63,21 @@ create policy "pathly_conexoes_delete_own"
   using (auth.uid() = user_id);
 
 revoke all on public.pathly_conexoes from anon, authenticated;
-grant select, delete on public.pathly_conexoes to authenticated;
-grant all on public.pathly_conexoes to service_role;
 
--- A linha que impede o navegador de ler o token. Precisa vir DEPOIS do grant de select acima,
--- senão o grant de tabela inteira a reintroduz.
-revoke select (token_cifrado) on public.pathly_conexoes from anon, authenticated;
+-- O `select` sai por coluna, e `token_cifrado` não está na lista. Não existe aqui um privilégio
+-- de tabela para depois tentar recortar — é essa ausência que protege o token.
+--
+-- Efeito colateral, e ele é desejado: `select *` nesta tabela passa a falhar com 42501 para
+-- `authenticated`. Quem escrever `select('*')` aqui descobre na hora, em vez de vazar o token em
+-- silêncio. O cliente já lê colunas explícitas em `src/lib/integracoes/usar-integracoes.ts`.
+grant select (user_id, provedor, escopos, conta, expira_em, criado_em, atualizado_em)
+  on public.pathly_conexoes to authenticated;
+
+-- Desconectar continua sendo da pessoa. O `delete` é de tabela porque apaga a linha inteira;
+-- não existe delete de coluna.
+grant delete on public.pathly_conexoes to authenticated;
+
+grant all on public.pathly_conexoes to service_role;
 
 -- ============================================================================================
 -- AÇÕES EXTERNAS
