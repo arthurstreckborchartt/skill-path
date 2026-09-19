@@ -188,15 +188,15 @@
   /*
    * A única cor do sistema, e ela mora num lugar só: a moldura do compositor de chat.
    *
-   * Croma entre 0.09 e 0.13 — cerca de um terço do máximo destes matizes. É o que separa
-   * "tecnologia integrada à interface" de fita de LED: as cores se distinguem entre si e
-   * continuam perdendo para o preto e branco em qualquer olhada rápida.
+   * Croma entre 0.14 e 0.19 — cerca de metade do máximo destes matizes. Subiu de 0.09–0.13 para
+   * a cor ficar viva o bastante para se notar num anel fino; acima disso começa a lembrar fita de
+   * LED, e a interface toda deixa de parecer preta e branca com um detalhe.
    */
-  --composer-1: oklch(0.62 0.13 295); /* roxo */
-  --composer-2: oklch(0.64 0.12 255); /* azul */
-  --composer-3: oklch(0.7 0.1 210); /* ciano */
-  --composer-4: oklch(0.7 0.09 165); /* verde */
-  --composer-5: oklch(0.66 0.12 350); /* rosa */
+  --composer-1: oklch(0.6 0.19 295); /* roxo */
+  --composer-2: oklch(0.62 0.17 255); /* azul */
+  --composer-3: oklch(0.66 0.15 210); /* ciano */
+  --composer-4: oklch(0.68 0.14 165); /* verde */
+  --composer-5: oklch(0.64 0.18 350); /* rosa */
 }
 
 .dark {
@@ -252,11 +252,11 @@
   --shadow-glow: none;
 
   /* Mesmos matizes, mais claros: sobre o fundo escuro do app um croma igual apagaria. */
-  --composer-1: oklch(0.7 0.13 295);
-  --composer-2: oklch(0.72 0.12 255);
-  --composer-3: oklch(0.78 0.1 210);
-  --composer-4: oklch(0.78 0.09 165);
-  --composer-5: oklch(0.74 0.12 350);
+  --composer-1: oklch(0.7 0.19 295);
+  --composer-2: oklch(0.72 0.17 255);
+  --composer-3: oklch(0.78 0.15 210);
+  --composer-4: oklch(0.78 0.14 165);
+  --composer-5: oklch(0.74 0.18 350);
 }
 
 @layer base {
@@ -371,8 +371,19 @@
  */
 .chat-composer-frame {
   --composer-radius: 1.375rem;
-  /* Intensidade do arco que viaja. 0 = a borda é só o cinza do sistema. */
-  --composer-luz: 0;
+  /*
+   * A espessura do anel. Mora aqui, e nao numa classe `p-px` na marcacao, porque o raio interno
+   * do campo e calculado a partir dela — os dois discordarem deixa um canto quadrado dentro de
+   * uma moldura redonda.
+   */
+  --composer-anel: 2px;
+  /*
+   * Intensidade do arco que viaja.
+   *
+   * Em repouso era 0 — a moldura ficava sendo so a borda cinza, e o efeito so existia enquanto
+   * alguem digitava. Um valor baixo mas presente deixa a cor viva sem competir com o conteudo.
+   */
+  --composer-luz: 0.28;
 
   /*
    * `isolation` é o que faz os pseudo-elementos com `z-index` negativo funcionarem: sem contexto
@@ -380,6 +391,7 @@
    */
   position: relative;
   isolation: isolate;
+  padding: var(--composer-anel);
   border-radius: var(--composer-radius);
   /* Em repouso a moldura é exatamente a borda que o resto do app usa. */
   background: var(--border);
@@ -401,12 +413,12 @@
   background: conic-gradient(
     in oklab from var(--composer-angle),
     transparent 0deg,
-    transparent 186deg,
-    var(--composer-1) 232deg,
-    var(--composer-2) 262deg,
-    var(--composer-3) 292deg,
-    var(--composer-4) 318deg,
-    transparent 356deg,
+    transparent 140deg,
+    var(--composer-1) 192deg,
+    var(--composer-2) 232deg,
+    var(--composer-3) 272deg,
+    var(--composer-4) 312deg,
+    transparent 352deg,
     transparent 360deg
   );
   opacity: var(--composer-luz);
@@ -467,7 +479,7 @@
 
 /* Digitando: o arco acende e dá a volta. É o estado que a tela inteira existe para servir. */
 .chat-composer-frame[data-typing="true"] {
-  --composer-luz: 0.9;
+  --composer-luz: 1;
 }
 
 /* Processando: o primeiro arco continua, o segundo entra por cima e o conjunto ganha ritmo. */
@@ -513,7 +525,7 @@
  * visível a faixa de 1px que o `p-px` deixa de fora do campo.
  */
 .chat-composer-frame [data-slot="input-group"] {
-  border-radius: calc(var(--composer-radius) - 1px);
+  border-radius: calc(var(--composer-radius) - var(--composer-anel));
   border: 0;
   background: var(--surface);
 }

@@ -236,7 +236,7 @@ export function ProjectChat({ projetoId }: { projetoId: string }) {
         */}
         <div
           ref={moldura}
-          className="chat-composer-frame mx-auto max-w-3xl p-px"
+          className="chat-composer-frame mx-auto max-w-3xl"
           data-processing={estado.respondendo ? "true" : undefined}
         >
           {/* Sem `className`: quem estiliza a caixa e o CSS da moldura. A `className` do

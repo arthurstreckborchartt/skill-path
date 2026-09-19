@@ -86,7 +86,7 @@ function CreateWorkspace() {
 
         <div
           ref={moldura}
-          className="chat-composer-frame mt-7 p-px text-left shadow-[var(--shadow-lift)]"
+          className="chat-composer-frame mt-7 text-left shadow-[var(--shadow-lift)]"
           data-processing={busy ? "true" : undefined}
         >
           <PromptInput
