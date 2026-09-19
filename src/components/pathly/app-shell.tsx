@@ -152,7 +152,10 @@ function AppShellInner() {
                 */
                 className={cn(
                   "tap group flex min-h-14 flex-col items-center justify-center gap-1 text-[11px] text-muted-foreground",
-                  "transition-colors hover:bg-surface-2 hover:text-foreground",
+                  // Sem fundo no hover: o bloco cinza atrás do item pesava mais que o próprio
+                  // item. O que acende é o desenho — ícone e rótulo clareiam juntos, porque o
+                  // ícone tira a cor de `currentColor`.
+                  "transition-colors hover:text-foreground",
                   "data-[status=active]:text-primary",
                 )}
               >
