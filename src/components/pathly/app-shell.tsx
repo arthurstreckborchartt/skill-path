@@ -145,8 +145,14 @@ function AppShellInner() {
               <Link
                 to={to}
                 activeOptions={{ exact: exact === true }}
+                /*
+                  O `hover:` do Tailwind v4 já nasce dentro de `@media (hover: hover)`, então o
+                  destaque não gruda em tela de toque — onde o "hover" de um toque ficaria aceso
+                  até alguém tocar em outro lugar.
+                */
                 className={cn(
                   "tap group flex min-h-14 flex-col items-center justify-center gap-1 text-[11px] text-muted-foreground",
+                  "transition-colors hover:bg-surface-2 hover:text-foreground",
                   "data-[status=active]:text-primary",
                 )}
               >

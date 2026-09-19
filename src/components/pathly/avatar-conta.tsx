@@ -19,7 +19,16 @@ import { cn } from "@/lib/utils";
  * diferença devolve sempre o inverso do que estiver atrás — contraste máximo em qualquer desenho,
  * e também no caso em que o canvas não renderiza.
  */
-export function AvatarConta({ size = 56, className }: { size?: number; className?: string }) {
+export function AvatarConta({
+  size = 56,
+  animado,
+  className,
+}: {
+  size?: number;
+  /** Anima sem parar. Para a tela de perfil, onde o avatar é o assunto. */
+  animado?: boolean;
+  className?: string;
+}) {
   const { session } = useSession();
   const bruto = session?.user.user_metadata?.["full_name"];
   const nome = typeof bruto === "string" && bruto.trim() ? bruto : (session?.user.email ?? "conta");
@@ -39,7 +48,12 @@ export function AvatarConta({ size = 56, className }: { size?: number; className
       )}
       style={{ width: size, height: size }}
     >
-      <FallbackAvatar name={nome} size={size} className="absolute inset-0" />
+      <FallbackAvatar
+        name={nome}
+        size={size}
+        className="absolute inset-0"
+        {...(animado ? { sempre: true } : {})}
+      />
       {/*
         Abaixo de 32px a inicial não entra: a 20px ela sairia com 7px de altura, pequena demais
         para ler e grande o bastante para sujar o desenho. Nesse tamanho quem identifica é a forma,
@@ -47,7 +61,11 @@ export function AvatarConta({ size = 56, className }: { size?: number; className
       */}
       {size >= 32 && (
         <span
-          className="relative font-display font-semibold text-white mix-blend-difference"
+          /*
+            `pointer-events-none`: sem isto, passar o mouse sobre a letra tira o ponteiro do
+            avatar e a animação de hover morre no meio do caminho.
+          */
+          className="pointer-events-none relative font-display font-semibold text-white mix-blend-difference"
           style={{ fontSize: Math.round(size * 0.34) }}
         >
           {iniciais}

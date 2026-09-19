@@ -222,6 +222,13 @@ interface FallbackAvatarProps {
   name: string;
   size?: number;
   animated?: boolean;
+  /**
+   * Anima sem parar, em vez de so no hover.
+   *
+   * Existe para a tela de perfil, onde o avatar e o assunto da pagina. Em qualquer outro lugar
+   * ele deve ficar parado: sao quadros gastos num enfeite que ninguem esta olhando.
+   */
+  sempre?: boolean;
   className?: string;
 }
 
@@ -229,6 +236,7 @@ export default function FallbackAvatar({
   name,
   size = 32,
   animated = true,
+  sempre = false,
   className,
 }: FallbackAvatarProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -263,16 +271,32 @@ export default function FallbackAvatar({
     renderToCanvas(canvas, getUniforms(), 0);
   }, [name, size, isMounted, getUniforms]);
 
-  // Hover animation
+  /*
+   * Movimento reduzido desliga a animacao por completo — nem hover, nem continua.
+   *
+   * A regra global de `prefers-reduced-motion` do `styles.css` so alcanca animacao CSS, e isto e
+   * `requestAnimationFrame` desenhando WebGL. O desenho parado continua la, que e o que importa:
+   * a identidade visual do avatar nao depende dele se mexer.
+   */
+  const [semMovimento, setSemMovimento] = useState(false);
   useEffect(() => {
-    if (!animated || !isMounted) return;
+    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setSemMovimento(media.matches);
+    const aoMudar = () => setSemMovimento(media.matches);
+    media.addEventListener("change", aoMudar);
+    return () => media.removeEventListener("change", aoMudar);
+  }, []);
+
+  // Animacao: continua quando `sempre`, senao so enquanto o ponteiro esta em cima.
+  useEffect(() => {
+    if (!animated || !isMounted || semMovimento) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
 
     let startTime: number | null = null;
 
     const animate = (timestamp: number) => {
-      if (!isHovering.current) return;
+      if (!sempre && !isHovering.current) return;
       if (startTime === null) startTime = timestamp - timeRef.current * 1000;
       const elapsed = (timestamp - startTime) / 1000;
       timeRef.current = elapsed;
@@ -292,15 +316,29 @@ export default function FallbackAvatar({
       renderToCanvas(canvas, getUniforms(), timeRef.current);
     };
 
-    canvas.addEventListener("mouseenter", onEnter);
-    canvas.addEventListener("mouseleave", onLeave);
+    if (sempre) {
+      startTime = null;
+      animRef.current = requestAnimationFrame(animate);
+      return () => cancelAnimationFrame(animRef.current);
+    }
+
+    /*
+     * Os ouvintes vao no elemento PAI, e nao no canvas.
+     *
+     * Quem monta este avatar costuma por algo em cima — as iniciais, no caso do Pathly. Com o
+     * ouvinte no canvas, passar o mouse sobre a letra dispara `mouseleave` e a animacao morre no
+     * meio, justamente quando o ponteiro esta no centro do avatar.
+     */
+    const alvo = canvas.parentElement ?? canvas;
+    alvo.addEventListener("mouseenter", onEnter);
+    alvo.addEventListener("mouseleave", onLeave);
 
     return () => {
-      canvas.removeEventListener("mouseenter", onEnter);
-      canvas.removeEventListener("mouseleave", onLeave);
+      alvo.removeEventListener("mouseenter", onEnter);
+      alvo.removeEventListener("mouseleave", onLeave);
       cancelAnimationFrame(animRef.current);
     };
-  }, [animated, isMounted, getUniforms]);
+  }, [animated, sempre, isMounted, semMovimento, getUniforms]);
 
   const dpr = isMounted ? window.devicePixelRatio || 1 : 1;
 

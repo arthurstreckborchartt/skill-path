@@ -49,7 +49,7 @@ function ProfilePage() {
       <Reveal>
         <Panel>
           <div className="flex items-center gap-4">
-            <AvatarConta size={56} />
+            <AvatarConta size={56} animado />
             <div className="min-w-0">
               <h2 className="truncate font-display text-xl font-semibold">{name}</h2>
               <p className="truncate text-sm text-muted-foreground">{session?.user.email}</p>
