@@ -300,6 +300,36 @@
     font-family: var(--font-sans);
   }
 
+  /*
+   * Campo preenchido pelo navegador.
+   *
+   * Quando o Chrome completa um campo, ele pinta por conta própria: fundo azul-claro e texto
+   * escuro. E ignora `background-color` e `color` — por isso nenhuma classe resolve. Sobre a
+   * interface escura do Pathly o resultado é uma caixa clara com texto quase ilegível, e era o
+   * único caso que a varredura de contraste não encontrava, porque o CSS calculado continua
+   * dizendo que está tudo certo.
+   *
+   * As três linhas abaixo são as que o Chrome respeita:
+   *
+   * - `-webkit-text-fill-color` sobrepõe a cor do texto que ele forçou.
+   * - `box-shadow` interno de 1000px cobre o fundo dele — `background-color` seria ignorado.
+   * - `transition` de duração absurda no `background-color` adia para sempre a pintura dele.
+   *   É feio e é o jeito que funciona.
+   *
+   * Como os valores saem de token, isto vale nos dois temas sem duplicação.
+   */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  input:-webkit-autofill:active,
+  textarea:-webkit-autofill,
+  select:-webkit-autofill {
+    -webkit-text-fill-color: var(--foreground);
+    box-shadow: 0 0 0 1000px var(--surface) inset;
+    caret-color: var(--foreground);
+    transition: background-color 9999s ease-in-out 0s;
+  }
+
   h1,
   h2,
   h3,
