@@ -67,12 +67,50 @@ export function Panel({
   children,
   hover,
   tilt,
+  invertido,
 }: {
   className?: string;
   children: ReactNode;
   hover?: boolean;
   tilt?: boolean;
+  /** Painel em negativo: fundo da cor do texto, texto da cor do fundo. */
+  invertido?: boolean;
 }) {
+  /*
+   * `invertido` existe porque escrever `bg-foreground text-background` na `className` NÃO
+   * funciona aqui, e falha do pior jeito: em silêncio.
+   *
+   * O utilitário `panel` define `background` — a forma curta, que inclui `background-image`. O
+   * `bg-foreground` define só `background-color`. Os dois convivem, e a imagem pinta por cima da
+   * cor: o painel continua com o gradiente escuro do tema, mas o texto já virou `text-background`,
+   * que no escuro é quase preto. Resultado: preto sobre escuro, ilegível.
+   *
+   * Pior ainda para quem for depurar: `getComputedStyle(...).backgroundColor` devolve o branco do
+   * `bg-foreground` e diz que o contraste está ótimo. Só olhando `backgroundImage` se enxerga o
+   * problema.
+   *
+   * Por isso o modo invertido não tenta vencer o `panel` — ele não usa o `panel`. Mesma caixa,
+   * cores explícitas, nenhuma colisão possível.
+   *
+   * A mesma colisão, em versão inofensiva, atinge quem passa uma tinta fraca pela `className`
+   * (`bg-primary/[0.06]` em `app.planos` e `licao`): a tinta simplesmente não aparece, engolida
+   * pelo gradiente. Ali não há problema de leitura, o texto segue na cor do tema — é só um efeito
+   * que ninguém vê. Se um dia essas tintas importarem, o caminho é este mesmo: uma variante aqui,
+   * não uma classe na chamada.
+   */
+  if (invertido) {
+    return (
+      <div
+        className={cn(
+          "rounded-lg border border-foreground/20 bg-foreground p-5 text-background shadow-[var(--shadow-soft)] sm:p-6",
+          className,
+        )}
+      >
+        {children}
+      </div>
+    );
+  }
+
   return (
     <div className={cn("panel p-5 sm:p-6", (hover || tilt) && "panel-hover", className)}>
       {children}

@@ -104,7 +104,7 @@ function IntegrationsPage() {
       )}
 
       <Reveal>
-        <Panel className="border-foreground/20 bg-foreground text-background">
+        <Panel invertido>
           <Plug className="size-5" />
           <h2 className="mt-4 max-w-2xl font-display text-2xl font-semibold">
             Nenhuma ação externa sai daqui sem você aprovar antes.

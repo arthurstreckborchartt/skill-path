@@ -199,7 +199,7 @@ function Landing() {
         <section id="controle" className="px-5 py-20 sm:px-8">
           <div className="mx-auto grid max-w-6xl gap-4 lg:grid-cols-2">
             <Reveal>
-              <Panel className="h-full border-foreground/20 bg-foreground text-background">
+              <Panel invertido className="h-full">
                 <ShieldCheck className="size-6" />
                 <h2 className="mt-5 font-display text-2xl font-semibold">
                   Você aprova antes de executar
