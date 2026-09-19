@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { Check, Lock, Play, Plug, ShieldCheck, TriangleAlert, X } from "lucide-react";
 import { Btn, Chip, PageHeader, Panel, Reveal } from "@/components/pathly/ui";
 import { cn } from "@/lib/utils";
@@ -35,6 +36,39 @@ export const Route = createFileRoute("/app/integracoes")({
 });
 
 /**
+ * O recado da volta do OAuth.
+ *
+ * Lido do endereço e **apagado dele** em seguida: sem isso, recarregar a página mostraria
+ * "conectado" de novo, e um endereço compartilhado carregaria um recado que não é sobre quem o
+ * abriu. O `replaceState` também tira o parâmetro do histórico.
+ *
+ * A lista é fechada, a mesma do callback. Nada de texto vindo da URL chega à tela — é o que
+ * impede a query de escrever a mensagem que quiser no seu app.
+ */
+const RECADOS: Record<string, string> = {
+  conectado: "Conta conectada. Nenhuma ação sai daqui sem a sua aprovação.",
+  recusado: "Você cancelou a autorização. Nada foi conectado.",
+  "estado-invalido": "A volta não conferiu e não conectei. Tente começar de novo.",
+  falhou: "Não consegui concluir a conexão. Tente de novo.",
+  "sem-config": "A conexão não está configurada neste ambiente.",
+};
+
+function useRecadoOauth(aoConectar: () => void) {
+  const [recado, setRecado] = useState<string | null>(null);
+
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search).get("oauth");
+    if (!p) return;
+
+    setRecado(RECADOS[p] ?? null);
+    window.history.replaceState({}, "", window.location.pathname);
+    if (p === "conectado") aoConectar();
+  }, [aoConectar]);
+
+  return recado;
+}
+
+/**
  * A tela de integrações.
  *
  * ## O que ela mostra, e por quê
@@ -47,7 +81,10 @@ export const Route = createFileRoute("/app/integracoes")({
  * é o que o olho acha primeiro.
  */
 function IntegrationsPage() {
-  const { estado, ocupado, pedir, decidir, executar, desconectar } = useIntegracoes();
+  const { estado, ocupado, pedir, decidir, executar, conectar, desconectar, recarregar } =
+    useIntegracoes();
+  // Recarrega ao voltar conectado: a linha foi gravada pelo servidor, e o hook não sabe disso.
+  const recado = useRecadoOauth(recarregar);
 
   if (estado.estado === "carregando") {
     return <p className="text-sm text-muted-foreground">Carregando suas integrações…</p>;
@@ -122,6 +159,13 @@ function IntegrationsPage() {
           </p>
         </Panel>
       </Reveal>
+
+      {recado && (
+        <Panel className="flex items-start gap-3">
+          <ShieldCheck className="mt-0.5 size-4 shrink-0" />
+          <p className="text-sm leading-relaxed">{recado}</p>
+        </Panel>
+      )}
 
       {/* ---------- Pendentes ---------- */}
       {pendentes.length > 0 && (
@@ -198,14 +242,26 @@ function IntegrationsPage() {
                   <div className="mt-auto pt-5">
                     {p.exigeCredencial && !conectado ? (
                       /*
-                        Um botão "Conectar" que não conecta ensina a pessoa a não confiar no que a
-                        tela diz. Enquanto falta a credencial no ambiente, a tela fala a verdade.
+                        O botão existe mesmo sem saber se o servidor tem a credencial: o cliente não
+                        tem como saber, e perguntar custaria uma requisição a mais em toda abertura
+                        da tela. Se faltar, o `/iniciar` recusa antes de sair do app e a mensagem
+                        diz exatamente isso — a pessoa nunca autoriza no GitHub para depois
+                        descobrir que não dava.
                       */
-                      <p className="flex items-start gap-2 text-xs leading-relaxed text-muted-foreground">
-                        <Lock className="mt-0.5 size-3.5 shrink-0" />
-                        Falta registrar o aplicativo OAuth e guardar o segredo no servidor. Até isso
-                        existir, conectar não funcionaria — então o botão não aparece.
-                      </p>
+                      <div className="space-y-3">
+                        <Btn
+                          size="sm"
+                          disabled={!estado.instalado}
+                          onClick={() => void conectar(p.id)}
+                        >
+                          <Lock className="size-4" /> Conectar {p.nome}
+                        </Btn>
+                        <p className="text-xs leading-relaxed text-muted-foreground">
+                          Você autoriza no {p.nome} e volta para cá. O Pathly pede{" "}
+                          {p.escopos.join(" e ")} — e mesmo conectado, nenhuma ação sai sem a sua
+                          aprovação.
+                        </p>
+                      </div>
                     ) : (
                       <div className="flex flex-wrap gap-2">
                         {p.acoes.map((a) => (

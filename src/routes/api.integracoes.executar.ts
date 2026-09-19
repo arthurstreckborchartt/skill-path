@@ -4,6 +4,8 @@ import { LIMITES, recusaParaResposta, registrarUso } from "@/lib/limite-uso";
 import { lerJsonLimitado, texto } from "@/lib/entrada-segura";
 import { liberadaParaExecutar, validarAcao, type AcaoExterna } from "@/lib/integracoes/contrato";
 import { executarAcao } from "@/lib/integracoes/executor";
+import { cifrar, decifrar } from "@/lib/integracoes/cripto";
+import { lerCredencial, precisaRenovar, renovar } from "@/lib/integracoes/github";
 
 /**
  * POST /api/integracoes/executar — executa uma ação **já aprovada**.
@@ -75,6 +77,79 @@ function daLinha(linha: LinhaAcao): AcaoExterna | null {
 /** O que vai para o banco e para a tela nunca é maior que isto. */
 const TETO_RESULTADO = 400;
 
+/**
+ * Busca, decifra e — se preciso — renova o token do provedor.
+ *
+ * ## Por que `service_role` aparece aqui
+ *
+ * `authenticated` não lê `token_cifrado`: o privilégio é concedido por coluna e essa não está na
+ * lista. Isso é a proteção funcionando, não um obstáculo — mas significa que quem lê o token é o
+ * servidor, com a chave que ignora RLS.
+ *
+ * Por isso o filtro é montado aqui, com o `userId` **conferido pelo token da sessão** logo acima.
+ * Nunca com id vindo do corpo da requisição. Uma consulta com `service_role` e um id de fora seria
+ * leitura de token alheio a um parâmetro de distância.
+ *
+ * Devolve `null` quando não há conexão, e o executor transforma isso em recusa explícita.
+ */
+async function tokenDoProvedor(
+  supabaseUrl: string,
+  userId: string,
+  provedor: string,
+): Promise<string | null> {
+  if (provedor === "demo") return null;
+
+  const serviceRole = lerEnv("SUPABASE_SERVICE_ROLE_KEY");
+  if (!serviceRole) return null;
+
+  const comoServico = { apikey: serviceRole, Authorization: `Bearer ${serviceRole}` };
+  const alvo =
+    `${supabaseUrl}/rest/v1/pathly_conexoes` +
+    `?user_id=eq.${encodeURIComponent(userId)}&provedor=eq.${encodeURIComponent(provedor)}`;
+
+  const r = await fetch(`${alvo}&select=token_cifrado&limit=1`, { headers: comoServico });
+  if (!r.ok) return null;
+
+  const linha = ((await r.json()) as { token_cifrado?: string }[])[0];
+  if (!linha?.token_cifrado) return null;
+
+  const claro = await decifrar(linha.token_cifrado);
+  if (!claro.ok) return null;
+
+  const credencial = lerCredencial(claro.valor);
+  if (!credencial) return null;
+
+  if (!precisaRenovar(credencial) || !credencial.refresh) return credencial.acesso;
+
+  const clientId = lerEnv("GITHUB_OAUTH_CLIENT_ID");
+  const clientSecret = lerEnv("GITHUB_OAUTH_CLIENT_SECRET");
+  if (!clientId || !clientSecret) return credencial.acesso;
+
+  const novo = await renovar({ clientId, clientSecret, refresh: credencial.refresh });
+  /*
+   * Renovação falhou: seguir com o token vencido é melhor que recusar. Ele pode estar dentro da
+   * margem de um minuto e ainda funcionar — e se não funcionar, quem recusa é o GitHub, com um
+   * motivo mais verdadeiro que "não consegui renovar".
+   */
+  if (!novo.ok) return credencial.acesso;
+
+  const cifrado = await cifrar(JSON.stringify(novo.valor));
+  if (cifrado.ok) {
+    // Gravar o token novo é o que evita renovar a cada execução. Falhar aqui não impede a
+    // execução em curso: o token na mão é válido, e a próxima chamada renova de novo.
+    await fetch(alvo, {
+      method: "PATCH",
+      headers: { ...comoServico, "Content-Type": "application/json", Prefer: "return=minimal" },
+      body: JSON.stringify({
+        token_cifrado: cifrado.valor,
+        expira_em: novo.valor.expiraEm,
+        atualizado_em: new Date().toISOString(),
+      }),
+    });
+  }
+  return novo.valor.acesso;
+}
+
 export const Route = createFileRoute("/api/integracoes/executar")({
   staticData: { sitemap: false },
   server: {
@@ -93,6 +168,7 @@ export const Route = createFileRoute("/api/integracoes/executar")({
           headers: { Authorization: `Bearer ${token}`, apikey: anonKey },
         });
         if (!conferido.ok) return erro(401, "Sessão expirada. Entre de novo.");
+        const { id: userId } = (await conferido.json()) as { id: string };
 
         const corpo = await lerJsonLimitado<Corpo>(request);
         if (!corpo.ok) {
@@ -183,7 +259,8 @@ export const Route = createFileRoute("/api/integracoes/executar")({
          */
         let resultado: Awaited<ReturnType<typeof executarAcao>>;
         try {
-          resultado = await executarAcao(acao, { token: null });
+          const credencial = await tokenDoProvedor(supabaseUrl, userId, acao.provedor);
+          resultado = await executarAcao(acao, { token: credencial });
         } catch (e) {
           resultado = {
             ok: false,

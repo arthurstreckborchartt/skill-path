@@ -1,4 +1,5 @@
 import type { AcaoExterna } from "./contrato";
+import { listarRepos } from "./github";
 
 /**
  * O que acontece depois da aprovação.
@@ -21,9 +22,6 @@ import type { AcaoExterna } from "./contrato";
  * `resultado` e `motivo` vão para o banco e aparecem na tela. Token, cabeçalho de autorização e
  * corpo bruto de resposta ficam de fora — o que volta é uma frase curta em português.
  */
-
-/** Chamadas externas param aqui. Sem isto, uma ponta lenta segura o Worker até o limite dele. */
-const TIMEOUT_MS = 10_000;
 
 export type ResultadoExecucao =
   | { ok: true; resumo: string }
@@ -90,19 +88,30 @@ export async function executarAcao(
     };
   }
 
+  if (acao.provedor === "github") {
+    switch (acao.acaoId) {
+      case "github-repos": {
+        const r = await listarRepos(contexto.token);
+        return r.ok
+          ? { ok: true, resumo: r.valor }
+          : { ok: false, motivo: r.motivo, permanente: false };
+      }
+      default:
+        return {
+          ok: false,
+          motivo: `Ação "${acao.acaoId}" não existe no GitHub.`,
+          permanente: true,
+        };
+    }
+  }
+
   /*
-   * GitHub entra aqui junto com o OAuth. Hoje não há caminho para chegar neste ponto pela tela —
-   * conectar não é oferecido sem credencial no ambiente —, então isto cobre só quem inserir uma
-   * ação direto no banco. Recusar explícito é melhor que cair num `default` silencioso.
+   * Provedor conhecido pelo tipo mas sem execução escrita. Recusar explícito é melhor que cair
+   * num `default` silencioso que devolveria sucesso sem ter feito nada.
    */
   return {
     ok: false,
     motivo: `Execução para ${acao.provedor} ainda não foi implementada.`,
     permanente: true,
   };
-}
-
-/** Exportado para o dia do primeiro provedor real: chamada externa com prazo, sempre. */
-export async function buscarComPrazo(url: string, init: RequestInit): Promise<Response> {
-  return fetch(url, { ...init, signal: AbortSignal.timeout(TIMEOUT_MS) });
 }

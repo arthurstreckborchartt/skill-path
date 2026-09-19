@@ -52,6 +52,8 @@ import { Route as AppProjetoIdRouteImport } from './routes/app.projeto.$id'
 import { Route as AppRoadmapIdRouteImport } from './routes/app.roadmap.$id'
 import { Route as AppSegurancaIdRouteImport } from './routes/app.seguranca.$id'
 import { Route as AppValidacaoIdRouteImport } from './routes/app.validacao.$id'
+import { Route as ApiIntegracoesOauthCallbackRouteImport } from './routes/api.integracoes.oauth.callback'
+import { Route as ApiIntegracoesOauthIniciarRouteImport } from './routes/api.integracoes.oauth.iniciar'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 
@@ -271,6 +273,18 @@ const AppValidacaoIdRoute = AppValidacaoIdRouteImport.update({
   path: '/validacao/$id',
   getParentRoute: () => AppRoute,
 } as any)
+const ApiIntegracoesOauthCallbackRoute =
+  ApiIntegracoesOauthCallbackRouteImport.update({
+    id: '/api/integracoes/oauth/callback',
+    path: '/api/integracoes/oauth/callback',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiIntegracoesOauthIniciarRoute =
+  ApiIntegracoesOauthIniciarRouteImport.update({
+    id: '/api/integracoes/oauth/iniciar',
+    path: '/api/integracoes/oauth/iniciar',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
   id: '/lovable/email/auth/preview',
   path: '/lovable/email/auth/preview',
@@ -326,6 +340,8 @@ export interface FileRoutesByFullPath {
   '/app/roadmap/$id': typeof AppRoadmapIdRoute
   '/app/seguranca/$id': typeof AppSegurancaIdRoute
   '/app/validacao/$id': typeof AppValidacaoIdRoute
+  '/api/integracoes/oauth/callback': typeof ApiIntegracoesOauthCallbackRoute
+  '/api/integracoes/oauth/iniciar': typeof ApiIntegracoesOauthIniciarRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
 }
@@ -372,6 +388,8 @@ export interface FileRoutesByTo {
   '/app/roadmap/$id': typeof AppRoadmapIdRoute
   '/app/seguranca/$id': typeof AppSegurancaIdRoute
   '/app/validacao/$id': typeof AppValidacaoIdRoute
+  '/api/integracoes/oauth/callback': typeof ApiIntegracoesOauthCallbackRoute
+  '/api/integracoes/oauth/iniciar': typeof ApiIntegracoesOauthIniciarRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
 }
@@ -420,6 +438,8 @@ export interface FileRoutesById {
   '/app/roadmap/$id': typeof AppRoadmapIdRoute
   '/app/seguranca/$id': typeof AppSegurancaIdRoute
   '/app/validacao/$id': typeof AppValidacaoIdRoute
+  '/api/integracoes/oauth/callback': typeof ApiIntegracoesOauthCallbackRoute
+  '/api/integracoes/oauth/iniciar': typeof ApiIntegracoesOauthIniciarRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
 }
@@ -469,6 +489,8 @@ export interface FileRouteTypes {
     | '/app/roadmap/$id'
     | '/app/seguranca/$id'
     | '/app/validacao/$id'
+    | '/api/integracoes/oauth/callback'
+    | '/api/integracoes/oauth/iniciar'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
   fileRoutesByTo: FileRoutesByTo
@@ -515,6 +537,8 @@ export interface FileRouteTypes {
     | '/app/roadmap/$id'
     | '/app/seguranca/$id'
     | '/app/validacao/$id'
+    | '/api/integracoes/oauth/callback'
+    | '/api/integracoes/oauth/iniciar'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
   id:
@@ -562,6 +586,8 @@ export interface FileRouteTypes {
     | '/app/roadmap/$id'
     | '/app/seguranca/$id'
     | '/app/validacao/$id'
+    | '/api/integracoes/oauth/callback'
+    | '/api/integracoes/oauth/iniciar'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
   fileRoutesById: FileRoutesById
@@ -590,6 +616,8 @@ export interface RootRouteChildren {
   ApiSegurancaRoute: typeof ApiSegurancaRoute
   ApiStripeWebhookRoute: typeof ApiStripeWebhookRoute
   ApiIntegracoesExecutarRoute: typeof ApiIntegracoesExecutarRoute
+  ApiIntegracoesOauthCallbackRoute: typeof ApiIntegracoesOauthCallbackRoute
+  ApiIntegracoesOauthIniciarRoute: typeof ApiIntegracoesOauthIniciarRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
 }
@@ -897,6 +925,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppValidacaoIdRouteImport
       parentRoute: typeof AppRoute
     }
+    '/api/integracoes/oauth/callback': {
+      id: '/api/integracoes/oauth/callback'
+      path: '/api/integracoes/oauth/callback'
+      fullPath: '/api/integracoes/oauth/callback'
+      preLoaderRoute: typeof ApiIntegracoesOauthCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/integracoes/oauth/iniciar': {
+      id: '/api/integracoes/oauth/iniciar'
+      path: '/api/integracoes/oauth/iniciar'
+      fullPath: '/api/integracoes/oauth/iniciar'
+      preLoaderRoute: typeof ApiIntegracoesOauthIniciarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/lovable/email/auth/preview': {
       id: '/lovable/email/auth/preview'
       path: '/lovable/email/auth/preview'
@@ -987,6 +1029,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiSegurancaRoute: ApiSegurancaRoute,
   ApiStripeWebhookRoute: ApiStripeWebhookRoute,
   ApiIntegracoesExecutarRoute: ApiIntegracoesExecutarRoute,
+  ApiIntegracoesOauthCallbackRoute: ApiIntegracoesOauthCallbackRoute,
+  ApiIntegracoesOauthIniciarRoute: ApiIntegracoesOauthIniciarRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
 }

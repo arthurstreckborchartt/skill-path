@@ -238,6 +238,43 @@ export function useIntegracoes(projetoId?: string) {
     [carregar, ocupado],
   );
 
+  /**
+   * Começa a conexão com um provedor.
+   *
+   * Duas etapas de propósito: o servidor precisa do `Bearer` para saber quem está conectando — a
+   * sessão do Supabase vive no `localStorage`, e uma navegação de topo não a carregaria. Então
+   * pedimos a URL com a sessão na mão e só depois saímos do app.
+   *
+   * `location.href` e não `window.open`: bloqueador de pop-up mataria a janela, e o retorno
+   * precisa cair na mesma aba para o cookie do fluxo chegar junto.
+   */
+  const conectar = useCallback(async (provedor: Provedor) => {
+    const { data } = await supabase.auth.getSession();
+    const token = data.session?.access_token;
+    if (!token) {
+      setEstado((a) =>
+        a.estado === "pronto" ? { ...a, erro: "Sua sessão expirou. Entre de novo." } : a,
+      );
+      return;
+    }
+
+    const resposta = await fetch("/api/integracoes/oauth/iniciar", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ provedor }),
+    });
+
+    const corpo = (await resposta.json().catch(() => ({}))) as { url?: string; erro?: string };
+    if (!resposta.ok || !corpo.url) {
+      setEstado((a) =>
+        a.estado === "pronto" ? { ...a, erro: corpo.erro ?? "Não consegui começar a conexão." } : a,
+      );
+      return;
+    }
+
+    window.location.href = corpo.url;
+  }, []);
+
   const desconectar = useCallback(
     async (provedor: Provedor) => {
       const { error } = await supabase.from("pathly_conexoes").delete().eq("provedor", provedor);
@@ -250,5 +287,5 @@ export function useIntegracoes(projetoId?: string) {
     [carregar],
   );
 
-  return { estado, ocupado, pedir, decidir, executar, desconectar, recarregar: carregar };
+  return { estado, ocupado, pedir, decidir, executar, conectar, desconectar, recarregar: carregar };
 }
