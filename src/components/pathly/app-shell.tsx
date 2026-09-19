@@ -2,6 +2,7 @@ import { Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { FolderKanban, Home, Plug, Search, Settings, User } from "lucide-react";
 import { Btn, Logo } from "./ui";
 import { Copilot } from "./copilot";
+import { FundoAnimado } from "./fundo-animado";
 import { cn } from "@/lib/utils";
 
 // Oportunidades (vagas) fica fora da navegação por enquanto: a tela ainda usa dados de
@@ -57,7 +58,17 @@ function AppShellInner() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   return (
-    <div className="min-h-screen bg-background">
+    /*
+      `bg-background` saiu daqui: o fundo opaco escondia o shader. Quem pinta o fundo agora e o
+      <body>, e o gradiente fica entre ele e o conteudo.
+
+      `isolate` e o que torna isso possivel. O gradiente usa `z-index: -1` para ficar atras do
+      conteudo; sem um contexto de empilhamento proprio neste elemento, esse -1 sobe ate a raiz da
+      pagina e vai parar atras do fundo do <body>, sumindo. Com `isolate`, ele fica preso entre o
+      fundo (transparente) deste container e tudo que esta dentro.
+    */
+    <div className="relative isolate min-h-screen">
+      <FundoAnimado />
       {/* Desktop sidebar */}
       <aside className="fixed top-0 left-0 z-30 hidden h-screen w-60 flex-col border-r border-sidebar-border bg-sidebar p-4 lg:flex">
         <Link to="/" className="tap mb-8 px-2 pt-1">
