@@ -163,9 +163,16 @@ export function useCopilot(projetoId: string | null, faceta: Faceta | null) {
     }));
   }, [projetoId, e.anteriorA]);
 
+  /**
+   * Manda a pergunta e devolve se ela **de fato** chegou a ser respondida.
+   *
+   * O retorno existe para quem chama poder distinguir "não enviei" de "enviei e falhou" — sem ele,
+   * o envio automático da primeira mensagem apagava a pergunta guardada antes de saber se valeu, e
+   * qualquer desistência no meio do caminho perdia o texto da pessoa para sempre, em silêncio.
+   */
   const perguntar = useCallback(
-    async (pergunta: string, modo?: Modo) => {
-      if (!projetoId || e.respondendo || !pergunta.trim()) return;
+    async (pergunta: string, modo?: Modo): Promise<boolean> => {
+      if (!projetoId || e.respondendo || !pergunta.trim()) return false;
 
       // Otimista: a pergunta aparece antes da resposta chegar. O id provisório nunca vai para o
       // banco — ele existe só para a chave de lista do React até a recarga.
@@ -189,7 +196,7 @@ export function useCopilot(projetoId: string | null, faceta: Faceta | null) {
         const token = data.session?.access_token;
         if (!token) {
           setE((a) => ({ ...a, respondendo: false, erro: "Sua sessão expirou. Entre de novo." }));
-          return;
+          return false;
         }
 
         const r = await fetch("/api/copilot", {
@@ -205,7 +212,7 @@ export function useCopilot(projetoId: string | null, faceta: Faceta | null) {
             respondendo: false,
             erro: corpo.erro ?? "Não consegui responder agora.",
           }));
-          return;
+          return false;
         }
 
         const resposta = corpo.resposta;
@@ -229,8 +236,11 @@ export function useCopilot(projetoId: string | null, faceta: Faceta | null) {
           const propostas = await lerPropostasPendentes(projetoId);
           setE((a) => ({ ...a, propostas }));
         }
+
+        return true;
       } catch {
         setE((a) => ({ ...a, respondendo: false, erro: "Sem conexão. Tente de novo." }));
+        return false;
       }
     },
     [projetoId, faceta, e.respondendo],

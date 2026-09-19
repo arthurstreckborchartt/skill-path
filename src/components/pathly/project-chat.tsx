@@ -69,13 +69,60 @@ export function ProjectChat({ projetoId }: { projetoId: string }) {
     if (!estado.respondendo) inputRef.current?.focus();
   }, [estado.respondendo]);
 
+  /*
+   * A primeira mensagem do projeto, vinda da tela de criação pelo `sessionStorage`.
+   *
+   * ## O que estava errado
+   *
+   * A versão anterior apagava a chave **antes** de enviar. Quando o envio não ia até o fim — e
+   * isso acontecia: reproduzi a tela vazia com zero chamadas ao `/api/copilot` e a chave já
+   * consumida — a ideia que a pessoa escreveu sumia para sempre, sem erro, sem aviso. Ela criava
+   * o projeto, chegava no chat e encontrava a tela de boas-vindas como se nada tivesse digitado.
+   *
+   * Não fui atrás da causa exata da desistência no meio do caminho. Fui atrás da propriedade que
+   * transformava um tropeço em perda definitiva: **consumir antes de confirmar**.
+   *
+   * ## O que vale agora
+   *
+   * A chave só sai do `sessionStorage` depois que `perguntar` confirma que respondeu. Se falhar, a
+   * pergunta continua guardada e a próxima montagem tenta de novo — recarregar a página resolve,
+   * em vez de perder. O `enviando` impede duas tentativas ao mesmo tempo, já que este efeito
+   * reexecuta a cada mudança de estado.
+   */
+  const enviando = useRef(false);
+
   useEffect(() => {
-    if (estado.carregando || estado.respondendo || estado.mensagens.length > 0) return;
+    if (estado.carregando) return;
+
     const key = `pathly.project.prompt.${projetoId}`;
     const pending = window.sessionStorage.getItem(key);
     if (!pending) return;
-    window.sessionStorage.removeItem(key);
-    void perguntar(pending, "guiar");
+
+    /*
+     * Conversa já tem mensagem: a pergunta guardada chegou ao destino, então a chave sai.
+     *
+     * Isso acontece de verdade, e é o outro lado da moeda de só apagar depois de confirmar. A
+     * instância que dispara o envio na criação do projeto costuma morrer na transição de rota —
+     * a requisição vai até o fim e o servidor grava, mas o `.then` dela nunca roda. Quem monta
+     * depois carrega a conversa pronta do banco e encontra a chave órfã aqui.
+     *
+     * Sem esta limpeza a chave ficaria para sempre, esperando uma conversa vazia que não volta.
+     */
+    if (estado.mensagens.length > 0) {
+      window.sessionStorage.removeItem(key);
+      return;
+    }
+
+    if (estado.respondendo || enviando.current) return;
+
+    enviando.current = true;
+    void perguntar(pending, "guiar")
+      .then((enviou) => {
+        if (enviou) window.sessionStorage.removeItem(key);
+      })
+      .finally(() => {
+        enviando.current = false;
+      });
   }, [estado.carregando, estado.mensagens.length, estado.respondendo, perguntar, projetoId]);
 
   function enviar(pergunta: string, comModo?: Modo) {
