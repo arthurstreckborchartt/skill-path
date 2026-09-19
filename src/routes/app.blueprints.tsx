@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { ArrowRight, Blocks, Loader2, Plus, X } from "lucide-react";
+import { ArrowRight, Blocks, Plus, X } from "lucide-react";
 import { Btn, Chip, PageHeader, Panel, Reveal } from "@/components/pathly/ui";
 import { Questionario, ResumoRespostas } from "@/components/pathly/questionario";
 import { BLOCOS, blocosProntos } from "@/lib/blueprint/contrato";
 import { RESPOSTAS_VAZIAS, respostasSuficientes, type Respostas } from "@/lib/blueprint/respostas";
 import { criarProjeto, useProjetos } from "@/lib/blueprint/usar-projetos";
+import { Spinner } from "@/components/ui/spell-spinner";
 
 export const Route = createFileRoute("/app/blueprints")({
   staticData: { sitemap: false },
@@ -99,7 +100,7 @@ function TelaProjetos() {
               >
                 {criando ? (
                   <>
-                    <Loader2 className="size-4 animate-spin" /> Criando…
+                    <Spinner className="size-4" /> Criando…
                   </>
                 ) : (
                   <>

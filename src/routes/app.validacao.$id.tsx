@@ -7,7 +7,6 @@ import {
   ChevronDown,
   Database,
   LayoutPanelTop,
-  Loader2,
   Lock,
 } from "lucide-react";
 import { Btn, Panel, ProgressBar, Reveal } from "@/components/pathly/ui";
@@ -21,6 +20,8 @@ import {
   type Resultado,
 } from "@/lib/validacao/contrato";
 import { doDominio } from "@/lib/validacao/motor";
+import { Spinner } from "@/components/ui/spell-spinner";
+import { BlurReveal } from "@/components/ui/blur-reveal";
 
 export const Route = createFileRoute("/app/validacao/$id")({
   staticData: { sitemap: false },
@@ -131,7 +132,7 @@ function TelaValidacao() {
               >
                 {sondando ? (
                   <>
-                    <Loader2 className="size-4 animate-spin" /> Sondando…
+                    <Spinner className="size-4" /> Sondando…
                   </>
                 ) : (
                   <>
@@ -286,9 +287,20 @@ function VerditoPainel({
     >
       <div className="flex items-center gap-2">
         {travado ? <Lock className="size-4" /> : <Check className="size-4" />}
-        <h2 className="font-display text-lg font-semibold">
+        {/*
+          Letra a letra, e não palavra a palavra como no resto do app: é o veredito, a frase mais
+          importante da tela, e uma revelação mais lenta faz a pessoa ler em vez de varrer. Vale
+          aqui justamente por ser uma frase curta e única — o componente custa uma `motion.span`
+          por caractere, então não serve para bloco de texto.
+        */}
+        <BlurReveal
+          as="h2"
+          className="font-display text-lg font-semibold"
+          speedReveal={2.2}
+          speedSegment={0.4}
+        >
           {travado ? "Há bloqueios para resolver" : "Nada bloqueia seguir"}
-        </h2>
+        </BlurReveal>
       </div>
 
       {motivo && <p className="mt-2 max-w-2xl text-sm leading-relaxed">{motivo}</p>}

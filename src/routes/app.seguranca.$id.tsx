@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, Eye, Loader2, ShieldAlert, Sparkles } from "lucide-react";
+import { ArrowLeft, Eye, ShieldAlert, Sparkles } from "lucide-react";
 import { Btn, Chip, Panel, Reveal } from "@/components/pathly/ui";
 import { BlocoCopiavel } from "@/components/pathly/banco-vistas";
 import {
@@ -16,6 +16,7 @@ import type { ContextoSeguranca } from "@/lib/seguranca/riscos";
 import { completarBlueprint } from "@/lib/blueprint/contrato";
 import { respostasSuficientes } from "@/lib/blueprint/respostas";
 import { cn } from "@/lib/utils";
+import { Spinner } from "@/components/ui/spell-spinner";
 
 export const Route = createFileRoute("/app/seguranca/$id")({
   staticData: { sitemap: false },
@@ -171,11 +172,7 @@ function TelaSeguranca() {
               onClick={() => void buscarExtras()}
               title="Buscar riscos específicos deste projeto"
             >
-              {buscando ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <Sparkles className="size-4" />
-              )}
+              {buscando ? <Spinner className="size-4" /> : <Sparkles className="size-4" />}
             </Btn>
           </div>
 

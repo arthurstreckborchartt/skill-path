@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, GraduationCap, Loader2, Network, RefreshCw, Wrench } from "lucide-react";
+import { ArrowLeft, GraduationCap, Network, RefreshCw, Wrench } from "lucide-react";
 import { Btn, Chip, Panel, Reveal } from "@/components/pathly/ui";
 import { BlocoCopiavel, VistaChecklist, VistaPrompts } from "@/components/pathly/banco-vistas";
 import { VistaConceitos, VistaMapa } from "@/components/pathly/api-vistas";
 import { useProjeto } from "@/lib/blueprint/usar-projetos";
 import { useDerivadosApi, useMapaApi } from "@/lib/api/usar-api";
 import { cn } from "@/lib/utils";
+import { Spinner } from "@/components/ui/spell-spinner";
 
 export const Route = createFileRoute("/app/api/$id")({
   staticData: { sitemap: false },
@@ -112,7 +113,7 @@ function TelaApi() {
             <Btn className="mt-5" disabled={gerando} onClick={() => void gerar(false)}>
               {gerando ? (
                 <>
-                  <Loader2 className="size-4 animate-spin" /> Projetando — leva até dois minutos
+                  <Spinner className="size-4" /> Projetando — leva até dois minutos
                 </>
               ) : (
                 <>
@@ -155,11 +156,7 @@ function TelaApi() {
               onClick={() => void gerar(true)}
               title="Projetar de novo"
             >
-              {gerando ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <RefreshCw className="size-4" />
-              )}
+              {gerando ? <Spinner className="size-4" /> : <RefreshCw className="size-4" />}
             </Btn>
           </div>
 

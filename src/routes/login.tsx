@@ -104,7 +104,6 @@ function LoginPage() {
           <AuthField
             label="Nova senha"
             type="password"
-            placeholder="mínimo 8 caracteres"
             value={password}
             onChange={setPassword}
             autoComplete="new-password"
@@ -134,7 +133,6 @@ function LoginPage() {
         <AuthField
           label="E-mail"
           type="email"
-          placeholder="voce@email.com"
           value={email}
           onChange={setEmail}
           autoComplete="email"
@@ -144,7 +142,6 @@ function LoginPage() {
         <AuthField
           label="Senha"
           type="password"
-          placeholder="••••••••"
           value={password}
           onChange={setPassword}
           autoComplete="current-password"

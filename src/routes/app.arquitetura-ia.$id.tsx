@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, Brain, Loader2, RefreshCw } from "lucide-react";
+import { ArrowLeft, Brain, RefreshCw } from "lucide-react";
 import { Btn, Panel, Reveal } from "@/components/pathly/ui";
 import { BlocoCopiavel } from "@/components/pathly/banco-vistas";
 import {
@@ -16,6 +16,7 @@ import { useArquiteturaIa, useDerivadosIa } from "@/lib/arquitetura-ia/usar-arqu
 import type { ContextoProjeto } from "@/lib/arquitetura-ia/derivados";
 import { completarBlueprint } from "@/lib/blueprint/contrato";
 import { cn } from "@/lib/utils";
+import { Spinner } from "@/components/ui/spell-spinner";
 
 export const Route = createFileRoute("/app/arquitetura-ia/$id")({
   staticData: { sitemap: false },
@@ -124,7 +125,7 @@ function TelaArquiteturaIa() {
             <Btn className="mt-5" disabled={gerando} onClick={() => void gerar(false)}>
               {gerando ? (
                 <>
-                  <Loader2 className="size-4 animate-spin" /> Analisando — leva até dois minutos
+                  <Spinner className="size-4" /> Analisando — leva até dois minutos
                 </>
               ) : (
                 <>
@@ -160,11 +161,7 @@ function TelaArquiteturaIa() {
             onClick={() => void gerar(true)}
             title="Analisar de novo"
           >
-            {gerando ? (
-              <Loader2 className="size-4 animate-spin" />
-            ) : (
-              <RefreshCw className="size-4" />
-            )}
+            {gerando ? <Spinner className="size-4" /> : <RefreshCw className="size-4" />}
           </Btn>
         </div>
       </Reveal>

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, Check, Loader2, Map as MapIcon, SkipForward, X } from "lucide-react";
+import { ArrowLeft, Check, Map as MapIcon, SkipForward, X } from "lucide-react";
 import { Btn, Chip, Panel, Reveal } from "@/components/pathly/ui";
 import {
   BarraProgresso,
@@ -17,6 +17,7 @@ import {
   useProgresso,
   useRoadmap,
 } from "@/lib/blueprint/usar-roadmap";
+import { Spinner } from "@/components/ui/spell-spinner";
 
 export const Route = createFileRoute("/app/roadmap/$id")({
   staticData: { sitemap: false },
@@ -212,7 +213,7 @@ function TelaRoadmap() {
               <div className="mt-5">
                 {conteudo.estado === "carregando" && (
                   <div className="flex items-center gap-2.5 py-8 text-sm text-muted-foreground">
-                    <Loader2 className="size-4 animate-spin text-primary" />
+                    <Spinner className="size-4" />
                     Escrevendo esta etapa para o seu projeto — leva até um minuto e meio.
                   </div>
                 )}

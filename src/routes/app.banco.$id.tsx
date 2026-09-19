@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, Database, GraduationCap, Loader2, RefreshCw, Wrench } from "lucide-react";
+import { ArrowLeft, Database, GraduationCap, RefreshCw, Wrench } from "lucide-react";
 import { Btn, Chip, Panel, Reveal } from "@/components/pathly/ui";
 import {
   BlocoCopiavel,
@@ -15,6 +15,7 @@ import { useDerivados, useModeloDeDados, type Modo } from "@/lib/banco/usar-banc
 import { DIALETOS, ROTULO_DIALETO } from "@/lib/banco/dialetos";
 import { contarPorGravidade } from "@/lib/banco/diagnostico";
 import { cn } from "@/lib/utils";
+import { Spinner } from "@/components/ui/spell-spinner";
 
 export const Route = createFileRoute("/app/banco/$id")({
   staticData: { sitemap: false },
@@ -131,7 +132,7 @@ function TelaBanco() {
             <Btn className="mt-5" disabled={gerando} onClick={() => void gerar(false)}>
               {gerando ? (
                 <>
-                  <Loader2 className="size-4 animate-spin" /> Projetando — leva até dois minutos
+                  <Spinner className="size-4" /> Projetando — leva até dois minutos
                 </>
               ) : (
                 <>
@@ -163,11 +164,7 @@ function TelaBanco() {
               onClick={() => void gerar(true)}
               title="Projetar de novo"
             >
-              {gerando ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <RefreshCw className="size-4" />
-              )}
+              {gerando ? <Spinner className="size-4" /> : <RefreshCw className="size-4" />}
             </Btn>
           </div>
 

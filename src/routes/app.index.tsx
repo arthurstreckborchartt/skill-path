@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { ArrowRight, FolderKanban, Loader2, Plus, ShieldCheck } from "lucide-react";
+import { ArrowRight, FolderKanban, Plus, ShieldCheck } from "lucide-react";
 import {
   PromptInput,
   PromptInputFooter,
@@ -12,6 +12,7 @@ import { Btn, Chip, Panel, Reveal } from "@/components/pathly/ui";
 import { useDigitando } from "@/components/pathly/usar-digitando";
 import { criarProjeto, useProjetos } from "@/lib/blueprint/usar-projetos";
 import { RESPOSTAS_VAZIAS } from "@/lib/blueprint/respostas";
+import { Spinner } from "@/components/ui/spell-spinner";
 
 export const Route = createFileRoute("/app/")({
   staticData: { sitemap: false },
@@ -168,7 +169,7 @@ function CreateWorkspace() {
               >
                 {busy ? (
                   <>
-                    <Loader2 className="size-4 animate-spin" /> Criando projeto…
+                    <Spinner className="size-4" /> Criando projeto…
                   </>
                 ) : (
                   <>

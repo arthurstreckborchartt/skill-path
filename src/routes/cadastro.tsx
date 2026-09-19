@@ -90,7 +90,6 @@ function SignupPage() {
         )}
         <AuthField
           label="Nome"
-          placeholder="Seu nome"
           value={name}
           onChange={setName}
           autoComplete="name"
@@ -100,7 +99,6 @@ function SignupPage() {
         <AuthField
           label="E-mail"
           type="email"
-          placeholder="voce@email.com"
           value={email}
           onChange={setEmail}
           autoComplete="email"
@@ -110,7 +108,6 @@ function SignupPage() {
         <AuthField
           label="Senha"
           type="password"
-          placeholder="mínimo 8 caracteres"
           value={password}
           onChange={setPassword}
           autoComplete="new-password"

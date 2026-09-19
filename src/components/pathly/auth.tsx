@@ -1,6 +1,7 @@
 ﻿import { type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { Logo } from "./ui";
+import { LabelInput } from "@/components/ui/label-input";
 
 export function AuthLayout({
   title,
@@ -54,10 +55,22 @@ export function AuthLayout({
   );
 }
 
+/**
+ * O campo dos formularios de entrada e cadastro.
+ *
+ * Por dentro e o `LabelInput` do registry `@spell`, que traz duas coisas que a versao anterior
+ * nao tinha: o rotulo que flutua para dentro da borda quando o campo tem conteudo, e o botao de
+ * mostrar senha. O segundo importa mais do que parece — digitar senha no escuro, sem poder
+ * conferir, e a causa mais comum de "minha senha esta errada" que na verdade era um typo.
+ *
+ * A prop `placeholder` saiu da API de proposito. Neste desenho o rotulo E o placeholder: ele
+ * ocupa o campo vazio e sobe para dentro da borda quando a pessoa digita. Passar os dois faz os
+ * textos se atropelarem — o campo de e-mail mostrava "E-mail  email.com" sobrepostos. Tirar a
+ * prop e melhor que ignora-la em silencio: quem tentar passar recebe erro de tipo.
+ */
 export function AuthField({
   label,
   type = "text",
-  placeholder,
   value,
   onChange,
   autoComplete,
@@ -66,7 +79,6 @@ export function AuthField({
 }: {
   label: string;
   type?: string;
-  placeholder?: string;
   value: string;
   onChange: (value: string) => void;
   autoComplete?: string;
@@ -74,20 +86,16 @@ export function AuthField({
   disabled?: boolean;
 }) {
   return (
-    <label className="block">
-      <span className="mb-1.5 block text-xs font-medium text-muted-foreground">{label}</span>
-      <input
-        type={type}
-        placeholder={placeholder}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        autoComplete={autoComplete}
-        required={required}
-        disabled={disabled}
-        // text-base no celular: abaixo de 16px o Safari do iPhone dá zoom ao focar o campo.
-        className="h-12 w-full rounded-md border border-input bg-surface-2 px-4 text-base outline-hidden transition-colors placeholder:text-muted-foreground focus:border-foreground/35 focus:ring-2 focus:ring-ring disabled:opacity-60 sm:text-sm"
-      />
-    </label>
+    <LabelInput
+      label={label}
+      type={type}
+      placeholder=" "
+      value={value}
+      onChange={(evento) => onChange(evento.target.value)}
+      required={required}
+      disabled={disabled}
+      {...(autoComplete ? { autoComplete } : {})}
+    />
   );
 }
 

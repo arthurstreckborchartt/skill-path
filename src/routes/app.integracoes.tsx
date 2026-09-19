@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Check, Loader2, Lock, Plug, ShieldCheck, TriangleAlert, X } from "lucide-react";
+import { Check, Lock, Plug, ShieldCheck, TriangleAlert, X } from "lucide-react";
 import { Btn, Chip, PageHeader, Panel, Reveal } from "@/components/pathly/ui";
 import { cn } from "@/lib/utils";
 import { useIntegracoes } from "@/lib/integracoes/usar-integracoes";
@@ -11,6 +11,7 @@ import {
   type Impacto,
 } from "@/lib/integracoes/contrato";
 import { PROVEDORES_DISPONIVEIS } from "@/lib/integracoes/provedores";
+import { Spinner } from "@/components/ui/spell-spinner";
 
 export const Route = createFileRoute("/app/integracoes")({
   staticData: { sitemap: false },
@@ -287,7 +288,7 @@ function CartaoAcao({
       {pendente && onAprovar && onRecusar && (
         <div className="mt-4 flex gap-2">
           <Btn size="sm" disabled={ocupado} onClick={onAprovar}>
-            {ocupado ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
+            {ocupado ? <Spinner className="size-4" /> : <Check className="size-4" />}
             Aprovar
           </Btn>
           <Btn variant="ghost" size="sm" disabled={ocupado} onClick={onRecusar}>

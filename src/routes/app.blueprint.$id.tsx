@@ -5,7 +5,6 @@ import {
   Brain,
   Check,
   Database,
-  Loader2,
   Map as MapIcon,
   Network,
   Pencil,
@@ -36,6 +35,7 @@ import {
   type Tecnico,
 } from "@/lib/blueprint/contrato";
 import { gerarBloco, salvarRespostas, useProjeto } from "@/lib/blueprint/usar-projetos";
+import { Spinner } from "@/components/ui/spell-spinner";
 
 export const Route = createFileRoute("/app/blueprint/$id")({
   staticData: { sitemap: false },
@@ -395,7 +395,7 @@ function TelaBlueprint() {
                   >
                     {salvando ? (
                       <>
-                        <Loader2 className="size-4 animate-spin" /> Salvando…
+                        <Spinner className="size-4" /> Salvando…
                       </>
                     ) : (
                       <>
@@ -458,7 +458,7 @@ function TelaBlueprint() {
               <div className="mt-4">
                 {estaGerando && (
                   <div className="flex items-center gap-2.5 text-sm text-muted-foreground">
-                    <Loader2 className="size-4 animate-spin text-primary" />
+                    <Spinner className="size-4" />
                     Montando esta parte — leva {ESPERA[bloco]}.
                   </div>
                 )}
