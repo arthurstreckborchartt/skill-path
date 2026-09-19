@@ -28,7 +28,7 @@ export function AuthLayout({
       </div>
 
       {/* Visual side */}
-       <aside className="relative hidden overflow-hidden border-l border-border bg-[var(--gradient-panel-strong)] text-foreground lg:block">
+      <aside className="relative hidden overflow-hidden border-l border-border bg-[var(--gradient-panel-strong)] text-foreground lg:block">
         <div className="relative flex h-full flex-col justify-center gap-0 p-14">
           {[
             { label: "Ideia", note: "o que você quer construir" },
@@ -39,11 +39,13 @@ export function AuthLayout({
           ].map((row, i) => (
             <div
               key={row.label}
-               className="animate-[fade-up_0.7s_cubic-bezier(0.16,1,0.3,1)_both] flex items-center justify-between border-b border-foreground/10 px-1 py-6"
+              className="animate-[fade-up_0.7s_cubic-bezier(0.16,1,0.3,1)_both] flex items-center justify-between border-b border-foreground/10 px-1 py-6"
               style={{ animationDelay: `${i * 110}ms` }}
             >
-              <span className="font-display text-xl font-semibold text-foreground">{row.label}</span>
-               <span className="text-xs text-muted-foreground">{row.note}</span>
+              <span className="font-display text-xl font-semibold text-foreground">
+                {row.label}
+              </span>
+              <span className="text-xs text-muted-foreground">{row.note}</span>
             </div>
           ))}
         </div>
@@ -83,7 +85,7 @@ export function AuthField({
         required={required}
         disabled={disabled}
         // text-base no celular: abaixo de 16px o Safari do iPhone dá zoom ao focar o campo.
-         className="h-12 w-full rounded-md border border-input bg-surface-2 px-4 text-base outline-hidden transition-colors placeholder:text-muted-foreground focus:border-foreground/35 focus:ring-2 focus:ring-ring disabled:opacity-60 sm:text-sm"
+        className="h-12 w-full rounded-md border border-input bg-surface-2 px-4 text-base outline-hidden transition-colors placeholder:text-muted-foreground focus:border-foreground/35 focus:ring-2 focus:ring-ring disabled:opacity-60 sm:text-sm"
       />
     </label>
   );

@@ -1,12 +1,5 @@
 import { Link, Outlet, useRouterState } from "@tanstack/react-router";
-import {
-  FolderKanban,
-  Home,
-  Plug,
-  Search,
-  Settings,
-  User,
-} from "lucide-react";
+import { FolderKanban, Home, Plug, Search, Settings, User } from "lucide-react";
 import { Btn, Logo } from "./ui";
 import { Copilot } from "./copilot";
 import { cn } from "@/lib/utils";
@@ -91,7 +84,11 @@ function AppShellInner() {
         <Link to="/" className="tap">
           <Logo />
         </Link>
-        <Link to="/app/configuracoes"><Btn variant="ghost" size="sm"><Settings className="size-4" /></Btn></Link>
+        <Link to="/app/configuracoes">
+          <Btn variant="ghost" size="sm">
+            <Settings className="size-4" />
+          </Btn>
+        </Link>
       </header>
 
       <div className="fixed top-0 right-0 left-60 z-20 hidden h-16 items-center border-b border-border bg-background px-8 lg:flex">
@@ -99,7 +96,9 @@ function AppShellInner() {
           <div className="flex h-9 w-full max-w-lg items-center gap-2 rounded-md border border-border bg-surface px-3 text-xs text-muted-foreground">
             <Search className="size-3.5 shrink-0" />
             <span className="truncate">Buscar projetos, decisões ou artefatos…</span>
-            <kbd className="ml-auto shrink-0 rounded border border-border bg-surface-2 px-1.5 py-0.5 font-sans text-[10px]">⌘K</kbd>
+            <kbd className="ml-auto shrink-0 rounded border border-border bg-surface-2 px-1.5 py-0.5 font-sans text-[10px]">
+              ⌘K
+            </kbd>
           </div>
           <span className="shrink-0 text-xs text-muted-foreground">Pathly Workspace</span>
         </div>

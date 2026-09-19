@@ -8,7 +8,21 @@ import tseslint from "typescript-eslint";
 export default tseslint.config(
   // `.agents` sao skills de plugins instalados localmente: nao sao do projeto e nao
   // estao no git. `*.gen.ts` e gerado.
-  { ignores: ["dist", ".output", ".vinxi", ".agents", "**/*.gen.ts"] },
+  //
+  // Os dois de `integrations/supabase` tambem se declaram gerados, e quem os gera nao
+  // roda prettier nem eslint. Ja estavam no `.prettierignore` pela mesma razao:
+  // corrigir a mao so adianta um diff que a proxima geracao desfaz.
+  {
+    ignores: [
+      "dist",
+      ".output",
+      ".vinxi",
+      ".agents",
+      "**/*.gen.ts",
+      "src/integrations/supabase/types.ts",
+      "src/integrations/supabase/previewAuthStorage.ts",
+    ],
+  },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ["**/*.{ts,tsx}"],

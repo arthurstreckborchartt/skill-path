@@ -11,5 +11,10 @@ routeTree.gen.ts
 # a proxima geracao volta sem formatacao e o diff reaparece.
 src/integrations/supabase/types.ts
 
+# Mesma razao: o arquivo se declara gerado na primeira linha ("This file is
+# automatically generated. Do not edit it directly."). Quem gera nao roda o
+# prettier, entao formatar aqui so adianta um diff que volta sozinho.
+src/integrations/supabase/previewAuthStorage.ts
+
 # Skills de plugins instalados localmente. Nao sao do projeto e nao estao no git.
 .agents

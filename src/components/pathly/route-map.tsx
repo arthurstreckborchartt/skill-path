@@ -57,8 +57,7 @@ function NodeDot({ step, active }: { step: StepView; active: boolean }) {
         className={cn(
           "relative grid size-11 place-items-center rounded-md border font-display text-sm font-semibold transition-colors duration-200",
           s === "concluído" && "border-primary/40 bg-primary text-primary-foreground",
-          s === "atual" &&
-            "border-foreground bg-surface text-foreground ring-2 ring-foreground/10",
+          s === "atual" && "border-foreground bg-surface text-foreground ring-2 ring-foreground/10",
           s === "futuro" && "border-border bg-surface-2 text-foreground/70",
           s === "bloqueado" && "border-border/60 bg-surface-2/60 text-muted-foreground",
           active && "border-foreground",

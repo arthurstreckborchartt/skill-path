@@ -226,7 +226,7 @@ function RoutePage() {
             key={v.id}
             onClick={() => setView(v.id)}
             className={cn(
-               "tap rounded-sm px-3.5 py-2 text-xs font-medium transition-colors sm:text-sm",
+              "tap rounded-sm px-3.5 py-2 text-xs font-medium transition-colors sm:text-sm",
               view === v.id
                 ? "bg-primary/15 text-primary"
                 : "text-muted-foreground hover:text-foreground",
@@ -240,7 +240,7 @@ function RoutePage() {
       {/* mapa + detalhe */}
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] lg:items-start">
         <div>
-           <div className="mb-4 flex items-center justify-between rounded-md border border-border bg-surface px-4 py-3">
+          <div className="mb-4 flex items-center justify-between rounded-md border border-border bg-surface px-4 py-3">
             <div>
               <p className="text-[11px] text-muted-foreground">Hoje</p>
               <p className="font-display text-sm font-semibold">
@@ -252,7 +252,7 @@ function RoutePage() {
 
           <RouteTrack steps={visible} selectedId={selected?.id ?? null} onSelect={select} />
 
-           <div className="mt-4 flex items-center justify-between rounded-md border border-border bg-surface-2 px-4 py-3">
+          <div className="mt-4 flex items-center justify-between rounded-md border border-border bg-surface-2 px-4 py-3">
             <div>
               <p className="text-[11px] text-muted-foreground">Objetivo</p>
               <p className="font-display text-sm font-semibold text-primary">

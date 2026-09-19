@@ -145,9 +145,7 @@ function TelaProjetos() {
             return (
               <Reveal key={p.id} delay={i * 60}>
                 <button
-                  onClick={() =>
-                    void navigate({ to: "/app/projeto/$id", params: { id: p.id } })
-                  }
+                  onClick={() => void navigate({ to: "/app/projeto/$id", params: { id: p.id } })}
                   className="tap grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-4 py-5 text-left"
                 >
                   <div className="min-w-0">

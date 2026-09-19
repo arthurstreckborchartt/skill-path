@@ -230,8 +230,7 @@ function Onboarding() {
       if (!active) return;
 
       const restored =
-        cloud &&
-        (!stored?.updatedAt || !cloud.updatedAt || cloud.updatedAt >= stored.updatedAt)
+        cloud && (!stored?.updatedAt || !cloud.updatedAt || cloud.updatedAt >= stored.updatedAt)
           ? cloud
           : stored;
       if (restored) {
@@ -660,7 +659,7 @@ function BuildingScreen({ onDone, trabalho }: { onDone: () => void; trabalho: Pr
               <div
                 key={label}
                 className={cn(
-                   "flex items-center gap-3 rounded-md border px-4 py-3.5 transition-colors duration-300",
+                  "flex items-center gap-3 rounded-md border px-4 py-3.5 transition-colors duration-300",
                   state === "done"
                     ? "border-primary/40 bg-primary/8"
                     : state === "active"
@@ -731,7 +730,7 @@ function ReadyScreen({ profile, onGo }: { profile: OnboardingProfile; onGo: () =
               <div
                 style={{ animationDelay: `${i * 130}ms` }}
                 className={cn(
-                   "animate-[fade-up_0.4s_cubic-bezier(0.16,1,0.3,1)_both] flex items-center justify-between gap-3 rounded-md border px-4 py-4",
+                  "animate-[fade-up_0.4s_cubic-bezier(0.16,1,0.3,1)_both] flex items-center justify-between gap-3 rounded-md border px-4 py-4",
                   i === milestones.length - 1
                     ? "border-primary/45 bg-primary/10"
                     : "border-border bg-surface/50",
@@ -750,9 +749,7 @@ function ReadyScreen({ profile, onGo }: { profile: OnboardingProfile; onGo: () =
                   {brl(m.income)}
                 </span>
               </div>
-              {i < milestones.length - 1 && (
-                <div className="ml-7 h-4 w-px bg-border" />
-              )}
+              {i < milestones.length - 1 && <div className="ml-7 h-4 w-px bg-border" />}
             </div>
           ))}
         </div>

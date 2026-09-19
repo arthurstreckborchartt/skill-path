@@ -29,7 +29,12 @@ import { cn } from "@/lib/utils";
 export function PathlyMark({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" className={className} fill="none" aria-hidden="true">
-      <path d="M5 19c0-5 4-5 6-7s1-6-1-7" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
+      <path
+        d="M5 19c0-5 4-5 6-7s1-6-1-7"
+        stroke="currentColor"
+        strokeWidth="2.4"
+        strokeLinecap="round"
+      />
       <circle cx="18" cy="6.5" r="2.6" fill="currentColor" />
     </svg>
   );
@@ -70,7 +75,9 @@ export function ProjectChat({ projetoId }: { projetoId: string }) {
           </span>
           <div className="min-w-0">
             <h1 className="truncate text-sm font-semibold">{estado.nomeProjeto || "Projeto"}</h1>
-            <p className="truncate text-xs text-muted-foreground">Planejamento e execução do seu SaaS</p>
+            <p className="truncate text-xs text-muted-foreground">
+              Planejamento e execução do seu SaaS
+            </p>
           </div>
         </div>
         <Chip tone="muted">
@@ -80,12 +87,19 @@ export function ProjectChat({ projetoId }: { projetoId: string }) {
 
       <div className="min-h-0 flex-1">
         {estado.carregando ? (
-          <div className="p-6"><Shimmer>Carregando o contexto do projeto…</Shimmer></div>
+          <div className="p-6">
+            <Shimmer>Carregando o contexto do projeto…</Shimmer>
+          </div>
         ) : (
           <Conversation>
             <ConversationContent className="mx-auto w-full max-w-3xl gap-6 px-4 py-8 sm:px-6">
               {estado.anteriorA && (
-                <Btn variant="ghost" size="sm" className="mx-auto" onClick={() => void carregarMais()}>
+                <Btn
+                  variant="ghost"
+                  size="sm"
+                  className="mx-auto"
+                  onClick={() => void carregarMais()}
+                >
                   <ChevronUp className="size-3.5" /> Mensagens anteriores
                 </Btn>
               )}
@@ -95,9 +109,12 @@ export function ProjectChat({ projetoId }: { projetoId: string }) {
                   <span className="mx-auto grid size-12 place-items-center rounded-md border border-border bg-surface-2">
                     <PathlyMark className="size-5" />
                   </span>
-                  <h2 className="mt-4 font-display text-2xl font-semibold">Vamos construir este SaaS</h2>
+                  <h2 className="mt-4 font-display text-2xl font-semibold">
+                    Vamos construir este SaaS
+                  </h2>
                   <p className="mx-auto mt-2 max-w-lg text-sm leading-relaxed text-muted-foreground">
-                    Conte o que precisa existir, o que já decidiu ou onde travou. O Pathly organiza o plano e pede sua confirmação antes de qualquer mudança.
+                    Conte o que precisa existir, o que já decidiu ou onde travou. O Pathly organiza
+                    o plano e pede sua confirmação antes de qualquer mudança.
                   </p>
                 </div>
               )}
@@ -115,8 +132,14 @@ export function ProjectChat({ projetoId }: { projetoId: string }) {
                 <ChatMessage key={mensagem.id} mensagem={mensagem} />
               ))}
 
-              {estado.respondendo && <Shimmer className="text-sm">Organizando o próximo passo…</Shimmer>}
-              {estado.erro && <p role="alert" className="text-sm text-destructive">{estado.erro}</p>}
+              {estado.respondendo && (
+                <Shimmer className="text-sm">Organizando o próximo passo…</Shimmer>
+              )}
+              {estado.erro && (
+                <p role="alert" className="text-sm text-destructive">
+                  {estado.erro}
+                </p>
+              )}
             </ConversationContent>
             <ConversationScrollButton />
           </Conversation>
@@ -125,7 +148,10 @@ export function ProjectChat({ projetoId }: { projetoId: string }) {
 
       <footer className="border-t border-border bg-background/70 p-3 sm:p-4">
         <div className="chat-composer-frame mx-auto max-w-3xl rounded-lg p-px">
-          <PromptInput onSubmit={({ text }) => enviar(text)} className="border-0 bg-surface shadow-none">
+          <PromptInput
+            onSubmit={({ text }) => enviar(text)}
+            className="border-0 bg-surface shadow-none"
+          >
             <PromptInputTextarea
               ref={inputRef}
               autoFocus
@@ -144,14 +170,19 @@ export function ProjectChat({ projetoId }: { projetoId: string }) {
                     onClick={() => setModo(modo === item ? undefined : item)}
                     className={cn(
                       "tap rounded-md px-2 py-1 text-[11px] transition-colors",
-                      modo === item ? "bg-foreground text-background" : "text-muted-foreground hover:bg-surface-2 hover:text-foreground",
+                      modo === item
+                        ? "bg-foreground text-background"
+                        : "text-muted-foreground hover:bg-surface-2 hover:text-foreground",
                     )}
                   >
                     {MODO_ROTULO[item]}
                   </button>
                 ))}
               </PromptInputTools>
-              <PromptInputSubmit status={estado.respondendo ? "submitted" : "ready"} disabled={estado.respondendo || !texto.trim()} />
+              <PromptInputSubmit
+                status={estado.respondendo ? "submitted" : "ready"}
+                disabled={estado.respondendo || !texto.trim()}
+              />
             </PromptInputFooter>
           </PromptInput>
         </div>
@@ -160,37 +191,79 @@ export function ProjectChat({ projetoId }: { projetoId: string }) {
   );
 }
 
-function ChatMessage({ mensagem }: { mensagem: { papel: string; texto: string; resposta: RespostaCopilot | null } }) {
+function ChatMessage({
+  mensagem,
+}: {
+  mensagem: { papel: string; texto: string; resposta: RespostaCopilot | null };
+}) {
   if (mensagem.papel === "usuario") {
-    return <Message from="user"><MessageContent className="bg-foreground text-background">{mensagem.texto}</MessageContent></Message>;
+    return (
+      <Message from="user">
+        <MessageContent className="bg-foreground text-background">{mensagem.texto}</MessageContent>
+      </Message>
+    );
   }
 
   const resposta = mensagem.resposta;
-  if (!resposta) return <Message from="assistant"><MessageContent><MessageResponse>{mensagem.texto}</MessageResponse></MessageContent></Message>;
+  if (!resposta)
+    return (
+      <Message from="assistant">
+        <MessageContent>
+          <MessageResponse>{mensagem.texto}</MessageResponse>
+        </MessageContent>
+      </Message>
+    );
 
   return (
     <Message from="assistant">
       <MessageContent className="w-full space-y-4">
-        {resposta.blocos.map((bloco, index) => <MessageResponse key={index}>{bloco}</MessageResponse>)}
+        {resposta.blocos.map((bloco, index) => (
+          <MessageResponse key={index}>{bloco}</MessageResponse>
+        ))}
         {resposta.passos.length > 0 && (
           <ol className="space-y-2">
             {resposta.passos.map((passo, index) => (
-              <li key={`${passo.titulo}-${index}`} className="rounded-md border border-border bg-surface-2/50 p-3">
-                <p className="text-sm font-medium">{index + 1}. {passo.titulo}</p>
-                <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{passo.detalhe}</p>
-                <p className="mt-2 flex gap-1.5 text-xs text-foreground/75"><Check className="mt-0.5 size-3 shrink-0" />{passo.comoValidar}</p>
+              <li
+                key={`${passo.titulo}-${index}`}
+                className="rounded-md border border-border bg-surface-2/50 p-3"
+              >
+                <p className="text-sm font-medium">
+                  {index + 1}. {passo.titulo}
+                </p>
+                <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                  {passo.detalhe}
+                </p>
+                <p className="mt-2 flex gap-1.5 text-xs text-foreground/75">
+                  <Check className="mt-0.5 size-3 shrink-0" />
+                  {passo.comoValidar}
+                </p>
               </li>
             ))}
           </ol>
         )}
-        {resposta.artefato && <BlocoCopiavel texto={resposta.artefato.conteudo} rotulo={resposta.artefato.titulo} />}
-        {resposta.proximoPasso && <p className="text-xs text-muted-foreground"><span className="font-medium text-foreground">Próximo passo:</span> {resposta.proximoPasso}</p>}
+        {resposta.artefato && (
+          <BlocoCopiavel texto={resposta.artefato.conteudo} rotulo={resposta.artefato.titulo} />
+        )}
+        {resposta.proximoPasso && (
+          <p className="text-xs text-muted-foreground">
+            <span className="font-medium text-foreground">Próximo passo:</span>{" "}
+            {resposta.proximoPasso}
+          </p>
+        )}
       </MessageContent>
     </Message>
   );
 }
 
-function ProposalCard({ proposta, onApprove, onReject }: { proposta: Proposta; onApprove: () => void; onReject: () => void }) {
+function ProposalCard({
+  proposta,
+  onApprove,
+  onReject,
+}: {
+  proposta: Proposta;
+  onApprove: () => void;
+  onReject: () => void;
+}) {
   const [busy, setBusy] = useState(false);
   return (
     <div className="rounded-md border border-foreground/20 bg-surface-2 p-4">
@@ -199,10 +272,33 @@ function ProposalCard({ proposta, onApprove, onReject }: { proposta: Proposta; o
         <p className="text-sm font-semibold">{proposta.titulo}</p>
       </div>
       <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{proposta.motivo}</p>
-      {proposta.impactos.length > 0 && <p className="mt-2 text-xs text-muted-foreground">Impacta: {proposta.impactos.join(" · ")}</p>}
+      {proposta.impactos.length > 0 && (
+        <p className="mt-2 text-xs text-muted-foreground">
+          Impacta: {proposta.impactos.join(" · ")}
+        </p>
+      )}
       <div className="mt-4 flex gap-2">
-        <Btn size="sm" disabled={busy} onClick={() => { setBusy(true); onApprove(); }}>Aprovar mudança</Btn>
-        <Btn size="sm" variant="ghost" disabled={busy} onClick={() => { setBusy(true); onReject(); }}>Rejeitar</Btn>
+        <Btn
+          size="sm"
+          disabled={busy}
+          onClick={() => {
+            setBusy(true);
+            onApprove();
+          }}
+        >
+          Aprovar mudança
+        </Btn>
+        <Btn
+          size="sm"
+          variant="ghost"
+          disabled={busy}
+          onClick={() => {
+            setBusy(true);
+            onReject();
+          }}
+        >
+          Rejeitar
+        </Btn>
       </div>
     </div>
   );

@@ -21,9 +21,7 @@ export function Logo({ className, compact }: { className?: string; compact?: boo
           <circle cx="18" cy="6.5" r="2.6" fill="currentColor" />
         </svg>
       </span>
-      {!compact && (
-        <span className="font-display text-lg font-semibold">Pathly</span>
-      )}
+      {!compact && <span className="font-display text-lg font-semibold">Pathly</span>}
     </span>
   );
 }
@@ -44,7 +42,8 @@ const btnBase =
 const btnStyles = {
   primary: "border border-primary bg-primary text-primary-foreground hover:opacity-85",
   soft: "border border-transparent bg-surface-2 text-foreground hover:border-border hover:bg-muted",
-  outline: "border border-border bg-surface text-foreground hover:border-foreground/25 hover:bg-surface-2",
+  outline:
+    "border border-border bg-surface text-foreground hover:border-foreground/25 hover:bg-surface-2",
   ghost: "text-muted-foreground hover:bg-surface-2 hover:text-foreground",
 };
 
@@ -75,9 +74,7 @@ export function Panel({
   tilt?: boolean;
 }) {
   return (
-    <div
-      className={cn("panel p-5 sm:p-6", (hover || tilt) && "panel-hover", className)}
-    >
+    <div className={cn("panel p-5 sm:p-6", (hover || tilt) && "panel-hover", className)}>
       {children}
     </div>
   );
@@ -318,11 +315,7 @@ export function Skeleton({ className }: { className?: string }) {
 }
 
 export function SectionLabel({ children }: { children: ReactNode }) {
-  return (
-    <span className="text-xs font-semibold text-muted-foreground uppercase">
-      {children}
-    </span>
-  );
+  return <span className="text-xs font-semibold text-muted-foreground uppercase">{children}</span>;
 }
 
 export function PageHeader({

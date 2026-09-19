@@ -1,13 +1,6 @@
 import { useEffect, useState } from "react";
 import { useRouterState } from "@tanstack/react-router";
-import {
-  Check,
-  ChevronUp,
-  FileCode,
-  MessageSquare,
-  X,
-  type LucideIcon,
-} from "lucide-react";
+import { Check, ChevronUp, FileCode, MessageSquare, X, type LucideIcon } from "lucide-react";
 import { Btn, Chip } from "./ui";
 import {
   Conversation,
@@ -64,7 +57,12 @@ const FACETA_POR_ROTA: { prefixo: string; faceta: Faceta; onde: string }[] = [
 function PathlyMark({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" className={className} fill="none" aria-hidden="true">
-      <path d="M5 19c0-5 4-5 6-7s1-6-1-7" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
+      <path
+        d="M5 19c0-5 4-5 6-7s1-6-1-7"
+        stroke="currentColor"
+        strokeWidth="2.4"
+        strokeLinecap="round"
+      />
       <circle cx="18" cy="6.5" r="2.6" fill="currentColor" />
     </svg>
   );
@@ -162,7 +160,7 @@ function Painel({
                 title="Gerar prompt de implementação"
                 className={cn(
                   "tap rounded-lg p-1.5 transition-colors",
-                   vista === "prompt" ? "bg-surface-2 text-foreground" : "text-muted-foreground",
+                  vista === "prompt" ? "bg-surface-2 text-foreground" : "text-muted-foreground",
                 )}
               >
                 <FileCode className="size-4.5" />
@@ -199,49 +197,51 @@ function Painel({
               aoVoltar={() => setVista("conversa")}
             />
           ) : estado.carregando ? (
-            <div className="p-4 text-sm"><Shimmer>Carregando o contexto…</Shimmer></div>
+            <div className="p-4 text-sm">
+              <Shimmer>Carregando o contexto…</Shimmer>
+            </div>
           ) : (
             <Conversation>
               <ConversationContent className="gap-5 p-4">
-              {estado.anteriorA && (
-                <button
-                  onClick={() => void carregarMais()}
-                  className="tap mx-auto mb-4 flex items-center gap-1.5 rounded-full bg-surface px-3 py-1.5 text-xs text-muted-foreground"
-                >
-                  <ChevronUp className="size-3" /> Mensagens anteriores
-                </button>
-              )}
+                {estado.anteriorA && (
+                  <button
+                    onClick={() => void carregarMais()}
+                    className="tap mx-auto mb-4 flex items-center gap-1.5 rounded-full bg-surface px-3 py-1.5 text-xs text-muted-foreground"
+                  >
+                    <ChevronUp className="size-3" /> Mensagens anteriores
+                  </button>
+                )}
 
-              {estado.mensagens.length === 0 && (
-                <Abertura
-                  passo={estado.proximoPasso}
-                  aoPedir={enviar}
-                  aoGerarPrompt={() => setVista("prompt")}
-                />
-              )}
+                {estado.mensagens.length === 0 && (
+                  <Abertura
+                    passo={estado.proximoPasso}
+                    aoPedir={enviar}
+                    aoGerarPrompt={() => setVista("prompt")}
+                  />
+                )}
 
-              {estado.propostas.length > 0 && (
-                <div className="mb-4 space-y-2">
-                  {estado.propostas.map((p) => (
-                    <CartaoProposta
-                      key={p.id}
-                      proposta={p}
-                      aoAprovar={() => void aprovar(p)}
-                      aoRejeitar={() => void rejeitar(p)}
-                    />
-                  ))}
-                </div>
-              )}
+                {estado.propostas.length > 0 && (
+                  <div className="mb-4 space-y-2">
+                    {estado.propostas.map((p) => (
+                      <CartaoProposta
+                        key={p.id}
+                        proposta={p}
+                        aoAprovar={() => void aprovar(p)}
+                        aoRejeitar={() => void rejeitar(p)}
+                      />
+                    ))}
+                  </div>
+                )}
 
-              {estado.mensagens.map((m) => (
-                <Mensagem key={m.id} mensagem={m} />
-              ))}
+                {estado.mensagens.map((m) => (
+                  <Mensagem key={m.id} mensagem={m} />
+                ))}
 
-              {estado.respondendo && (
-                <Shimmer className="text-sm">Pensando sobre o seu projeto…</Shimmer>
-              )}
+                {estado.respondendo && (
+                  <Shimmer className="text-sm">Pensando sobre o seu projeto…</Shimmer>
+                )}
 
-              {estado.erro && <p className="mt-4 text-sm text-destructive">{estado.erro}</p>}
+                {estado.erro && <p className="mt-4 text-sm text-destructive">{estado.erro}</p>}
               </ConversationContent>
               <ConversationScrollButton />
             </Conversation>
@@ -269,7 +269,9 @@ function Painel({
                     onClick={() => setModo(modo === x ? undefined : x)}
                     className={cn(
                       "tap rounded-md px-2 py-1 text-[11px] transition-colors",
-                      modo === x ? "bg-foreground text-background" : "text-muted-foreground hover:bg-surface-2 hover:text-foreground",
+                      modo === x
+                        ? "bg-foreground text-background"
+                        : "text-muted-foreground hover:bg-surface-2 hover:text-foreground",
                     )}
                   >
                     {MODO_ROTULO[x]}
@@ -348,9 +350,7 @@ function Mensagem({ mensagem }: { mensagem: { papel: string; texto: string; resp
   if (mensagem.papel === "usuario") {
     return (
       <Message from="user">
-        <MessageContent className="bg-foreground text-background">
-          {mensagem.texto}
-        </MessageContent>
+        <MessageContent className="bg-foreground text-background">{mensagem.texto}</MessageContent>
       </Message>
     );
   }
@@ -364,50 +364,58 @@ function Mensagem({ mensagem }: { mensagem: { papel: string; texto: string; resp
   } | null;
 
   if (!r) {
-    return <Message from="assistant"><MessageContent><MessageResponse>{mensagem.texto}</MessageResponse></MessageContent></Message>;
+    return (
+      <Message from="assistant">
+        <MessageContent>
+          <MessageResponse>{mensagem.texto}</MessageResponse>
+        </MessageContent>
+      </Message>
+    );
   }
 
   return (
-    <Message from="assistant"><MessageContent className="w-full space-y-3">
-      {r.blocos.map((b, i) => (
-        <p key={i} className="text-sm leading-relaxed text-foreground/90">
-          {b}
-        </p>
-      ))}
+    <Message from="assistant">
+      <MessageContent className="w-full space-y-3">
+        {r.blocos.map((b, i) => (
+          <p key={i} className="text-sm leading-relaxed text-foreground/90">
+            {b}
+          </p>
+        ))}
 
-      {/* `list-none` no <ol>: a numeração é desenhada por nós, no título. Com o marcador da lista
+        {/* `list-none` no <ol>: a numeração é desenhada por nós, no título. Com o marcador da lista
           ligado, saía "1. 1. Inserir a venda". */}
-      {r.passos.length > 0 && (
-        <ol className="list-none space-y-2.5">
-          {r.passos.map((p, i) => (
-            <li key={i} className="rounded-xl border border-border bg-surface/40 p-3">
-              <p className="text-sm font-medium">
-                {i + 1}. {p.titulo}
-              </p>
-              <p className="mt-1 text-sm leading-relaxed text-foreground/80">{p.detalhe}</p>
-              <p className="mt-2 flex items-start gap-1.5 text-xs leading-relaxed text-primary">
-                <Check className="mt-0.5 size-3 shrink-0" />
-                {p.comoValidar}
-              </p>
-            </li>
-          ))}
-        </ol>
-      )}
+        {r.passos.length > 0 && (
+          <ol className="list-none space-y-2.5">
+            {r.passos.map((p, i) => (
+              <li key={i} className="rounded-xl border border-border bg-surface/40 p-3">
+                <p className="text-sm font-medium">
+                  {i + 1}. {p.titulo}
+                </p>
+                <p className="mt-1 text-sm leading-relaxed text-foreground/80">{p.detalhe}</p>
+                <p className="mt-2 flex items-start gap-1.5 text-xs leading-relaxed text-primary">
+                  <Check className="mt-0.5 size-3 shrink-0" />
+                  {p.comoValidar}
+                </p>
+              </li>
+            ))}
+          </ol>
+        )}
 
-      {r.artefato && <BlocoCopiavel texto={r.artefato.conteudo} rotulo={r.artefato.titulo} />}
+        {r.artefato && <BlocoCopiavel texto={r.artefato.conteudo} rotulo={r.artefato.titulo} />}
 
-      {r.alertaComplexidade && (
-        <p className="rounded-lg border border-destructive/25 bg-destructive/[0.03] p-3 text-xs leading-relaxed text-foreground/85">
-          {r.alertaComplexidade}
-        </p>
-      )}
+        {r.alertaComplexidade && (
+          <p className="rounded-lg border border-destructive/25 bg-destructive/[0.03] p-3 text-xs leading-relaxed text-foreground/85">
+            {r.alertaComplexidade}
+          </p>
+        )}
 
-      {r.proximoPasso && (
-        <p className="text-xs leading-relaxed text-muted-foreground">
-          <span className="font-medium text-foreground/70">Depois disto:</span> {r.proximoPasso}
-        </p>
-      )}
-    </MessageContent></Message>
+        {r.proximoPasso && (
+          <p className="text-xs leading-relaxed text-muted-foreground">
+            <span className="font-medium text-foreground/70">Depois disto:</span> {r.proximoPasso}
+          </p>
+        )}
+      </MessageContent>
+    </Message>
   );
 }
 
