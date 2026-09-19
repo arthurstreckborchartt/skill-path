@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, FolderKanban, Gem, Plug, Settings, User } from "lucide-react";
 import { Btn, Chip, PageHeader, Panel, Reveal } from "@/components/pathly/ui";
+import FallbackAvatar from "@/components/ui/fallback-avatar";
 import { useProjetos } from "@/lib/blueprint/usar-projetos";
 import { useSession } from "@/lib/auth";
 
@@ -48,8 +49,19 @@ function ProfilePage() {
       <Reveal>
         <Panel>
           <div className="flex items-center gap-4">
-            <span className="grid size-14 shrink-0 place-items-center rounded-md bg-foreground font-display text-lg font-semibold text-background">
-              {initials || <User className="size-6" />}
+            {/*
+              O avatar é gerado a partir do nome: o mesmo nome dá sempre o mesmo desenho, e nomes
+              diferentes dão desenhos diferentes. Em escala de cinza — a forma é que identifica,
+              não a cor. Ele só anima enquanto o ponteiro está em cima; parado não custa quadro
+              nenhum.
+
+              As iniciais continuam por cima, porque o desenho sozinho não diz de quem é a conta.
+            */}
+            <span className="relative grid size-14 shrink-0 place-items-center overflow-hidden rounded-md bg-foreground">
+              <FallbackAvatar name={name} size={56} className="absolute inset-0" />
+              <span className="relative font-display text-lg font-semibold text-background mix-blend-difference">
+                {initials || <User className="size-6" />}
+              </span>
             </span>
             <div className="min-w-0">
               <h2 className="truncate font-display text-xl font-semibold">{name}</h2>
