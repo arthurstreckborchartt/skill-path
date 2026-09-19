@@ -3,6 +3,7 @@ import { FolderKanban, Home, Plug, Search, Settings, User } from "lucide-react";
 import { Btn, Logo } from "./ui";
 import { Copilot } from "./copilot";
 import { FundoAnimado } from "./fundo-animado";
+import { AvatarConta } from "./avatar-conta";
 import { cn } from "@/lib/utils";
 
 // Oportunidades (vagas) fica fora da navegação por enquanto: a tela ainda usa dados de
@@ -149,7 +150,19 @@ function AppShellInner() {
                   "data-[status=active]:text-primary",
                 )}
               >
-                <Icon className="size-5 transition-transform group-active:scale-90" />
+                {/*
+                  Perfil mostra o avatar da conta, e não um ícone genérico: é a única aba que fala
+                  de uma pessoa específica, e o desenho dela identifica mais rápido que um
+                  contorno igual ao de qualquer outro app.
+
+                  20px e não 5 como os ícones: o desenho precisa de área para se distinguir. A
+                  altura mínima de 56px da barra não muda por causa disso.
+                */}
+                {to === "/app/perfil" ? (
+                  <AvatarConta size={20} className="transition-transform group-active:scale-90" />
+                ) : (
+                  <Icon className="size-5 transition-transform group-active:scale-90" />
+                )}
                 {label}
               </Link>
             </li>
