@@ -48,6 +48,7 @@ import { Route as AppAprenderActivityIdRouteImport } from './routes/app.aprender
 import { Route as AppArquiteturaIaIdRouteImport } from './routes/app.arquitetura-ia.$id'
 import { Route as AppBancoIdRouteImport } from './routes/app.banco.$id'
 import { Route as AppBlueprintIdRouteImport } from './routes/app.blueprint.$id'
+import { Route as AppLancamentoIdRouteImport } from './routes/app.lancamento.$id'
 import { Route as AppProjetoIdRouteImport } from './routes/app.projeto.$id'
 import { Route as AppRoadmapIdRouteImport } from './routes/app.roadmap.$id'
 import { Route as AppSegurancaIdRouteImport } from './routes/app.seguranca.$id'
@@ -253,6 +254,11 @@ const AppBlueprintIdRoute = AppBlueprintIdRouteImport.update({
   path: '/blueprint/$id',
   getParentRoute: () => AppRoute,
 } as any)
+const AppLancamentoIdRoute = AppLancamentoIdRouteImport.update({
+  id: '/lancamento/$id',
+  path: '/lancamento/$id',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppProjetoIdRoute = AppProjetoIdRouteImport.update({
   id: '/projeto/$id',
   path: '/projeto/$id',
@@ -336,6 +342,7 @@ export interface FileRoutesByFullPath {
   '/app/arquitetura-ia/$id': typeof AppArquiteturaIaIdRoute
   '/app/banco/$id': typeof AppBancoIdRoute
   '/app/blueprint/$id': typeof AppBlueprintIdRoute
+  '/app/lancamento/$id': typeof AppLancamentoIdRoute
   '/app/projeto/$id': typeof AppProjetoIdRoute
   '/app/roadmap/$id': typeof AppRoadmapIdRoute
   '/app/seguranca/$id': typeof AppSegurancaIdRoute
@@ -384,6 +391,7 @@ export interface FileRoutesByTo {
   '/app/arquitetura-ia/$id': typeof AppArquiteturaIaIdRoute
   '/app/banco/$id': typeof AppBancoIdRoute
   '/app/blueprint/$id': typeof AppBlueprintIdRoute
+  '/app/lancamento/$id': typeof AppLancamentoIdRoute
   '/app/projeto/$id': typeof AppProjetoIdRoute
   '/app/roadmap/$id': typeof AppRoadmapIdRoute
   '/app/seguranca/$id': typeof AppSegurancaIdRoute
@@ -434,6 +442,7 @@ export interface FileRoutesById {
   '/app/arquitetura-ia/$id': typeof AppArquiteturaIaIdRoute
   '/app/banco/$id': typeof AppBancoIdRoute
   '/app/blueprint/$id': typeof AppBlueprintIdRoute
+  '/app/lancamento/$id': typeof AppLancamentoIdRoute
   '/app/projeto/$id': typeof AppProjetoIdRoute
   '/app/roadmap/$id': typeof AppRoadmapIdRoute
   '/app/seguranca/$id': typeof AppSegurancaIdRoute
@@ -485,6 +494,7 @@ export interface FileRouteTypes {
     | '/app/arquitetura-ia/$id'
     | '/app/banco/$id'
     | '/app/blueprint/$id'
+    | '/app/lancamento/$id'
     | '/app/projeto/$id'
     | '/app/roadmap/$id'
     | '/app/seguranca/$id'
@@ -533,6 +543,7 @@ export interface FileRouteTypes {
     | '/app/arquitetura-ia/$id'
     | '/app/banco/$id'
     | '/app/blueprint/$id'
+    | '/app/lancamento/$id'
     | '/app/projeto/$id'
     | '/app/roadmap/$id'
     | '/app/seguranca/$id'
@@ -582,6 +593,7 @@ export interface FileRouteTypes {
     | '/app/arquitetura-ia/$id'
     | '/app/banco/$id'
     | '/app/blueprint/$id'
+    | '/app/lancamento/$id'
     | '/app/projeto/$id'
     | '/app/roadmap/$id'
     | '/app/seguranca/$id'
@@ -897,6 +909,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppBlueprintIdRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/lancamento/$id': {
+      id: '/app/lancamento/$id'
+      path: '/lancamento/$id'
+      fullPath: '/app/lancamento/$id'
+      preLoaderRoute: typeof AppLancamentoIdRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/projeto/$id': {
       id: '/app/projeto/$id'
       path: '/projeto/$id'
@@ -973,6 +992,7 @@ interface AppRouteChildren {
   AppArquiteturaIaIdRoute: typeof AppArquiteturaIaIdRoute
   AppBancoIdRoute: typeof AppBancoIdRoute
   AppBlueprintIdRoute: typeof AppBlueprintIdRoute
+  AppLancamentoIdRoute: typeof AppLancamentoIdRoute
   AppProjetoIdRoute: typeof AppProjetoIdRoute
   AppRoadmapIdRoute: typeof AppRoadmapIdRoute
   AppSegurancaIdRoute: typeof AppSegurancaIdRoute
@@ -996,6 +1016,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppArquiteturaIaIdRoute: AppArquiteturaIaIdRoute,
   AppBancoIdRoute: AppBancoIdRoute,
   AppBlueprintIdRoute: AppBlueprintIdRoute,
+  AppLancamentoIdRoute: AppLancamentoIdRoute,
   AppProjetoIdRoute: AppProjetoIdRoute,
   AppRoadmapIdRoute: AppRoadmapIdRoute,
   AppSegurancaIdRoute: AppSegurancaIdRoute,

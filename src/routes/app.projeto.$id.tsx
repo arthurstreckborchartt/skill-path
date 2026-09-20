@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, LayoutPanelTop, ShieldCheck } from "lucide-react";
+import { ArrowLeft, LayoutPanelTop, Rocket, ShieldCheck } from "lucide-react";
 import { ProjectChat } from "@/components/pathly/project-chat";
 import { Btn } from "@/components/pathly/ui";
 
@@ -41,6 +41,17 @@ function ProjectPage() {
           <Link to="/app/validacao/$id" params={{ id }}>
             <Btn variant="ghost" size="sm">
               <ShieldCheck className="size-4" /> Validação
+            </Btn>
+          </Link>
+          {/*
+            Lançamento ao lado de validação, e não depois dela: as duas perguntam "isto está de
+            pé?", só que sobre coisas diferentes — uma sobre o que foi construído, outra sobre
+            onde isso vai rodar. Guardar a segunda para o fim é o que faz alguém descobrir na
+            véspera que não tem backup.
+          */}
+          <Link to="/app/lancamento/$id" params={{ id }}>
+            <Btn variant="ghost" size="sm">
+              <Rocket className="size-4" /> Lançamento
             </Btn>
           </Link>
           <Link to="/app/blueprint/$id" params={{ id }}>
