@@ -34,10 +34,20 @@ interface LabelInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   containerClassName?: string;
 }
 
-const ringColorMap: Record<RingColor, string> = {
-  muted: "focus:ring-ring",
-  primary: "focus:ring-foreground/40",
-  destructive: "focus:ring-destructive",
+/**
+ * A cor do foco, aplicada na borda do `fieldset` — nao num anel.
+ *
+ * `ring` do Tailwind e `box-shadow`, e box-shadow e um retangulo fechado: nao existe como abrir
+ * um entalhe nele. Com o anel no campo, o foco desenhava uma segunda linha por cima do rotulo,
+ * justamente onde a borda tinha acabado de abrir espaco.
+ *
+ * Como a borda ja mora no `fieldset`, e o `fieldset` ja tem o vao, expressar o foco nela sai
+ * entalhado de graca.
+ */
+const corDeFoco: Record<RingColor, string> = {
+  muted: "peer-focus:border-ring",
+  primary: "peer-focus:border-foreground/40",
+  destructive: "peer-focus:border-destructive",
 };
 
 export function LabelInput({
@@ -65,9 +75,8 @@ export function LabelInput({
       <input
         className={cn(
           // text-base no celular: abaixo de 16px o Safari do iPhone da zoom ao focar o campo.
-          "peer block h-12 w-full rounded-md border border-transparent bg-surface-2 px-4 text-base text-foreground outline-none transition-colors focus:ring-2 disabled:opacity-60 sm:text-sm",
+          "peer block h-12 w-full rounded-md border border-transparent bg-surface-2 px-4 text-base text-foreground outline-none transition-colors disabled:opacity-60 sm:text-sm",
           isPasswordType && "pr-9",
-          ringColorMap[ringColor],
         )}
         placeholder={placeholder}
         type={inputType}
@@ -102,7 +111,11 @@ export function LabelInput({
         aria-hidden="true"
         className={cn(
           "pointer-events-none absolute inset-0 m-0 rounded-md border border-input p-0 transition-colors",
-          "peer-focus:border-foreground/35",
+          // 2px no foco: e o destaque, e ele nasce entalhado por ser a mesma borda.
+          "peer-focus:border-2",
+          corDeFoco[ringColor],
+          // A compensacao de 1px vira 2px quando a borda engrossa — senao o vao anda junto.
+          "peer-focus:[&>legend]:ml-[8px]",
           /*
             `ml-[9px]` e nao `ml-2.5` (10px): a `legend` se posiciona a partir da caixa de
             conteudo do `fieldset`, que ja esta 1px para dentro por causa da propria borda. O
