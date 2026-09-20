@@ -14,8 +14,9 @@
  *    como um retangulo pairando. Com `legend`, o buraco e buraco: o navegador tira a largura
  *    dela do traco, sem pintar nada.
  * 3. Altura 12 e `text-base sm:text-sm`, herdados do `AuthField` que este componente
- *    substituiu: abaixo de 16px o Safari do iPhone da zoom ao focar o campo. O fundo e
- *    `surface-2`, o mesmo que os campos de autenticacao ja usavam.
+ *    substituiu: abaixo de 16px o Safari do iPhone da zoom ao focar o campo.
+ * 3b. O campo e transparente: o que aparece dentro dele e o fundo da pagina. Combina com a borda
+ *    entalhada — nenhuma das duas pinta nada, entao nao ha cor para casar com nada.
  * 4. Rotulos do botao de senha em portugues.
  *
  * O `autofill:shadow-[...]` do original saiu: o app ja trata `:-webkit-autofill` globalmente no
@@ -75,7 +76,7 @@ export function LabelInput({
       <input
         className={cn(
           // text-base no celular: abaixo de 16px o Safari do iPhone da zoom ao focar o campo.
-          "peer block h-12 w-full rounded-md border border-transparent bg-surface-2 px-4 text-base text-foreground outline-none transition-colors disabled:opacity-60 sm:text-sm",
+          "peer block h-12 w-full rounded-md border border-transparent bg-transparent px-4 text-base text-foreground outline-none transition-colors disabled:opacity-60 sm:text-sm",
           isPasswordType && "pr-9",
         )}
         placeholder={placeholder}
