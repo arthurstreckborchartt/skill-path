@@ -211,6 +211,22 @@ O campo "prompt" e o campo "modoManual" precisam funcionar de forma independente
 vai pedir a uma IA, outro para quem vai digitar tudo à mão. Nunca escreva "peça para a IA" dentro
 de "modoManual".`;
 
+/**
+ * Achata uma lista que deveria ser de textos e veio com objetos `{ texto }`.
+ *
+ * Modelos fazem isso o tempo todo, provavelmente por contaminação do formato de `tarefas`, que de
+ * fato é `{ texto, porque }`. Normalizar custa quatro linhas; recusar a etapa inteira custa uma
+ * geração e a paciência de quem esperou.
+ */
+function achatar(v: unknown): unknown[] {
+  if (!Array.isArray(v)) return [];
+  return v.map((x) => {
+    if (typeof x === "string") return x;
+    const obj = x as { texto?: unknown };
+    return typeof obj?.texto === "string" ? obj.texto : x;
+  });
+}
+
 function textos(v: unknown, minimo: number): string[] | null {
   if (!Array.isArray(v)) return null;
   const limpo = v.filter((x): x is string => typeof x === "string" && x.trim().length > 2);
@@ -278,12 +294,8 @@ export function validarEtapa(valor: unknown): ConteudoEtapa | null {
    * é o formato das tarefas logo acima. Normalizar aqui custa três linhas; recusar a etapa inteira
    * por causa disso custa uma geração e a paciência de quem esperou.
    */
-  const checklist = (Array.isArray(e.checklist) ? e.checklist : [])
-    .map((c) => {
-      if (typeof c === "string") return c.trim();
-      const obj = c as { texto?: unknown };
-      return typeof obj?.texto === "string" ? obj.texto.trim() : "";
-    })
+  const checklist = achatar(e.checklist)
+    .map((c) => (typeof c === "string" ? c.trim() : ""))
     .filter((c) => c.length > 5);
   if (checklist.length < 2) return recusa(`checklist valido=${checklist.length}`);
 
@@ -317,4 +329,49 @@ export function validarEtapa(valor: unknown): ConteudoEtapa | null {
     modoManual,
     validacao,
   };
+}
+
+/**
+ * Conserta, na leitura, o conteúdo que foi salvo antes de a normalização existir.
+ *
+ * ## O bug que isto fecha
+ *
+ * `validarEtapa` achata `{ texto }` desde sempre — mas só na **geração**. O conteúdo em cache é
+ * devolvido cru por `/api/etapa`, e as etapas gravadas antes daquela correção voltam com
+ * `checklist: [{ texto }]`. React então recebe um objeto onde espera um texto, e derruba o painel
+ * inteiro da etapa: "Objects are not valid as a React child".
+ *
+ * Encontrado em 2026-09-20, nas etapas 1 e 3 de um projeto real. A etapa 4 do mesmo projeto estava
+ * correta, o que explica por que o problema passou despercebido: depende de quando cada etapa foi
+ * gerada.
+ *
+ * ## Por que não passar o cache inteiro por `validarEtapa`
+ *
+ * Porque `validarEtapa` recusa, e recusa dispara regeração — uma chamada de IA paga, e a reescrita
+ * de um conteúdo que a pessoa talvez já tenha lido. As regras de validação cresceram com o tempo
+ * (o `modoManual` ganhou uma, por exemplo), então conteúdo antigo e perfeitamente bom seria
+ * descartado junto com o defeituoso.
+ *
+ * Aqui só se conserta a forma. Nada é recusado, nada é regerado, e o que já era válido passa
+ * intacto.
+ */
+export function normalizarConteudoSalvo(valor: unknown): unknown {
+  if (!valor || typeof valor !== "object" || Array.isArray(valor)) return valor;
+  const e = valor as Record<string, unknown>;
+
+  /* Só as listas que o contrato declara como `string[]`. `tarefas` e `recursos` são objetos de verdade. */
+  const listasDeTexto = [
+    "explicacao",
+    "conhecimentoNecessario",
+    "checklist",
+    "criteriosDeConclusao",
+    "riscos",
+    "modoManual",
+  ] as const;
+
+  const saida: Record<string, unknown> = { ...e };
+  for (const chave of listasDeTexto) {
+    if (Array.isArray(e[chave])) saida[chave] = achatar(e[chave]);
+  }
+  return saida;
 }

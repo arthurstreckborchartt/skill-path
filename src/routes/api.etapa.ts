@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { normalizarConteudoSalvo } from "@/lib/blueprint/etapa-contrato";
 import { lerEnv } from "@/lib/server-env";
 import { LIMITES, recusaParaResposta, registrarUso } from "@/lib/limite-uso";
 import { lerJsonLimitado, texto } from "@/lib/entrada-segura";
@@ -100,9 +101,21 @@ export const Route = createFileRoute("/api/etapa")({
           const linhas = (await salva.json()) as { conteudo?: unknown }[];
           linhaExiste = linhas.length > 0;
           if (linhas[0]?.conteudo) {
-            return new Response(JSON.stringify({ conteudo: linhas[0].conteudo, doCache: true }), {
-              headers: JSON_HEADERS,
-            });
+            /*
+             * O cache passa pelo normalizador. Etapas gravadas antes de `validarEtapa` achatar
+             * `{ texto }` voltavam com objetos onde a tela espera texto, e derrubavam o painel
+             * inteiro com "Objects are not valid as a React child".
+             *
+             * Conserta só a forma: nada é recusado e nada é regerado, para não cobrar uma chamada
+             * de IA por conteúdo que continua bom.
+             */
+            return new Response(
+              JSON.stringify({
+                conteudo: normalizarConteudoSalvo(linhas[0].conteudo),
+                doCache: true,
+              }),
+              { headers: JSON_HEADERS },
+            );
           }
         }
 
