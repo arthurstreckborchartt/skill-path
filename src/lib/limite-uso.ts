@@ -335,4 +335,15 @@ export const LIMITES = {
    * 30 por hora é muito para quem aprova uma por uma, que é o desenho, e pouco para um laço.
    */
   integracoes: { limite: 30, janelaMinutos: 60 },
+  /**
+   * O MCP Gateway.
+   *
+   * Mais alto que os outros de propósito: quem chama aqui é um agente trabalhando, e ler contexto
+   * antes de cada passo é o uso correto — não abuso. O teto existe para o laço, não para o
+   * trabalho: 120 por hora são duas chamadas por minuto, sustentadas por uma hora inteira.
+   *
+   * E as leituras não custam IA nenhuma: o Gateway consulta o banco. O risco que este limite
+   * contém é de martelar o Supabase, não de gastar token.
+   */
+  mcp: { limite: 120, janelaMinutos: 60 },
 } as const;
