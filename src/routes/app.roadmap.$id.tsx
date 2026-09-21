@@ -9,6 +9,7 @@ import {
   TrilhaDeFases,
 } from "@/components/pathly/roadmap";
 import { DetalheEtapa } from "@/components/pathly/etapa-detalhe";
+import { SessaoDeDesenvolvimento } from "@/components/pathly/sessao-de-desenvolvimento";
 import { useProjeto } from "@/lib/blueprint/usar-projetos";
 import {
   contarProgresso,
@@ -72,6 +73,10 @@ function TelaRoadmap() {
   const etapaAberta =
     aberta === null ? null : fases.flatMap((f) => f.etapas).find((e) => e.ordem === aberta);
   const faseDaAtual = atual ? fases.find((f) => f.fase.nome === atual.fase)?.fase : undefined;
+  /* A etapa do plano, que é a que carrega entrega e fase — a do progresso só carrega o estado. */
+  const etapaDoPlano = etapaAberta
+    ? projeto.conteudo.execucao?.etapas.find((e) => e.ordem === etapaAberta.ordem)
+    : undefined;
 
   async function alternarItem(indice: number) {
     if (!etapaAberta) return;
@@ -232,6 +237,22 @@ function TelaRoadmap() {
                     conteudo={conteudo.conteudo}
                     checklistFeito={etapaAberta.checklistFeito}
                     aoAlternarItem={(i) => void alternarItem(i)}
+                  />
+                )}
+
+                {/*
+                  A sessão entra depois do conteúdo da etapa, não antes: o brief só faz sentido
+                  para quem já leu o que a etapa pede. Antes, viraria um botão de copiar sem saber
+                  o que se está copiando.
+                */}
+                {conteudo.estado === "pronta" && etapaDoPlano && (
+                  <SessaoDeDesenvolvimento
+                    projetoId={id}
+                    nomeProjeto={projeto.nome}
+                    blueprint={projeto.conteudo}
+                    etapa={etapaDoPlano}
+                    etapasConcluidas={numeros.feitas}
+                    etapasTotal={numeros.total}
                   />
                 )}
               </div>
