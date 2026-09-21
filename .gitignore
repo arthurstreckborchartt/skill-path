@@ -43,3 +43,7 @@ skills-lock.json
 # no desenvolvimento e no painel de segredos do provedor em produção.
 .env.local
 .env.*.local
+
+# O token da ponte local. Ele autentica uma maquina inteira contra o Pathly, e o servidor guarda
+# so o hash dele — commitar este arquivo entregaria o segredo que nem o Pathly tem.
+ponte/.pathly-bridge.json
