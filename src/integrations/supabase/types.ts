@@ -429,6 +429,343 @@ export type Database = {
           },
         ]
       }
+      pathly_hub_aprovacoes: {
+        Row: {
+          action: string
+          approved_at: string | null
+          approved_by: string | null
+          capability: string
+          created_at: string
+          error: string | null
+          executed_at: string | null
+          expires_at: string
+          fingerprint: string
+          id: string
+          integration_id: string
+          metadata: Json
+          nonce: string
+          project_id: string | null
+          requested_permission: string
+          result: string | null
+          scope: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          action: string
+          approved_at?: string | null
+          approved_by?: string | null
+          capability: string
+          created_at?: string
+          error?: string | null
+          executed_at?: string | null
+          expires_at: string
+          fingerprint: string
+          id?: string
+          integration_id: string
+          metadata?: Json
+          nonce: string
+          project_id?: string | null
+          requested_permission: string
+          result?: string | null
+          scope?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          action?: string
+          approved_at?: string | null
+          approved_by?: string | null
+          capability?: string
+          created_at?: string
+          error?: string | null
+          executed_at?: string | null
+          expires_at?: string
+          fingerprint?: string
+          id?: string
+          integration_id?: string
+          metadata?: Json
+          nonce?: string
+          project_id?: string | null
+          requested_permission?: string
+          result?: string | null
+          scope?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      pathly_hub_auditoria: {
+        Row: {
+          acao_id: string | null
+          ato: string
+          capacidade: string | null
+          detalhe: string
+          em: string
+          id: string
+          projeto_id: string | null
+          provedor: string
+          user_id: string
+        }
+        Insert: {
+          acao_id?: string | null
+          ato: string
+          capacidade?: string | null
+          detalhe?: string
+          em?: string
+          id?: string
+          projeto_id?: string | null
+          provedor: string
+          user_id: string
+        }
+        Update: {
+          acao_id?: string | null
+          ato?: string
+          capacidade?: string | null
+          detalhe?: string
+          em?: string
+          id?: string
+          projeto_id?: string | null
+          provedor?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      pathly_hub_eventos: {
+        Row: {
+          dados: Json
+          id: string
+          origem: string
+          processado: boolean
+          projeto_id: string | null
+          provedor: string
+          recebido_em: string
+          tipo: string
+          user_id: string
+        }
+        Insert: {
+          dados?: Json
+          id?: string
+          origem?: string
+          processado?: boolean
+          projeto_id?: string | null
+          provedor: string
+          recebido_em?: string
+          tipo: string
+          user_id: string
+        }
+        Update: {
+          dados?: Json
+          id?: string
+          origem?: string
+          processado?: boolean
+          projeto_id?: string | null
+          provedor?: string
+          recebido_em?: string
+          tipo?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pathly_hub_eventos_projeto_id_fkey"
+            columns: ["projeto_id"]
+            isOneToOne: false
+            referencedRelation: "pathly_projetos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pathly_hub_ferramentas_projeto: {
+        Row: {
+          atualizado_em: string
+          criado_em: string
+          papel: string
+          project_id: string
+          provedor_id: string
+          user_id: string
+        }
+        Insert: {
+          atualizado_em?: string
+          criado_em?: string
+          papel: string
+          project_id: string
+          provedor_id: string
+          user_id: string
+        }
+        Update: {
+          atualizado_em?: string
+          criado_em?: string
+          papel?: string
+          project_id?: string
+          provedor_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pathly_hub_ferramentas_projeto_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "pathly_projetos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pathly_hub_permissoes: {
+        Row: {
+          capacidade: string
+          concedida_em: string
+          expira_em: string | null
+          id: string
+          projeto_id: string | null
+          provedor: string
+          revogada_em: string | null
+          user_id: string
+        }
+        Insert: {
+          capacidade: string
+          concedida_em?: string
+          expira_em?: string | null
+          id?: string
+          projeto_id?: string | null
+          provedor: string
+          revogada_em?: string | null
+          user_id: string
+        }
+        Update: {
+          capacidade?: string
+          concedida_em?: string
+          expira_em?: string | null
+          id?: string
+          projeto_id?: string | null
+          provedor?: string
+          revogada_em?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pathly_hub_permissoes_projeto_id_fkey"
+            columns: ["projeto_id"]
+            isOneToOne: false
+            referencedRelation: "pathly_projetos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pathly_hub_registros: {
+        Row: {
+          criado_em: string
+          etapa_ordem: number | null
+          id: string
+          itens: string[]
+          origem: string
+          project_id: string
+          provedor_id: string
+          texto: string
+          tipo: string
+          user_id: string
+        }
+        Insert: {
+          criado_em?: string
+          etapa_ordem?: number | null
+          id?: string
+          itens?: string[]
+          origem: string
+          project_id: string
+          provedor_id: string
+          texto: string
+          tipo: string
+          user_id: string
+        }
+        Update: {
+          criado_em?: string
+          etapa_ordem?: number | null
+          id?: string
+          itens?: string[]
+          origem?: string
+          project_id?: string
+          provedor_id?: string
+          texto?: string
+          tipo?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pathly_hub_registros_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "pathly_projetos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pathly_hub_sessoes: {
+        Row: {
+          approved_actions: Json
+          completed_at: string | null
+          context_snapshot: Json | null
+          current_step: string
+          errors: Json
+          executed_actions: Json
+          id: string
+          integration_id: string | null
+          project_id: string
+          provider: string | null
+          requested_actions: Json
+          result: Json | null
+          started_at: string
+          steps: Json
+          task_id: string
+          technical_decisions: Json
+          user_id: string
+        }
+        Insert: {
+          approved_actions?: Json
+          completed_at?: string | null
+          context_snapshot?: Json | null
+          current_step?: string
+          errors?: Json
+          executed_actions?: Json
+          id?: string
+          integration_id?: string | null
+          project_id: string
+          provider?: string | null
+          requested_actions?: Json
+          result?: Json | null
+          started_at?: string
+          steps?: Json
+          task_id: string
+          technical_decisions?: Json
+          user_id: string
+        }
+        Update: {
+          approved_actions?: Json
+          completed_at?: string | null
+          context_snapshot?: Json | null
+          current_step?: string
+          errors?: Json
+          executed_actions?: Json
+          id?: string
+          integration_id?: string | null
+          project_id?: string
+          provider?: string | null
+          requested_actions?: Json
+          result?: Json | null
+          started_at?: string
+          steps?: Json
+          task_id?: string
+          technical_decisions?: Json
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pathly_hub_sessoes_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "pathly_projetos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pathly_learning_activity_progress: {
         Row: {
           activity_id: string
@@ -553,6 +890,266 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      pathly_obsidian_conexao: {
+        Row: {
+          atualizado_em: string
+          automatica: boolean
+          criado_em: string
+          direcao: string
+          mapeamento: Json
+          mecanismo: string
+          pastas: Json
+          tipos: Json
+          user_id: string
+          vault: string
+        }
+        Insert: {
+          atualizado_em?: string
+          automatica?: boolean
+          criado_em?: string
+          direcao?: string
+          mapeamento?: Json
+          mecanismo?: string
+          pastas?: Json
+          tipos?: Json
+          user_id: string
+          vault: string
+        }
+        Update: {
+          atualizado_em?: string
+          automatica?: boolean
+          criado_em?: string
+          direcao?: string
+          mapeamento?: Json
+          mecanismo?: string
+          pastas?: Json
+          tipos?: Json
+          user_id?: string
+          vault?: string
+        }
+        Relationships: []
+      }
+      pathly_obsidian_eventos: {
+        Row: {
+          caminho: string
+          criado_em: string
+          detalhe: string | null
+          evento: string
+          id: string
+          origem: string
+          project_id: string | null
+          user_id: string
+        }
+        Insert: {
+          caminho: string
+          criado_em?: string
+          detalhe?: string | null
+          evento: string
+          id?: string
+          origem: string
+          project_id?: string | null
+          user_id: string
+        }
+        Update: {
+          caminho?: string
+          criado_em?: string
+          detalhe?: string | null
+          evento?: string
+          id?: string
+          origem?: string
+          project_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pathly_obsidian_eventos_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "pathly_projetos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pathly_obsidian_notas: {
+        Row: {
+          caminho: string
+          id: string
+          impressao: string
+          project_id: string | null
+          sincronizado_em: string
+          tipo: string
+          user_id: string
+        }
+        Insert: {
+          caminho: string
+          id?: string
+          impressao: string
+          project_id?: string | null
+          sincronizado_em?: string
+          tipo: string
+          user_id: string
+        }
+        Update: {
+          caminho?: string
+          id?: string
+          impressao?: string
+          project_id?: string | null
+          sincronizado_em?: string
+          tipo?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pathly_obsidian_notas_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "pathly_projetos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pathly_ponte_codigos: {
+        Row: {
+          codigo_hash: string
+          criado_em: string
+          expira_em: string
+          usado_em: string | null
+          user_id: string
+        }
+        Insert: {
+          codigo_hash: string
+          criado_em?: string
+          expira_em: string
+          usado_em?: string | null
+          user_id: string
+        }
+        Update: {
+          codigo_hash?: string
+          criado_em?: string
+          expira_em?: string
+          usado_em?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      pathly_ponte_tarefas: {
+        Row: {
+          acao_id: string
+          concluida_em: string | null
+          criada_em: string
+          entregue_em: string | null
+          estado: string
+          expira_em: string
+          id: string
+          impressao_plano: string | null
+          modo: string
+          parametros: Json
+          plano_id: string | null
+          ponte_id: string
+          project_id: string | null
+          recusa: string | null
+          resultado: Json | null
+          user_id: string
+        }
+        Insert: {
+          acao_id: string
+          concluida_em?: string | null
+          criada_em?: string
+          entregue_em?: string | null
+          estado?: string
+          expira_em: string
+          id?: string
+          impressao_plano?: string | null
+          modo: string
+          parametros?: Json
+          plano_id?: string | null
+          ponte_id: string
+          project_id?: string | null
+          recusa?: string | null
+          resultado?: Json | null
+          user_id: string
+        }
+        Update: {
+          acao_id?: string
+          concluida_em?: string | null
+          criada_em?: string
+          entregue_em?: string | null
+          estado?: string
+          expira_em?: string
+          id?: string
+          impressao_plano?: string | null
+          modo?: string
+          parametros?: Json
+          plano_id?: string | null
+          ponte_id?: string
+          project_id?: string | null
+          recusa?: string | null
+          resultado?: Json | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pathly_ponte_tarefas_plano_id_fkey"
+            columns: ["plano_id"]
+            isOneToOne: false
+            referencedRelation: "pathly_ponte_tarefas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pathly_ponte_tarefas_ponte_id_fkey"
+            columns: ["ponte_id"]
+            isOneToOne: false
+            referencedRelation: "pathly_pontes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pathly_ponte_tarefas_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "pathly_projetos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pathly_pontes: {
+        Row: {
+          adaptadores: string[]
+          criada_em: string
+          id: string
+          nome: string
+          plataforma: string
+          revogada_em: string | null
+          token_hash: string
+          ultima_batida: string | null
+          user_id: string
+          versao: string
+        }
+        Insert: {
+          adaptadores?: string[]
+          criada_em?: string
+          id?: string
+          nome: string
+          plataforma?: string
+          revogada_em?: string | null
+          token_hash: string
+          ultima_batida?: string | null
+          user_id: string
+          versao?: string
+        }
+        Update: {
+          adaptadores?: string[]
+          criada_em?: string
+          id?: string
+          nome?: string
+          plataforma?: string
+          revogada_em?: string | null
+          token_hash?: string
+          ultima_batida?: string | null
+          user_id?: string
+          versao?: string
+        }
+        Relationships: []
       }
       pathly_profiles: {
         Row: {
