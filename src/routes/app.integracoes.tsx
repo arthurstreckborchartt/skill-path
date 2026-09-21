@@ -1,6 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Check, Lock, Play, Plug, ShieldCheck, TriangleAlert, X } from "lucide-react";
+import { Check, ChevronRight, Lock, Play, Plug, ShieldCheck, TriangleAlert, X } from "lucide-react";
 import { Btn, Chip, PageHeader, Panel, Reveal } from "@/components/pathly/ui";
 import { cn } from "@/lib/utils";
 import { useIntegracoes } from "@/lib/integracoes/usar-integracoes";
@@ -119,6 +119,51 @@ function IntegrationsPage() {
           </Chip>
         }
       />
+
+      <Reveal>
+        <Link
+          to="/app/pontes"
+          className="tap mb-3 flex items-center justify-between gap-3 rounded-2xl border border-border bg-surface px-4 py-3"
+        >
+          <span className="min-w-0">
+            <span className="block text-sm font-medium">Pontes locais</span>
+            <span className="block text-xs text-muted-foreground">
+              Revit, VS Code e outras ferramentas de desktop — onde a nuvem não alcança.
+            </span>
+          </span>
+          <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+        </Link>
+      </Reveal>
+
+      <Reveal>
+        <Link
+          to="/app/obsidian"
+          className="tap mb-3 flex items-center justify-between gap-3 rounded-2xl border border-border bg-surface px-4 py-3"
+        >
+          <span className="min-w-0">
+            <span className="block text-sm font-medium">Obsidian</span>
+            <span className="block text-xs text-muted-foreground">
+              O plano, as decisões e o histórico no seu vault — sem o conteúdo sair do navegador.
+            </span>
+          </span>
+          <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+        </Link>
+      </Reveal>
+
+      <Reveal>
+        <Link
+          to="/app/ferramentas"
+          className="tap flex items-center justify-between gap-3 rounded-2xl border border-border bg-surface px-4 py-3"
+        >
+          <span className="min-w-0">
+            <span className="block text-sm font-medium">Ferramentas de desenvolvimento</span>
+            <span className="block text-xs text-muted-foreground">
+              Claude, Codex, Cursor — quem escreve o código, e o que o Pathly alcança em cada uma.
+            </span>
+          </span>
+          <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+        </Link>
+      </Reveal>
 
       {!estado.instalado && (
         <Panel className="border-foreground/25">

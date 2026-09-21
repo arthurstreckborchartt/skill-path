@@ -8,6 +8,7 @@ import {
   Monitor,
   Moon,
   Palette,
+  Plug,
   Shield,
   Sliders,
   Sun,
@@ -124,11 +125,46 @@ function SettingsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Configurações" subtitle="Aparência, privacidade e conta" />
+      <PageHeader title="Configurações" subtitle="Aparência, integrações, privacidade e conta" />
 
       <Reveal>
         <Section icon={Palette} title="Aparência">
           <ThemePicker />
+        </Section>
+      </Reveal>
+
+      <Reveal delay={120}>
+        <Section icon={Plug} title="Integrações">
+          <div className="divide-y divide-border">
+            <Link
+              to="/app/integracoes"
+              className="tap flex min-h-14 items-center justify-between gap-3 py-1 text-sm"
+            >
+              <span>Contas e ações externas</span>
+              <ChevronRight className="size-4 text-muted-foreground" />
+            </Link>
+            <Link
+              to="/app/ferramentas"
+              className="tap flex min-h-14 items-center justify-between gap-3 py-1 text-sm"
+            >
+              <span>Ferramentas de desenvolvimento</span>
+              <ChevronRight className="size-4 text-muted-foreground" />
+            </Link>
+            <Link
+              to="/app/obsidian"
+              className="tap flex min-h-14 items-center justify-between gap-3 py-1 text-sm"
+            >
+              <span>Obsidian</span>
+              <ChevronRight className="size-4 text-muted-foreground" />
+            </Link>
+            <Link
+              to="/app/pontes"
+              className="tap flex min-h-14 items-center justify-between gap-3 py-1 text-sm"
+            >
+              <span>Pontes locais</span>
+              <ChevronRight className="size-4 text-muted-foreground" />
+            </Link>
+          </div>
         </Section>
       </Reveal>
 

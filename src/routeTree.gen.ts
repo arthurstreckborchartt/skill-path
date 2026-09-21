@@ -27,6 +27,7 @@ import { Route as ApiBlueprintRouteImport } from './routes/api.blueprint'
 import { Route as ApiCopilotRouteImport } from './routes/api.copilot'
 import { Route as ApiEtapaRouteImport } from './routes/api.etapa'
 import { Route as ApiLicaoRouteImport } from './routes/api.licao'
+import { Route as ApiPonteRouteImport } from './routes/api.ponte'
 import { Route as ApiPraticaRouteImport } from './routes/api.pratica'
 import { Route as ApiRotaRouteImport } from './routes/api.rota'
 import { Route as ApiSegurancaRouteImport } from './routes/api.seguranca'
@@ -34,15 +35,20 @@ import { Route as ApiStripeWebhookRouteImport } from './routes/api.stripe-webhoo
 import { Route as AppIndexRouteImport } from './routes/app.index'
 import { Route as AppBlueprintsRouteImport } from './routes/app.blueprints'
 import { Route as AppConfiguracoesRouteImport } from './routes/app.configuracoes'
+import { Route as AppFerramentasRouteImport } from './routes/app.ferramentas'
 import { Route as AppHabilidadesRouteImport } from './routes/app.habilidades'
 import { Route as AppIntegracoesRouteImport } from './routes/app.integracoes'
+import { Route as AppObsidianRouteImport } from './routes/app.obsidian'
 import { Route as AppOportunidadesRouteImport } from './routes/app.oportunidades'
 import { Route as AppPerfilRouteImport } from './routes/app.perfil'
 import { Route as AppPlanosRouteImport } from './routes/app.planos'
+import { Route as AppPontesRouteImport } from './routes/app.pontes'
 import { Route as AppProjetosRouteImport } from './routes/app.projetos'
 import { Route as AppRevisarRouteImport } from './routes/app.revisar'
 import { Route as AppRotaRouteImport } from './routes/app.rota'
+import { Route as ApiIaChaveRouteImport } from './routes/api.ia.chave'
 import { Route as ApiIntegracoesExecutarRouteImport } from './routes/api.integracoes.executar'
+import { Route as ApiPonteCodigoRouteImport } from './routes/api.ponte.codigo'
 import { Route as AppApiIdRouteImport } from './routes/app.api.$id'
 import { Route as AppAprenderActivityIdRouteImport } from './routes/app.aprender.$activityId'
 import { Route as AppArquiteturaIaIdRouteImport } from './routes/app.arquitetura-ia.$id'
@@ -149,6 +155,11 @@ const ApiLicaoRoute = ApiLicaoRouteImport.update({
   path: '/api/licao',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPonteRoute = ApiPonteRouteImport.update({
+  id: '/api/ponte',
+  path: '/api/ponte',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPraticaRoute = ApiPraticaRouteImport.update({
   id: '/api/pratica',
   path: '/api/pratica',
@@ -184,6 +195,11 @@ const AppConfiguracoesRoute = AppConfiguracoesRouteImport.update({
   path: '/configuracoes',
   getParentRoute: () => AppRoute,
 } as any)
+const AppFerramentasRoute = AppFerramentasRouteImport.update({
+  id: '/ferramentas',
+  path: '/ferramentas',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppHabilidadesRoute = AppHabilidadesRouteImport.update({
   id: '/habilidades',
   path: '/habilidades',
@@ -192,6 +208,11 @@ const AppHabilidadesRoute = AppHabilidadesRouteImport.update({
 const AppIntegracoesRoute = AppIntegracoesRouteImport.update({
   id: '/integracoes',
   path: '/integracoes',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppObsidianRoute = AppObsidianRouteImport.update({
+  id: '/obsidian',
+  path: '/obsidian',
   getParentRoute: () => AppRoute,
 } as any)
 const AppOportunidadesRoute = AppOportunidadesRouteImport.update({
@@ -209,6 +230,11 @@ const AppPlanosRoute = AppPlanosRouteImport.update({
   path: '/planos',
   getParentRoute: () => AppRoute,
 } as any)
+const AppPontesRoute = AppPontesRouteImport.update({
+  id: '/pontes',
+  path: '/pontes',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppProjetosRoute = AppProjetosRouteImport.update({
   id: '/projetos',
   path: '/projetos',
@@ -224,10 +250,20 @@ const AppRotaRoute = AppRotaRouteImport.update({
   path: '/rota',
   getParentRoute: () => AppRoute,
 } as any)
+const ApiIaChaveRoute = ApiIaChaveRouteImport.update({
+  id: '/api/ia/chave',
+  path: '/api/ia/chave',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiIntegracoesExecutarRoute = ApiIntegracoesExecutarRouteImport.update({
   id: '/api/integracoes/executar',
   path: '/api/integracoes/executar',
   getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPonteCodigoRoute = ApiPonteCodigoRouteImport.update({
+  id: '/codigo',
+  path: '/codigo',
+  getParentRoute: () => ApiPonteRoute,
 } as any)
 const AppApiIdRoute = AppApiIdRouteImport.update({
   id: '/api/$id',
@@ -321,22 +357,28 @@ export interface FileRoutesByFullPath {
   '/api/copilot': typeof ApiCopilotRoute
   '/api/etapa': typeof ApiEtapaRoute
   '/api/licao': typeof ApiLicaoRoute
+  '/api/ponte': typeof ApiPonteRouteWithChildren
   '/api/pratica': typeof ApiPraticaRoute
   '/api/rota': typeof ApiRotaRoute
   '/api/seguranca': typeof ApiSegurancaRoute
   '/api/stripe-webhook': typeof ApiStripeWebhookRoute
   '/app/blueprints': typeof AppBlueprintsRoute
   '/app/configuracoes': typeof AppConfiguracoesRoute
+  '/app/ferramentas': typeof AppFerramentasRoute
   '/app/habilidades': typeof AppHabilidadesRoute
   '/app/integracoes': typeof AppIntegracoesRoute
+  '/app/obsidian': typeof AppObsidianRoute
   '/app/oportunidades': typeof AppOportunidadesRoute
   '/app/perfil': typeof AppPerfilRoute
   '/app/planos': typeof AppPlanosRoute
+  '/app/pontes': typeof AppPontesRoute
   '/app/projetos': typeof AppProjetosRoute
   '/app/revisar': typeof AppRevisarRoute
   '/app/rota': typeof AppRotaRoute
   '/app/': typeof AppIndexRoute
+  '/api/ia/chave': typeof ApiIaChaveRoute
   '/api/integracoes/executar': typeof ApiIntegracoesExecutarRoute
+  '/api/ponte/codigo': typeof ApiPonteCodigoRoute
   '/app/api/$id': typeof AppApiIdRoute
   '/app/aprender/$activityId': typeof AppAprenderActivityIdRoute
   '/app/arquitetura-ia/$id': typeof AppArquiteturaIaIdRoute
@@ -370,22 +412,28 @@ export interface FileRoutesByTo {
   '/api/copilot': typeof ApiCopilotRoute
   '/api/etapa': typeof ApiEtapaRoute
   '/api/licao': typeof ApiLicaoRoute
+  '/api/ponte': typeof ApiPonteRouteWithChildren
   '/api/pratica': typeof ApiPraticaRoute
   '/api/rota': typeof ApiRotaRoute
   '/api/seguranca': typeof ApiSegurancaRoute
   '/api/stripe-webhook': typeof ApiStripeWebhookRoute
   '/app/blueprints': typeof AppBlueprintsRoute
   '/app/configuracoes': typeof AppConfiguracoesRoute
+  '/app/ferramentas': typeof AppFerramentasRoute
   '/app/habilidades': typeof AppHabilidadesRoute
   '/app/integracoes': typeof AppIntegracoesRoute
+  '/app/obsidian': typeof AppObsidianRoute
   '/app/oportunidades': typeof AppOportunidadesRoute
   '/app/perfil': typeof AppPerfilRoute
   '/app/planos': typeof AppPlanosRoute
+  '/app/pontes': typeof AppPontesRoute
   '/app/projetos': typeof AppProjetosRoute
   '/app/revisar': typeof AppRevisarRoute
   '/app/rota': typeof AppRotaRoute
   '/app': typeof AppIndexRoute
+  '/api/ia/chave': typeof ApiIaChaveRoute
   '/api/integracoes/executar': typeof ApiIntegracoesExecutarRoute
+  '/api/ponte/codigo': typeof ApiPonteCodigoRoute
   '/app/api/$id': typeof AppApiIdRoute
   '/app/aprender/$activityId': typeof AppAprenderActivityIdRoute
   '/app/arquitetura-ia/$id': typeof AppArquiteturaIaIdRoute
@@ -421,22 +469,28 @@ export interface FileRoutesById {
   '/api/copilot': typeof ApiCopilotRoute
   '/api/etapa': typeof ApiEtapaRoute
   '/api/licao': typeof ApiLicaoRoute
+  '/api/ponte': typeof ApiPonteRouteWithChildren
   '/api/pratica': typeof ApiPraticaRoute
   '/api/rota': typeof ApiRotaRoute
   '/api/seguranca': typeof ApiSegurancaRoute
   '/api/stripe-webhook': typeof ApiStripeWebhookRoute
   '/app/blueprints': typeof AppBlueprintsRoute
   '/app/configuracoes': typeof AppConfiguracoesRoute
+  '/app/ferramentas': typeof AppFerramentasRoute
   '/app/habilidades': typeof AppHabilidadesRoute
   '/app/integracoes': typeof AppIntegracoesRoute
+  '/app/obsidian': typeof AppObsidianRoute
   '/app/oportunidades': typeof AppOportunidadesRoute
   '/app/perfil': typeof AppPerfilRoute
   '/app/planos': typeof AppPlanosRoute
+  '/app/pontes': typeof AppPontesRoute
   '/app/projetos': typeof AppProjetosRoute
   '/app/revisar': typeof AppRevisarRoute
   '/app/rota': typeof AppRotaRoute
   '/app/': typeof AppIndexRoute
+  '/api/ia/chave': typeof ApiIaChaveRoute
   '/api/integracoes/executar': typeof ApiIntegracoesExecutarRoute
+  '/api/ponte/codigo': typeof ApiPonteCodigoRoute
   '/app/api/$id': typeof AppApiIdRoute
   '/app/aprender/$activityId': typeof AppAprenderActivityIdRoute
   '/app/arquitetura-ia/$id': typeof AppArquiteturaIaIdRoute
@@ -473,22 +527,28 @@ export interface FileRouteTypes {
     | '/api/copilot'
     | '/api/etapa'
     | '/api/licao'
+    | '/api/ponte'
     | '/api/pratica'
     | '/api/rota'
     | '/api/seguranca'
     | '/api/stripe-webhook'
     | '/app/blueprints'
     | '/app/configuracoes'
+    | '/app/ferramentas'
     | '/app/habilidades'
     | '/app/integracoes'
+    | '/app/obsidian'
     | '/app/oportunidades'
     | '/app/perfil'
     | '/app/planos'
+    | '/app/pontes'
     | '/app/projetos'
     | '/app/revisar'
     | '/app/rota'
     | '/app/'
+    | '/api/ia/chave'
     | '/api/integracoes/executar'
+    | '/api/ponte/codigo'
     | '/app/api/$id'
     | '/app/aprender/$activityId'
     | '/app/arquitetura-ia/$id'
@@ -522,22 +582,28 @@ export interface FileRouteTypes {
     | '/api/copilot'
     | '/api/etapa'
     | '/api/licao'
+    | '/api/ponte'
     | '/api/pratica'
     | '/api/rota'
     | '/api/seguranca'
     | '/api/stripe-webhook'
     | '/app/blueprints'
     | '/app/configuracoes'
+    | '/app/ferramentas'
     | '/app/habilidades'
     | '/app/integracoes'
+    | '/app/obsidian'
     | '/app/oportunidades'
     | '/app/perfil'
     | '/app/planos'
+    | '/app/pontes'
     | '/app/projetos'
     | '/app/revisar'
     | '/app/rota'
     | '/app'
+    | '/api/ia/chave'
     | '/api/integracoes/executar'
+    | '/api/ponte/codigo'
     | '/app/api/$id'
     | '/app/aprender/$activityId'
     | '/app/arquitetura-ia/$id'
@@ -572,22 +638,28 @@ export interface FileRouteTypes {
     | '/api/copilot'
     | '/api/etapa'
     | '/api/licao'
+    | '/api/ponte'
     | '/api/pratica'
     | '/api/rota'
     | '/api/seguranca'
     | '/api/stripe-webhook'
     | '/app/blueprints'
     | '/app/configuracoes'
+    | '/app/ferramentas'
     | '/app/habilidades'
     | '/app/integracoes'
+    | '/app/obsidian'
     | '/app/oportunidades'
     | '/app/perfil'
     | '/app/planos'
+    | '/app/pontes'
     | '/app/projetos'
     | '/app/revisar'
     | '/app/rota'
     | '/app/'
+    | '/api/ia/chave'
     | '/api/integracoes/executar'
+    | '/api/ponte/codigo'
     | '/app/api/$id'
     | '/app/aprender/$activityId'
     | '/app/arquitetura-ia/$id'
@@ -623,10 +695,12 @@ export interface RootRouteChildren {
   ApiCopilotRoute: typeof ApiCopilotRoute
   ApiEtapaRoute: typeof ApiEtapaRoute
   ApiLicaoRoute: typeof ApiLicaoRoute
+  ApiPonteRoute: typeof ApiPonteRouteWithChildren
   ApiPraticaRoute: typeof ApiPraticaRoute
   ApiRotaRoute: typeof ApiRotaRoute
   ApiSegurancaRoute: typeof ApiSegurancaRoute
   ApiStripeWebhookRoute: typeof ApiStripeWebhookRoute
+  ApiIaChaveRoute: typeof ApiIaChaveRoute
   ApiIntegracoesExecutarRoute: typeof ApiIntegracoesExecutarRoute
   ApiIntegracoesOauthCallbackRoute: typeof ApiIntegracoesOauthCallbackRoute
   ApiIntegracoesOauthIniciarRoute: typeof ApiIntegracoesOauthIniciarRoute
@@ -762,6 +836,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiLicaoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/ponte': {
+      id: '/api/ponte'
+      path: '/api/ponte'
+      fullPath: '/api/ponte'
+      preLoaderRoute: typeof ApiPonteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/pratica': {
       id: '/api/pratica'
       path: '/api/pratica'
@@ -811,6 +892,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppConfiguracoesRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/ferramentas': {
+      id: '/app/ferramentas'
+      path: '/ferramentas'
+      fullPath: '/app/ferramentas'
+      preLoaderRoute: typeof AppFerramentasRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/habilidades': {
       id: '/app/habilidades'
       path: '/habilidades'
@@ -823,6 +911,13 @@ declare module '@tanstack/react-router' {
       path: '/integracoes'
       fullPath: '/app/integracoes'
       preLoaderRoute: typeof AppIntegracoesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/obsidian': {
+      id: '/app/obsidian'
+      path: '/obsidian'
+      fullPath: '/app/obsidian'
+      preLoaderRoute: typeof AppObsidianRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/oportunidades': {
@@ -846,6 +941,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppPlanosRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/pontes': {
+      id: '/app/pontes'
+      path: '/pontes'
+      fullPath: '/app/pontes'
+      preLoaderRoute: typeof AppPontesRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/projetos': {
       id: '/app/projetos'
       path: '/projetos'
@@ -867,12 +969,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppRotaRouteImport
       parentRoute: typeof AppRoute
     }
+    '/api/ia/chave': {
+      id: '/api/ia/chave'
+      path: '/api/ia/chave'
+      fullPath: '/api/ia/chave'
+      preLoaderRoute: typeof ApiIaChaveRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/integracoes/executar': {
       id: '/api/integracoes/executar'
       path: '/api/integracoes/executar'
       fullPath: '/api/integracoes/executar'
       preLoaderRoute: typeof ApiIntegracoesExecutarRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/api/ponte/codigo': {
+      id: '/api/ponte/codigo'
+      path: '/codigo'
+      fullPath: '/api/ponte/codigo'
+      preLoaderRoute: typeof ApiPonteCodigoRouteImport
+      parentRoute: typeof ApiPonteRoute
     }
     '/app/api/$id': {
       id: '/app/api/$id'
@@ -978,11 +1094,14 @@ declare module '@tanstack/react-router' {
 interface AppRouteChildren {
   AppBlueprintsRoute: typeof AppBlueprintsRoute
   AppConfiguracoesRoute: typeof AppConfiguracoesRoute
+  AppFerramentasRoute: typeof AppFerramentasRoute
   AppHabilidadesRoute: typeof AppHabilidadesRoute
   AppIntegracoesRoute: typeof AppIntegracoesRoute
+  AppObsidianRoute: typeof AppObsidianRoute
   AppOportunidadesRoute: typeof AppOportunidadesRoute
   AppPerfilRoute: typeof AppPerfilRoute
   AppPlanosRoute: typeof AppPlanosRoute
+  AppPontesRoute: typeof AppPontesRoute
   AppProjetosRoute: typeof AppProjetosRoute
   AppRevisarRoute: typeof AppRevisarRoute
   AppRotaRoute: typeof AppRotaRoute
@@ -1002,11 +1121,14 @@ interface AppRouteChildren {
 const AppRouteChildren: AppRouteChildren = {
   AppBlueprintsRoute: AppBlueprintsRoute,
   AppConfiguracoesRoute: AppConfiguracoesRoute,
+  AppFerramentasRoute: AppFerramentasRoute,
   AppHabilidadesRoute: AppHabilidadesRoute,
   AppIntegracoesRoute: AppIntegracoesRoute,
+  AppObsidianRoute: AppObsidianRoute,
   AppOportunidadesRoute: AppOportunidadesRoute,
   AppPerfilRoute: AppPerfilRoute,
   AppPlanosRoute: AppPlanosRoute,
+  AppPontesRoute: AppPontesRoute,
   AppProjetosRoute: AppProjetosRoute,
   AppRevisarRoute: AppRevisarRoute,
   AppRotaRoute: AppRotaRoute,
@@ -1024,6 +1146,18 @@ const AppRouteChildren: AppRouteChildren = {
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
+
+interface ApiPonteRouteChildren {
+  ApiPonteCodigoRoute: typeof ApiPonteCodigoRoute
+}
+
+const ApiPonteRouteChildren: ApiPonteRouteChildren = {
+  ApiPonteCodigoRoute: ApiPonteCodigoRoute,
+}
+
+const ApiPonteRouteWithChildren = ApiPonteRoute._addFileChildren(
+  ApiPonteRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -1045,10 +1179,12 @@ const rootRouteChildren: RootRouteChildren = {
   ApiCopilotRoute: ApiCopilotRoute,
   ApiEtapaRoute: ApiEtapaRoute,
   ApiLicaoRoute: ApiLicaoRoute,
+  ApiPonteRoute: ApiPonteRouteWithChildren,
   ApiPraticaRoute: ApiPraticaRoute,
   ApiRotaRoute: ApiRotaRoute,
   ApiSegurancaRoute: ApiSegurancaRoute,
   ApiStripeWebhookRoute: ApiStripeWebhookRoute,
+  ApiIaChaveRoute: ApiIaChaveRoute,
   ApiIntegracoesExecutarRoute: ApiIntegracoesExecutarRoute,
   ApiIntegracoesOauthCallbackRoute: ApiIntegracoesOauthCallbackRoute,
   ApiIntegracoesOauthIniciarRoute: ApiIntegracoesOauthIniciarRoute,
