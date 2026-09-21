@@ -24,9 +24,12 @@
  * como a capacidade **aparece** e quanto atrito ela merece.
  */
 
+import { DEFINICOES_NIVEL, type Nivel } from "./niveis";
+
 export const CAPACIDADES = [
   // ---- Projeto e contexto -------------------------------------------------------------------
   "READ_PROJECT",
+  "WRITE_PROJECT",
   "UPDATE_BLUEPRINT",
   // ---- Arquivos -----------------------------------------------------------------------------
   "READ_FILES",
@@ -42,27 +45,44 @@ export const CAPACIDADES = [
   "CREATE_BRANCH",
   "CREATE_COMMIT",
   "PUSH_GIT",
-  // ---- Base de conhecimento -----------------------------------------------------------------
-  "READ_OBSIDIAN",
-  "WRITE_OBSIDIAN",
-  "CREATE_OBSIDIAN_NOTE",
+  // ---- Base de conhecimento (vault do Obsidian) ---------------------------------------------
+  // Granularidade de pasta, e não de vault, é o ponto: "acesso ao Obsidian" é uma autorização que
+  // ninguém consegue avaliar. "Ler a pasta Projects/" é.
+  "READ_VAULT",
+  "READ_FOLDER",
+  "WRITE_FOLDER",
+  "CREATE_NOTE",
+  "UPDATE_NOTE",
+  "DELETE_NOTE",
+  "SEARCH_VAULT",
+  "EXECUTE_OBSIDIAN_COMMAND",
+  // ---- Ponte local --------------------------------------------------------------------------
+  // Uma capacidade por ação, e não uma "permissão de Revit": autorizar ler o modelo e autorizar
+  // criar elemento nele são decisões de tamanhos muito diferentes.
+  "BRIDGE_CONNECT",
+  "REVIT_GET_PROJECT",
+  "REVIT_READ_MODEL",
+  "REVIT_EXPORT",
+  "REVIT_CREATE_ELEMENT",
+  "REVIT_UPDATE_ELEMENT",
+  "VSCODE_OPEN_FILE",
+  // ---- Publicação ---------------------------------------------------------------------------
+  "DEPLOY_APP",
 ] as const;
 
 export type Capacidade = (typeof CAPACIDADES)[number];
 
-export const CLASSES_DE_RISCO = ["leitura", "escrita", "execucao", "destrutiva"] as const;
-export type ClasseDeRisco = (typeof CLASSES_DE_RISCO)[number];
-
-export const ROTULO_CLASSE: Record<ClasseDeRisco, string> = {
-  leitura: "Só leitura",
-  escrita: "Escreve",
-  execucao: "Executa",
-  destrutiva: "Destrutiva",
-};
-
 export type DefinicaoCapacidade = {
   id: Capacidade;
-  classe: ClasseDeRisco;
+  /**
+   * O nível de permissão que esta capacidade consome.
+   *
+   * É o que liga o catálogo ao portão: a ação declara a capacidade, a capacidade declara o nível,
+   * e o nível decide se precisa de aprovação a cada vez, se exige autenticação fresca e se pode
+   * virar permissão persistente. Sem esse elo, cada ação teria que repetir a mesma classificação
+   * e alguma hora uma delas discordaria.
+   */
+  nivel: Nivel;
   /** O rótulo que a pessoa lê na tela de permissões. Frase, não jargão. */
   rotulo: string;
   /** O que ela permite, em termos concretos. É o que a pessoa está autorizando. */
@@ -87,16 +107,30 @@ export type DefinicaoCapacidade = {
 export const DEFINICOES: Record<Capacidade, DefinicaoCapacidade> = {
   READ_PROJECT: {
     id: "READ_PROJECT",
-    classe: "leitura",
+    nivel: "READ",
     rotulo: "Ler o contexto do projeto",
     oQuePermite:
       "Ler o plano, o modelo de dados, o mapa de API e as decisões já tomadas, para trabalhar " +
       "com o seu projeto em vez de um genérico.",
     naoPermite: "Alterar qualquer coisa no plano, nem ler outros projetos seus.",
   },
+  WRITE_PROJECT: {
+    id: "WRITE_PROJECT",
+    nivel: "WRITE",
+    rotulo: "Escrever no registro do projeto",
+    oQuePermite:
+      "Registrar no Pathly o que aconteceu: etapa concluída, erro encontrado, decisão técnica " +
+      "tomada, trabalho entregue. É o que uma ferramenta externa precisa para o projeto não " +
+      "envelhecer enquanto ela trabalha.",
+    naoPermite:
+      "Tocar no seu código, no seu repositório ou no seu vault. Isto escreve no registro do " +
+      "projeto dentro do Pathly, e em nada fora dele.",
+    exige: ["READ_PROJECT"],
+  },
   UPDATE_BLUEPRINT: {
     id: "UPDATE_BLUEPRINT",
-    classe: "escrita",
+    // SUGGEST, e nao WRITE: ela cria proposta, e proposta nao muda nada sozinha.
+    nivel: "SUGGEST",
     rotulo: "Propor mudanças no plano",
     oQuePermite:
       "Criar propostas de alteração no Blueprint — que continuam passando pela sua aprovação, " +
@@ -109,7 +143,7 @@ export const DEFINICOES: Record<Capacidade, DefinicaoCapacidade> = {
 
   READ_FILES: {
     id: "READ_FILES",
-    classe: "leitura",
+    nivel: "READ",
     rotulo: "Ler arquivos do repositório",
     oQuePermite: "Abrir e ler arquivos do projeto conectado.",
     naoPermite:
@@ -118,7 +152,7 @@ export const DEFINICOES: Record<Capacidade, DefinicaoCapacidade> = {
   },
   WRITE_FILES: {
     id: "WRITE_FILES",
-    classe: "escrita",
+    nivel: "WRITE",
     rotulo: "Modificar arquivos",
     oQuePermite: "Alterar o conteúdo de arquivos que já existem.",
     naoPermite: "Criar nem apagar arquivos — cada uma dessas é uma autorização própria.",
@@ -126,21 +160,21 @@ export const DEFINICOES: Record<Capacidade, DefinicaoCapacidade> = {
   },
   CREATE_FILE: {
     id: "CREATE_FILE",
-    classe: "escrita",
+    nivel: "WRITE",
     rotulo: "Criar arquivos",
     oQuePermite: "Criar arquivos novos no projeto.",
     exige: ["READ_FILES"],
   },
   UPDATE_FILE: {
     id: "UPDATE_FILE",
-    classe: "escrita",
+    nivel: "WRITE",
     rotulo: "Atualizar um arquivo específico",
     oQuePermite: "Alterar um arquivo nomeado, sem alcance sobre o resto do repositório.",
     exige: ["READ_FILES"],
   },
   DELETE_FILE: {
     id: "DELETE_FILE",
-    classe: "destrutiva",
+    nivel: "DELETE",
     rotulo: "Apagar arquivos",
     oQuePermite:
       "Remover arquivos do projeto, inclusive os que você não escreveu e os que não estão " +
@@ -153,7 +187,7 @@ export const DEFINICOES: Record<Capacidade, DefinicaoCapacidade> = {
 
   EXECUTE_COMMAND: {
     id: "EXECUTE_COMMAND",
-    classe: "execucao",
+    nivel: "EXECUTE",
     rotulo: "Executar comandos",
     oQuePermite: "Rodar comandos no ambiente conectado.",
     naoPermite:
@@ -163,7 +197,7 @@ export const DEFINICOES: Record<Capacidade, DefinicaoCapacidade> = {
   },
   RUN_TESTS: {
     id: "RUN_TESTS",
-    classe: "execucao",
+    nivel: "EXECUTE",
     rotulo: "Rodar os testes",
     oQuePermite: "Executar a suíte de testes do projeto e ler o resultado.",
     naoPermite: "Rodar qualquer outro comando — para isso existe `EXECUTE_COMMAND`.",
@@ -171,20 +205,20 @@ export const DEFINICOES: Record<Capacidade, DefinicaoCapacidade> = {
 
   READ_GIT: {
     id: "READ_GIT",
-    classe: "leitura",
+    nivel: "READ",
     rotulo: "Ler o histórico do git",
     oQuePermite: "Ler commits, branches, diferenças e estado da árvore.",
   },
   CREATE_BRANCH: {
     id: "CREATE_BRANCH",
-    classe: "escrita",
+    nivel: "WRITE",
     rotulo: "Criar branches",
     oQuePermite: "Criar uma branch nova a partir do estado atual.",
     exige: ["READ_GIT"],
   },
   CREATE_COMMIT: {
     id: "CREATE_COMMIT",
-    classe: "escrita",
+    nivel: "COMMIT",
     rotulo: "Criar commits",
     oQuePermite: "Registrar alterações num commit local.",
     naoPermite: "Publicar esse commit em lugar nenhum — empurrar é outra autorização.",
@@ -192,7 +226,7 @@ export const DEFINICOES: Record<Capacidade, DefinicaoCapacidade> = {
   },
   PUSH_GIT: {
     id: "PUSH_GIT",
-    classe: "destrutiva",
+    nivel: "PUSH",
     rotulo: "Enviar para o repositório remoto",
     oQuePermite: "Publicar commits no remoto, onde outras pessoas e automações os veem.",
     naoPermite:
@@ -201,26 +235,174 @@ export const DEFINICOES: Record<Capacidade, DefinicaoCapacidade> = {
     exige: ["READ_GIT", "CREATE_COMMIT"],
   },
 
-  READ_OBSIDIAN: {
-    id: "READ_OBSIDIAN",
-    classe: "leitura",
-    rotulo: "Ler o seu vault",
-    oQuePermite: "Ler notas do vault conectado, para usar o que você já escreveu como contexto.",
-  },
-  WRITE_OBSIDIAN: {
-    id: "WRITE_OBSIDIAN",
-    classe: "escrita",
-    rotulo: "Editar notas do vault",
+  READ_VAULT: {
+    id: "READ_VAULT",
+    nivel: "READ",
+    rotulo: "Ler o vault inteiro",
     oQuePermite:
-      "Alterar o conteúdo de notas que já existem no vault, sobrescrevendo o que estava lá.",
-    exige: ["READ_OBSIDIAN"],
+      "Ler qualquer nota do vault conectado, em qualquer pasta, para usar o que você já escreveu " +
+      "como contexto.",
+    naoPermite:
+      "Escrever nada. E não é o que o Pathly pede por padrão — o padrão é pasta por pasta, " +
+      "porque o vault inteiro costuma ter muita coisa que não é sobre o projeto.",
   },
-  CREATE_OBSIDIAN_NOTE: {
-    id: "CREATE_OBSIDIAN_NOTE",
-    classe: "escrita",
-    rotulo: "Criar notas no vault",
-    oQuePermite: "Criar notas novas, por exemplo para registrar decisões e evidências.",
-    exige: ["READ_OBSIDIAN"],
+  READ_FOLDER: {
+    id: "READ_FOLDER",
+    nivel: "READ",
+    rotulo: "Ler uma pasta do vault",
+    oQuePermite:
+      "Ler as notas de uma pasta específica que você escolher, e das subpastas dela. As outras " +
+      "pastas continuam invisíveis para o Pathly.",
+  },
+  WRITE_FOLDER: {
+    id: "WRITE_FOLDER",
+    nivel: "WRITE",
+    rotulo: "Escrever numa pasta do vault",
+    oQuePermite:
+      "Alterar notas dentro de uma pasta específica — e só dentro dos blocos que o próprio Pathly " +
+      "escreveu, delimitados por marcadores na nota.",
+    naoPermite:
+      "Tocar no que você escreveu à mão. O texto fora dos marcadores do Pathly não é alterado, e " +
+      "quando os marcadores somem o Pathly para e pergunta em vez de adivinhar.",
+    exige: ["READ_FOLDER"],
+  },
+  CREATE_NOTE: {
+    id: "CREATE_NOTE",
+    nivel: "WRITE",
+    rotulo: "Criar notas",
+    oQuePermite:
+      "Criar notas que ainda não existem, dentro das pastas autorizadas — por exemplo uma nota " +
+      "por decisão técnica ou por erro encontrado.",
+    exige: ["WRITE_FOLDER"],
+  },
+  UPDATE_NOTE: {
+    id: "UPDATE_NOTE",
+    nivel: "WRITE",
+    rotulo: "Atualizar notas existentes",
+    oQuePermite:
+      "Reescrever os blocos do Pathly numa nota que já existe, mantendo intacto o resto do texto.",
+    naoPermite: "Substituir a nota inteira. Quando só uma seção muda, só ela é reescrita.",
+    exige: ["WRITE_FOLDER"],
+  },
+  DELETE_NOTE: {
+    id: "DELETE_NOTE",
+    nivel: "DELETE",
+    rotulo: "Apagar notas",
+    oQuePermite:
+      "Remover uma nota do vault, uma por vez e sempre com você confirmando aquela nota " +
+      "especificamente.",
+    naoPermite:
+      "Apagar em lote, e apagar sem você confirmar aquela nota especificamente. Uma autorização " +
+      "de apagar nunca vale para a próxima.",
+    exige: ["WRITE_FOLDER"],
+  },
+  SEARCH_VAULT: {
+    id: "SEARCH_VAULT",
+    nivel: "READ",
+    rotulo: "Buscar no vault",
+    oQuePermite:
+      "Procurar um termo nas pastas autorizadas e receber de volta os trechos que casaram — não " +
+      "as notas inteiras.",
+    exige: ["READ_FOLDER"],
+  },
+  EXECUTE_OBSIDIAN_COMMAND: {
+    id: "EXECUTE_OBSIDIAN_COMMAND",
+    nivel: "EXECUTE",
+    rotulo: "Executar comandos do Obsidian",
+    oQuePermite:
+      "Disparar comandos do próprio Obsidian — abrir o gráfico, rodar um plugin, executar um " +
+      "template.",
+    naoPermite:
+      "Funcionar pelo caminho de pasta. Só o plugin Local REST API expõe comandos, e ele roda em " +
+      "127.0.0.1 — fora do alcance do Pathly na nuvem. Declarada aqui porque a permissão existe; " +
+      "nenhum mecanismo que o Pathly alcança hoje a atende.",
+    exige: ["READ_VAULT"],
+  },
+
+  BRIDGE_CONNECT: {
+    id: "BRIDGE_CONNECT",
+    nivel: "READ",
+    rotulo: "Conectar uma ponte local",
+    oQuePermite:
+      "Registrar um agente rodando na sua máquina e deixá-lo buscar tarefas do Pathly. Sozinha, " +
+      "ela não autoriza nenhuma ação: cada tipo de ação tem permissão própria.",
+    naoPermite:
+      "Executar qualquer coisa. A ponte só aceita ações que ela mesma conhece, e cada uma exige " +
+      "a permissão dela.",
+  },
+  REVIT_GET_PROJECT: {
+    id: "REVIT_GET_PROJECT",
+    nivel: "READ",
+    rotulo: "Ler os dados do projeto no Revit",
+    oQuePermite:
+      "Ler nome, caminho, unidades e níveis do projeto aberto no Revit — o suficiente para o " +
+      "Pathly saber com o que está lidando.",
+    exige: ["BRIDGE_CONNECT"],
+  },
+  REVIT_READ_MODEL: {
+    id: "REVIT_READ_MODEL",
+    nivel: "READ",
+    rotulo: "Ler elementos do modelo",
+    oQuePermite:
+      "Consultar elementos do modelo por categoria e ler os parâmetros deles, sem alterar nada.",
+    exige: ["BRIDGE_CONNECT"],
+  },
+  REVIT_EXPORT: {
+    id: "REVIT_EXPORT",
+    nivel: "WRITE",
+    rotulo: "Exportar do Revit",
+    oQuePermite:
+      "Gerar um arquivo a partir do modelo — IFC, DWG, PDF ou planilha — numa pasta que você " +
+      "indicar.",
+    naoPermite: "Alterar o modelo. Exportar lê o modelo e escreve fora dele.",
+    exige: ["BRIDGE_CONNECT", "REVIT_READ_MODEL"],
+  },
+  REVIT_CREATE_ELEMENT: {
+    id: "REVIT_CREATE_ELEMENT",
+    nivel: "WRITE",
+    rotulo: "Criar elementos no modelo",
+    oQuePermite:
+      "Acrescentar elementos ao modelo aberto — paredes, portas, ambientes — a partir de uma " +
+      "lista que você aprova antes, elemento por elemento.",
+    naoPermite:
+      "Criar sem você ver antes. Toda criação passa por uma simulação que diz quantos e quais " +
+      "elementos entrariam, e nada acontece até você autorizar aquela simulação.",
+    exige: ["BRIDGE_CONNECT", "REVIT_READ_MODEL"],
+  },
+  REVIT_UPDATE_ELEMENT: {
+    id: "REVIT_UPDATE_ELEMENT",
+    nivel: "WRITE",
+    rotulo: "Alterar elementos do modelo",
+    oQuePermite:
+      "Mudar parâmetros de elementos que já existem no modelo, a partir de uma lista que você " +
+      "aprova antes.",
+    naoPermite:
+      "Apagar elemento, e alterar sem simulação. O que vai mudar é mostrado antes, com o valor " +
+      "atual ao lado do novo.",
+    exige: ["BRIDGE_CONNECT", "REVIT_READ_MODEL"],
+  },
+  VSCODE_OPEN_FILE: {
+    id: "VSCODE_OPEN_FILE",
+    nivel: "READ",
+    rotulo: "Abrir um arquivo no editor",
+    oQuePermite:
+      "Abrir um arquivo do seu projeto no VS Code, numa linha específica — o gesto de levar você " +
+      "até onde a etapa acontece.",
+    naoPermite: "Ler, escrever ou executar nada. Só abre o editor no lugar certo.",
+    exige: ["BRIDGE_CONNECT"],
+  },
+
+  DEPLOY_APP: {
+    id: "DEPLOY_APP",
+    nivel: "DEPLOY",
+    rotulo: "Publicar o projeto",
+    oQuePermite:
+      "Disparar um deploy do projeto conectado, levando o que está lá para quem estiver usando " +
+      "o produto naquele momento.",
+    naoPermite:
+      "Desfazer. Voltar atrás depende do provedor de hospedagem e do que você tiver preparado " +
+      "antes — o Pathly não reverte deploy de ninguém.",
+    exige: ["READ_PROJECT"],
   },
 };
 
@@ -234,18 +416,21 @@ export function faltamPara(pedida: Capacidade, concedidas: readonly Capacidade[]
   return falta;
 }
 
-export function ehDestrutiva(c: Capacidade): boolean {
-  return DEFINICOES[c].classe === "destrutiva";
+export function nivelDe(c: Capacidade): Nivel {
+  return DEFINICOES[c].nivel;
+}
+
+/** `true` quando cada ocorrência precisa de aprovação, mesmo com permissão já concedida. */
+export function exigeAprovacaoPorAcao(c: Capacidade): boolean {
+  return DEFINICOES_NIVEL[DEFINICOES[c].nivel].aprovacaoPorAcao;
 }
 
 /** Para a tela agrupar sem inventar categoria própria. */
-export function porClasse(cs: readonly Capacidade[]): Record<ClasseDeRisco, Capacidade[]> {
-  const fora: Record<ClasseDeRisco, Capacidade[]> = {
-    leitura: [],
-    escrita: [],
-    execucao: [],
-    destrutiva: [],
-  };
-  for (const c of cs) fora[DEFINICOES[c].classe].push(c);
+export function porNivel(cs: readonly Capacidade[]): Partial<Record<Nivel, Capacidade[]>> {
+  const fora: Partial<Record<Nivel, Capacidade[]>> = {};
+  for (const c of cs) {
+    const n = DEFINICOES[c].nivel;
+    (fora[n] ??= []).push(c);
+  }
   return fora;
 }

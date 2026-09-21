@@ -65,14 +65,15 @@ export function conferirProvedor(p: IntegrationProvider): string[] {
     }
   }
 
-  const classes = p.capacidades.map((c) => DEFINICOES[c].classe);
-  if (!p.suporte.escrita && classes.includes("escrita")) {
-    problemas.push("declara não suportar escrita, mas tem capacidade de escrita");
+  const niveis = p.capacidades.map((c) => DEFINICOES[c].nivel);
+  const escreve = ["WRITE", "COMMIT", "PUSH", "DEPLOY", "DELETE"];
+  if (!p.suporte.escrita && niveis.some((n) => escreve.includes(n))) {
+    problemas.push("declara não suportar escrita, mas tem capacidade que altera algo");
   }
-  if (!p.suporte.execucao && classes.includes("execucao")) {
+  if (!p.suporte.execucao && niveis.includes("EXECUTE")) {
     problemas.push("declara não suportar execução, mas tem capacidade de execução");
   }
-  if (!p.suporte.leitura && classes.includes("leitura")) {
+  if (!p.suporte.leitura && niveis.includes("READ")) {
     problemas.push("declara não suportar leitura, mas tem capacidade de leitura");
   }
 
