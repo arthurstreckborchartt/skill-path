@@ -140,7 +140,18 @@ function SettingsPage() {
               to="/app/integracoes"
               className="tap flex min-h-14 items-center justify-between gap-3 py-1 text-sm"
             >
-              <span>Contas e ações externas</span>
+              <span>Todas as integrações</span>
+              <ChevronRight className="size-4 text-muted-foreground" />
+            </Link>
+            {/*
+              A central de segurança fica no topo da lista, e não no fim: quem a procura
+              normalmente está com pressa.
+            */}
+            <Link
+              to="/app/central-seguranca"
+              className="tap flex min-h-14 items-center justify-between gap-3 py-1 text-sm"
+            >
+              <span>Central de segurança</span>
               <ChevronRight className="size-4 text-muted-foreground" />
             </Link>
             <Link

@@ -34,6 +34,7 @@ import { Route as ApiSegurancaRouteImport } from './routes/api.seguranca'
 import { Route as ApiStripeWebhookRouteImport } from './routes/api.stripe-webhook'
 import { Route as AppIndexRouteImport } from './routes/app.index'
 import { Route as AppBlueprintsRouteImport } from './routes/app.blueprints'
+import { Route as AppCentralSegurancaRouteImport } from './routes/app.central-seguranca'
 import { Route as AppConfiguracoesRouteImport } from './routes/app.configuracoes'
 import { Route as AppFerramentasRouteImport } from './routes/app.ferramentas'
 import { Route as AppHabilidadesRouteImport } from './routes/app.habilidades'
@@ -188,6 +189,11 @@ const AppIndexRoute = AppIndexRouteImport.update({
 const AppBlueprintsRoute = AppBlueprintsRouteImport.update({
   id: '/blueprints',
   path: '/blueprints',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppCentralSegurancaRoute = AppCentralSegurancaRouteImport.update({
+  id: '/central-seguranca',
+  path: '/central-seguranca',
   getParentRoute: () => AppRoute,
 } as any)
 const AppConfiguracoesRoute = AppConfiguracoesRouteImport.update({
@@ -363,6 +369,7 @@ export interface FileRoutesByFullPath {
   '/api/seguranca': typeof ApiSegurancaRoute
   '/api/stripe-webhook': typeof ApiStripeWebhookRoute
   '/app/blueprints': typeof AppBlueprintsRoute
+  '/app/central-seguranca': typeof AppCentralSegurancaRoute
   '/app/configuracoes': typeof AppConfiguracoesRoute
   '/app/ferramentas': typeof AppFerramentasRoute
   '/app/habilidades': typeof AppHabilidadesRoute
@@ -418,6 +425,7 @@ export interface FileRoutesByTo {
   '/api/seguranca': typeof ApiSegurancaRoute
   '/api/stripe-webhook': typeof ApiStripeWebhookRoute
   '/app/blueprints': typeof AppBlueprintsRoute
+  '/app/central-seguranca': typeof AppCentralSegurancaRoute
   '/app/configuracoes': typeof AppConfiguracoesRoute
   '/app/ferramentas': typeof AppFerramentasRoute
   '/app/habilidades': typeof AppHabilidadesRoute
@@ -475,6 +483,7 @@ export interface FileRoutesById {
   '/api/seguranca': typeof ApiSegurancaRoute
   '/api/stripe-webhook': typeof ApiStripeWebhookRoute
   '/app/blueprints': typeof AppBlueprintsRoute
+  '/app/central-seguranca': typeof AppCentralSegurancaRoute
   '/app/configuracoes': typeof AppConfiguracoesRoute
   '/app/ferramentas': typeof AppFerramentasRoute
   '/app/habilidades': typeof AppHabilidadesRoute
@@ -533,6 +542,7 @@ export interface FileRouteTypes {
     | '/api/seguranca'
     | '/api/stripe-webhook'
     | '/app/blueprints'
+    | '/app/central-seguranca'
     | '/app/configuracoes'
     | '/app/ferramentas'
     | '/app/habilidades'
@@ -588,6 +598,7 @@ export interface FileRouteTypes {
     | '/api/seguranca'
     | '/api/stripe-webhook'
     | '/app/blueprints'
+    | '/app/central-seguranca'
     | '/app/configuracoes'
     | '/app/ferramentas'
     | '/app/habilidades'
@@ -644,6 +655,7 @@ export interface FileRouteTypes {
     | '/api/seguranca'
     | '/api/stripe-webhook'
     | '/app/blueprints'
+    | '/app/central-seguranca'
     | '/app/configuracoes'
     | '/app/ferramentas'
     | '/app/habilidades'
@@ -885,6 +897,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppBlueprintsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/central-seguranca': {
+      id: '/app/central-seguranca'
+      path: '/central-seguranca'
+      fullPath: '/app/central-seguranca'
+      preLoaderRoute: typeof AppCentralSegurancaRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/configuracoes': {
       id: '/app/configuracoes'
       path: '/configuracoes'
@@ -1093,6 +1112,7 @@ declare module '@tanstack/react-router' {
 
 interface AppRouteChildren {
   AppBlueprintsRoute: typeof AppBlueprintsRoute
+  AppCentralSegurancaRoute: typeof AppCentralSegurancaRoute
   AppConfiguracoesRoute: typeof AppConfiguracoesRoute
   AppFerramentasRoute: typeof AppFerramentasRoute
   AppHabilidadesRoute: typeof AppHabilidadesRoute
@@ -1120,6 +1140,7 @@ interface AppRouteChildren {
 
 const AppRouteChildren: AppRouteChildren = {
   AppBlueprintsRoute: AppBlueprintsRoute,
+  AppCentralSegurancaRoute: AppCentralSegurancaRoute,
   AppConfiguracoesRoute: AppConfiguracoesRoute,
   AppFerramentasRoute: AppFerramentasRoute,
   AppHabilidadesRoute: AppHabilidadesRoute,
