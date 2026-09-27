@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, LayoutPanelTop, Rocket, ShieldCheck } from "lucide-react";
 import { ProjectChat } from "@/components/pathly/project-chat";
+import { FerramentasDoProjeto } from "@/components/pathly/ferramentas-do-projeto";
 import { Btn } from "@/components/pathly/ui";
 
 export const Route = createFileRoute("/app/projeto/$id")({
@@ -61,6 +62,12 @@ function ProjectPage() {
           </Link>
         </div>
       </div>
+      {/*
+        As ferramentas e o "onde eu parei" vêm antes da conversa, e não depois: quem abre um
+        projeto depois de alguns dias faz essa pergunta primeiro. Abaixo do chat, a resposta só
+        seria encontrada por quem rolasse até o fim de uma conversa longa.
+      */}
+      <FerramentasDoProjeto projetoId={id} />
       <ProjectChat projetoId={id} />
     </div>
   );

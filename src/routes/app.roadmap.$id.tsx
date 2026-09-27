@@ -23,14 +23,30 @@ import { Spinner } from "@/components/ui/spell-spinner";
 export const Route = createFileRoute("/app/roadmap/$id")({
   staticData: { sitemap: false },
   head: () => ({ meta: [{ title: "Roadmap — Pathly" }] }),
+  /**
+   * `?etapa=7` abre o painel daquela etapa direto.
+   *
+   * Existe para o "Continuar desenvolvimento" ter para onde levar. Sem isto, o botão só poderia
+   * abrir o roadmap e pedir que a pessoa procurasse a etapa de novo — o que desfaz o trabalho de
+   * ter descoberto qual é.
+   *
+   * A validação é estreita de propósito: inteiro positivo ou nada. Um número vindo da URL é
+   * entrada externa, e o único uso dele aqui é comparar com `ordem` de uma etapa que existe. Se
+   * não existir, o painel simplesmente não abre.
+   */
+  validateSearch: (busca: Record<string, unknown>): { etapa?: number } => {
+    const n = Number(busca["etapa"]);
+    return Number.isInteger(n) && n > 0 ? { etapa: n } : {};
+  },
   component: TelaRoadmap,
 });
 
 function TelaRoadmap() {
   const { id } = Route.useParams();
+  const { etapa: etapaDaUrl } = Route.useSearch();
   const { estado } = useProjeto(id);
   const { porOrdem, salvar } = useProgresso(id);
-  const [aberta, setAberta] = useState<number | null>(null);
+  const [aberta, setAberta] = useState<number | null>(etapaDaUrl ?? null);
 
   const projeto = estado.estado === "pronto" ? estado.projeto : null;
   const { fases, foraDoProjeto } = useRoadmap(
