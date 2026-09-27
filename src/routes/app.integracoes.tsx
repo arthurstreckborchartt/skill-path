@@ -1,8 +1,21 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { Check, ChevronRight, Lock, Play, Plug, ShieldCheck, TriangleAlert, X } from "lucide-react";
-import { Btn, Chip, PageHeader, Panel, Reveal } from "@/components/pathly/ui";
+import { useEffect, useMemo, useState } from "react";
+import { Check, Lock, Play, Plus, ShieldCheck, TriangleAlert, X } from "lucide-react";
+import {
+  Btn,
+  Chip,
+  PageHeader,
+  Panel,
+  Reveal,
+  SectionLabel,
+  Skeleton,
+} from "@/components/pathly/ui";
 import { cn } from "@/lib/utils";
+import {
+  AdicionarIntegracao,
+  CartaoIntegracao,
+  DetalheIntegracao,
+} from "@/components/pathly/vitrine";
 import { useIntegracoes } from "@/lib/integracoes/usar-integracoes";
 import {
   ROTULO_ESTADO_ACAO,
@@ -10,8 +23,20 @@ import {
   ROTULO_PROVEDOR,
   type AcaoExterna,
   type Impacto,
+  type Provedor,
 } from "@/lib/integracoes/contrato";
 import { PROVEDORES_DISPONIVEIS } from "@/lib/integracoes/provedores";
+import { useVitrine } from "@/lib/hub/vitrine/usar-vitrine";
+import {
+  CATEGORIAS,
+  EXPLICACAO_CATEGORIA,
+  ROTULO_CATEGORIA,
+  acharIntegracao,
+  porCategoria,
+  type Aba,
+  type IntegracaoDaVitrine,
+} from "@/lib/hub/vitrine/catalogo";
+import { useProjetos } from "@/lib/blueprint/usar-projetos";
 import { Spinner } from "@/components/ui/spell-spinner";
 
 export const Route = createFileRoute("/app/integracoes")({
@@ -71,148 +96,81 @@ function useRecadoOauth(aoConectar: () => void) {
 /**
  * A tela de integrações.
  *
- * ## O que ela mostra, e por quê
+ * ## A ordem desta página é uma decisão, não um acaso
  *
- * Antes de aprovar, a pessoa lê **o que vai acontecer** e **para onde vai**. Um botão "autorizar"
- * sem essas duas coisas é um botão que se aprende a clicar sem ler — e esta tela existe
- * justamente para o contrário.
+ * O que espera por você vem primeiro. Uma ação pendente é trabalho parado — enterrá-la abaixo de
+ * uma grade de cartões faria a pessoa descobrir dias depois que o Pathly estava esperando.
  *
- * Ação destrutiva aparece invertida, como os bloqueios da validação: num monocromático, inverter
- * é o que o olho acha primeiro.
+ * Depois vêm as categorias. Elas não organizam por tecnologia (OAuth aqui, API key ali), porque
+ * ninguém procura integração por método de autenticação. Organizam por para que servem.
+ *
+ * ## O que esta tela recusa a fazer
+ *
+ * Nenhum botão conecta em um clique. Todo caminho para conectar passa pela explicação do método —
+ * a mesma frase, no cartão de adicionar e na aba de configuração. "Conectar sua conta" sem dizer
+ * o que isso significa é a frase que esta tela existe para não escrever.
  */
 function IntegrationsPage() {
   const { estado, ocupado, pedir, decidir, executar, conectar, desconectar, recarregar } =
     useIntegracoes();
+  const vitrine = useVitrine();
+  const projetos = useProjetos();
   // Recarrega ao voltar conectado: a linha foi gravada pelo servidor, e o hook não sabe disso.
-  const recado = useRecadoOauth(recarregar);
+  const recado = useRecadoOauth(() => {
+    recarregar();
+    void vitrine.recarregar();
+  });
 
-  if (estado.estado === "carregando") {
-    return <p className="text-sm text-muted-foreground">Carregando suas integrações…</p>;
-  }
+  const [aberta, setAberta] = useState<string | null>(null);
+  const [adicionando, setAdicionando] = useState(false);
 
-  if (estado.estado === "erro") {
-    return (
-      <Panel className="text-center">
-        <p className="text-sm">{estado.mensagem}</p>
-      </Panel>
-    );
-  }
+  const nomesDeProjeto = useMemo(() => {
+    const m: Record<string, string> = {};
+    if (projetos.estado === "pronta") for (const p of projetos.projetos) m[p.id] = p.nome;
+    return m;
+  }, [projetos]);
 
-  const conectados = new Set(estado.conexoes.map((c) => c.provedor));
-  const pendentes = estado.acoes.filter((a) => a.estado === "pendente");
+  const pendentes =
+    estado.estado === "pronto" ? estado.acoes.filter((a) => a.estado === "pendente") : [];
   /*
    * `aprovada` tem seção própria, entre as pendentes e o histórico, porque é o único estado em que
    * a pessoa ainda precisa fazer algo. Misturá-lo ao histórico esconderia trabalho por fazer numa
    * lista chamada "o que já foi decidido" — decidido está, feito não.
    */
-  const aprovadas = estado.acoes.filter((a) => a.estado === "aprovada");
-  const historico = estado.acoes.filter((a) => a.estado !== "pendente" && a.estado !== "aprovada");
+  const aprovadas =
+    estado.estado === "pronto" ? estado.acoes.filter((a) => a.estado === "aprovada") : [];
+  const historico =
+    estado.estado === "pronto"
+      ? estado.acoes.filter((a) => a.estado !== "pendente" && a.estado !== "aprovada")
+      : [];
+
+  const integracaoAberta = aberta ? acharIntegracao(aberta) : null;
+  const situacaoAberta =
+    integracaoAberta && vitrine.estado === "pronto"
+      ? vitrine.situacoes[integracaoAberta.id]
+      : undefined;
 
   return (
     <div className="space-y-8">
       <PageHeader
         title="Integrações"
-        subtitle="Conecte as ferramentas que o Pathly poderá coordenar para você"
+        subtitle="As ferramentas que o Pathly coordena com você — e o alcance real de cada uma"
         action={
-          <Chip tone="muted">
-            <ShieldCheck className="size-3" /> Sempre com aprovação
-          </Chip>
+          <div className="flex flex-wrap gap-2">
+            <Btn size="sm" onClick={() => setAdicionando(true)}>
+              <Plus className="size-4" /> Adicionar
+            </Btn>
+            <Link
+              to="/app/central-seguranca"
+              className="tap inline-flex h-9 items-center gap-2 rounded-md border border-border bg-surface px-4 text-sm font-medium coarse:h-11"
+            >
+              <ShieldCheck className="size-4" /> Central de segurança
+            </Link>
+          </div>
         }
       />
 
-      <Reveal>
-        <Link
-          to="/app/pontes"
-          className="tap mb-3 flex items-center justify-between gap-3 rounded-2xl border border-border bg-surface px-4 py-3"
-        >
-          <span className="min-w-0">
-            <span className="block text-sm font-medium">Pontes locais</span>
-            <span className="block text-xs text-muted-foreground">
-              Revit, VS Code e outras ferramentas de desktop — onde a nuvem não alcança.
-            </span>
-          </span>
-          <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
-        </Link>
-      </Reveal>
-
-      <Reveal>
-        <Link
-          to="/app/obsidian"
-          className="tap mb-3 flex items-center justify-between gap-3 rounded-2xl border border-border bg-surface px-4 py-3"
-        >
-          <span className="min-w-0">
-            <span className="block text-sm font-medium">Obsidian</span>
-            <span className="block text-xs text-muted-foreground">
-              O plano, as decisões e o histórico no seu vault — sem o conteúdo sair do navegador.
-            </span>
-          </span>
-          <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
-        </Link>
-      </Reveal>
-
-      <Reveal>
-        <Link
-          to="/app/ferramentas"
-          className="tap flex items-center justify-between gap-3 rounded-2xl border border-border bg-surface px-4 py-3"
-        >
-          <span className="min-w-0">
-            <span className="block text-sm font-medium">Ferramentas de desenvolvimento</span>
-            <span className="block text-xs text-muted-foreground">
-              Claude, Codex, Cursor — quem escreve o código, e o que o Pathly alcança em cada uma.
-            </span>
-          </span>
-          <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
-        </Link>
-      </Reveal>
-
-      {!estado.instalado && (
-        <Panel className="border-foreground/25">
-          <div className="flex items-start gap-3">
-            <TriangleAlert className="mt-0.5 size-5 shrink-0" />
-            <div>
-              <p className="text-sm font-medium">As integrações ainda não estão instaladas aqui.</p>
-              <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-                As tabelas <code className="font-mono text-xs">pathly_conexoes</code> e{" "}
-                <code className="font-mono text-xs">pathly_acoes_externas</code> não existem neste
-                ambiente. O script está em{" "}
-                <code className="font-mono text-xs">supabase/pathly_integracoes.sql</code> e precisa
-                ser executado no Supabase. Até lá, nada nesta tela grava.
-              </p>
-            </div>
-          </div>
-        </Panel>
-      )}
-
-      {estado.erro && (
-        <p
-          role="alert"
-          className="rounded-md border border-foreground/25 bg-surface-2 px-4 py-3 text-sm font-medium"
-        >
-          {estado.erro}
-        </p>
-      )}
-
-      <Reveal>
-        <Panel invertido>
-          <Plug className="size-5" />
-          <h2 className="mt-4 max-w-2xl font-display text-2xl font-semibold">
-            Nenhuma ação externa sai daqui sem você aprovar antes.
-          </h2>
-          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-background/70">
-            Você vê o que será enviado e para onde, e aprova uma por uma. A aprovação fica
-            registrada, vale uma execução só, e o que foi recusado continua visível.
-          </p>
-        </Panel>
-      </Reveal>
-
-      {recado && (
-        <Panel className="flex items-start gap-3">
-          <ShieldCheck className="mt-0.5 size-4 shrink-0" />
-          <p className="text-sm leading-relaxed">{recado}</p>
-        </Panel>
-      )}
-
-      {/* ---------- Pendentes ---------- */}
+      {/* ---------- O que espera por você ---------- */}
       {pendentes.length > 0 && (
         <section className="space-y-3">
           <h2 className="font-display text-xl font-semibold">
@@ -230,7 +188,6 @@ function IntegrationsPage() {
         </section>
       )}
 
-      {/* ---------- Aprovadas, esperando execução ---------- */}
       {aprovadas.length > 0 && (
         <section className="space-y-3">
           <h2 className="font-display text-xl font-semibold">
@@ -250,90 +207,108 @@ function IntegrationsPage() {
         </section>
       )}
 
-      {/* ---------- Provedores ---------- */}
-      <section className="space-y-3">
-        <h2 className="font-display text-xl font-semibold">Ferramentas</h2>
+      {recado && (
+        <Panel className="flex items-start gap-3">
+          <ShieldCheck className="mt-0.5 size-4 shrink-0" />
+          <p className="text-sm leading-relaxed">{recado}</p>
+        </Panel>
+      )}
+
+      {estado.estado === "pronto" && estado.erro && (
+        <p
+          role="alert"
+          className="rounded-md border border-foreground/25 bg-surface-2 px-4 py-3 text-sm font-medium"
+        >
+          {estado.erro}
+        </p>
+      )}
+
+      {/* ---------- A vitrine ---------- */}
+      {vitrine.estado === "carregando" && (
         <div className="grid gap-4 lg:grid-cols-2">
-          {PROVEDORES_DISPONIVEIS.map((p, i) => {
-            const conectado = conectados.has(p.id);
-            const conexao = estado.conexoes.find((c) => c.provedor === p.id);
+          {[0, 1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-44 rounded-lg" />
+          ))}
+        </div>
+      )}
+
+      {vitrine.estado === "erro" && (
+        <Panel className="flex items-start gap-3">
+          <TriangleAlert className="mt-0.5 size-5 shrink-0" />
+          <div>
+            <p className="text-sm font-medium">Não consegui ler suas integrações.</p>
+            <p className="mt-1 text-sm text-muted-foreground">{vitrine.mensagem}</p>
+            <Btn
+              variant="ghost"
+              size="sm"
+              className="mt-3"
+              onClick={() => void vitrine.recarregar()}
+            >
+              Tentar de novo
+            </Btn>
+          </div>
+        </Panel>
+      )}
+
+      {vitrine.estado === "pronto" && (
+        <>
+          {vitrine.semTabela.length > 0 && (
+            <Panel className="border-foreground/25">
+              <div className="flex items-start gap-3">
+                <TriangleAlert className="mt-0.5 size-5 shrink-0" />
+                <div className="min-w-0">
+                  <p className="text-sm font-medium">
+                    Parte do Hub ainda não foi instalada neste ambiente.
+                  </p>
+                  <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                    As tabelas de{" "}
+                    <span className="font-medium text-foreground">
+                      {vitrine.semTabela.join(", ")}
+                    </span>{" "}
+                    não existem no banco. Os scripts estão em{" "}
+                    <code className="font-mono text-xs">supabase/</code> e precisam ser executados
+                    no Supabase. Até lá, essas integrações aparecem aqui mas nada nelas grava.
+                  </p>
+                </div>
+              </div>
+            </Panel>
+          )}
+
+          {CATEGORIAS.map((categoria) => {
+            const lista = porCategoria(categoria);
+            if (lista.length === 0) return null;
 
             return (
-              <Reveal key={p.id} delay={i * 70}>
-                <Panel className="flex h-full flex-col">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <h3 className="text-base font-semibold">{p.nome}</h3>
-                      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                        {p.descricao}
-                      </p>
-                    </div>
-                    {conectado ? (
-                      <Chip tone="primary">
-                        <Check className="size-3" /> Conectado
-                      </Chip>
-                    ) : (
-                      <Chip tone="muted">Não conectado</Chip>
-                    )}
-                  </div>
+              <section key={categoria} className="space-y-3">
+                <div>
+                  <h2 className="font-display text-xl font-semibold">
+                    {ROTULO_CATEGORIA[categoria]}
+                  </h2>
+                  <p className="mt-0.5 text-sm text-muted-foreground">
+                    {EXPLICACAO_CATEGORIA[categoria]}
+                  </p>
+                </div>
 
-                  {conexao?.conta && (
-                    <p className="mt-3 text-xs text-muted-foreground">
-                      Conta: <span className="font-medium text-foreground">{conexao.conta}</span>
-                      {conexao.escopos.length > 0 && ` · ${conexao.escopos.join(", ")}`}
-                    </p>
-                  )}
-
-                  <div className="mt-auto pt-5">
-                    {p.exigeCredencial && !conectado ? (
-                      /*
-                        O botão existe mesmo sem saber se o servidor tem a credencial: o cliente não
-                        tem como saber, e perguntar custaria uma requisição a mais em toda abertura
-                        da tela. Se faltar, o `/iniciar` recusa antes de sair do app e a mensagem
-                        diz exatamente isso — a pessoa nunca autoriza no GitHub para depois
-                        descobrir que não dava.
-                      */
-                      <div className="space-y-3">
-                        <Btn
-                          size="sm"
-                          disabled={!estado.instalado}
-                          onClick={() => void conectar(p.id)}
-                        >
-                          <Lock className="size-4" /> Conectar {p.nome}
-                        </Btn>
-                        <p className="text-xs leading-relaxed text-muted-foreground">
-                          Você autoriza no {p.nome} e volta para cá. O Pathly pede{" "}
-                          {p.escopos.join(" e ")} — e mesmo conectado, nenhuma ação sai sem a sua
-                          aprovação.
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="flex flex-wrap gap-2">
-                        {p.acoes.map((a) => (
-                          <Btn
-                            key={a.id}
-                            variant="outline"
-                            size="sm"
-                            disabled={!estado.instalado}
-                            onClick={() => void pedir(p.id, a.id)}
-                          >
-                            {a.rotulo}
-                          </Btn>
-                        ))}
-                        {conectado && (
-                          <Btn variant="ghost" size="sm" onClick={() => void desconectar(p.id)}>
-                            Desconectar
-                          </Btn>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </Panel>
-              </Reveal>
+                <div className="grid gap-4 lg:grid-cols-2">
+                  {lista.map((i, n) => {
+                    const situacao = vitrine.situacoes[i.id];
+                    if (!situacao) return null;
+                    return (
+                      <Reveal key={i.id} delay={n * 60}>
+                        <CartaoIntegracao
+                          integracao={i}
+                          situacao={situacao}
+                          aoGerenciar={() => setAberta(i.id)}
+                        />
+                      </Reveal>
+                    );
+                  })}
+                </div>
+              </section>
             );
           })}
-        </div>
-      </section>
+        </>
+      )}
 
       {/* ---------- Histórico ---------- */}
       {historico.length > 0 && (
@@ -350,6 +325,144 @@ function IntegrationsPage() {
           </div>
         </section>
       )}
+
+      {/* ---------- Sobreposições ---------- */}
+      {integracaoAberta && situacaoAberta && vitrine.estado === "pronto" && (
+        <DetalheIntegracao
+          integracao={integracaoAberta}
+          situacao={situacaoAberta}
+          auditoria={vitrine.auditoria}
+          nomesDeProjeto={nomesDeProjeto}
+          ocupado={vitrine.ocupado}
+          abaInicial={abaDeEntrada(situacaoAberta.estado)}
+          extraConfiguracao={
+            <ControlesDoProvedor
+              integracao={integracaoAberta}
+              instalado={estado.estado === "pronto" ? estado.instalado : false}
+              conectado={
+                estado.estado === "pronto"
+                  ? estado.conexoes.some((c) => c.provedor === integracaoAberta.id)
+                  : false
+              }
+              aoConectar={(id) => void conectar(id)}
+              aoDesconectar={(id) => void desconectar(id)}
+              aoPedir={(id, acaoId) => void pedir(id, acaoId)}
+            />
+          }
+          aoRevogar={() => {
+            void (async () => {
+              await vitrine.revogar(integracaoAberta.id);
+              setAberta(null);
+            })();
+          }}
+          aoFechar={() => setAberta(null)}
+        />
+      )}
+
+      {adicionando && vitrine.estado === "pronto" && (
+        <AdicionarIntegracao
+          situacoes={vitrine.situacoes}
+          aoEscolher={(i) => {
+            setAdicionando(false);
+            setAberta(i.id);
+          }}
+          aoFechar={() => setAdicionando(false)}
+        />
+      )}
+    </div>
+  );
+}
+
+/**
+ * Em que aba o detalhe abre.
+ *
+ * Quem clica em "Conectar" quer conectar; abrir na visão geral obrigaria um clique a mais para
+ * chegar onde a ação está. Quem clica num cartão já conectado quer ver como ele está.
+ */
+function abaDeEntrada(estado: string): Aba {
+  const paraConfiguracao = [
+    "nao-conectada",
+    "token-expirado",
+    "permissao-expirada",
+    "oauth-cancelado",
+    "revogada",
+    "conflito",
+  ];
+  return paraConfiguracao.includes(estado) ? "configuracao" : "visao-geral";
+}
+
+/**
+ * Os controles de um provedor OAuth, dentro da aba de configuração.
+ *
+ * Só aparecem para as integrações que `PROVEDORES_DISPONIVEIS` conhece — hoje o GitHub e o
+ * provedor de demonstração. Para as outras, a configuração vive na tela própria delas, e este
+ * componente devolve `null` em vez de inventar um formulário que não liga em nada.
+ */
+function ControlesDoProvedor({
+  integracao,
+  instalado,
+  conectado,
+  aoConectar,
+  aoDesconectar,
+  aoPedir,
+}: {
+  integracao: IntegracaoDaVitrine;
+  instalado: boolean;
+  conectado: boolean;
+  /*
+   * Os três recebem o id do provedor, e não o fecham por cima: o tipo estreito (`Provedor`) é
+   * conhecido aqui dentro, onde o catálogo foi consultado, e não lá fora, onde o id ainda é um
+   * `string` qualquer da vitrine.
+   */
+  aoConectar: (id: Provedor) => void;
+  aoDesconectar: (id: Provedor) => void;
+  aoPedir: (id: Provedor, acaoId: string) => void;
+}) {
+  const p = PROVEDORES_DISPONIVEIS.find((x) => x.id === integracao.id);
+  if (!p) return null;
+
+  if (!instalado) {
+    return (
+      <p className="text-sm text-muted-foreground">
+        As tabelas de integrações não existem neste ambiente, então conectar aqui não gravaria nada.
+        O script é <code className="font-mono text-xs">supabase/pathly_integracoes.sql</code>.
+      </p>
+    );
+  }
+
+  if (p.exigeCredencial && !conectado) {
+    return (
+      <div className="space-y-3">
+        <Btn size="sm" onClick={() => aoConectar(p.id)}>
+          <Lock className="size-4" /> Conectar {p.nome}
+        </Btn>
+        <p className="text-xs leading-relaxed text-muted-foreground">
+          Você autoriza no {p.nome} e volta para cá. O Pathly pede {p.escopos.join(" e ")} — e mesmo
+          conectado, nenhuma ação sai sem a sua aprovação.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      <SectionLabel>Pedir uma ação</SectionLabel>
+      <p className="text-xs leading-relaxed text-muted-foreground">
+        Pedir não executa. A ação entra na fila de aprovação no topo desta página, com o destino à
+        vista, e só sai de lá se você aprovar.
+      </p>
+      <div className="flex flex-wrap gap-2">
+        {p.acoes.map((a) => (
+          <Btn key={a.id} variant="outline" size="sm" onClick={() => aoPedir(p.id, a.id)}>
+            {a.rotulo}
+          </Btn>
+        ))}
+        {conectado && (
+          <Btn variant="ghost" size="sm" onClick={() => aoDesconectar(p.id)}>
+            Desconectar
+          </Btn>
+        )}
+      </div>
     </div>
   );
 }
