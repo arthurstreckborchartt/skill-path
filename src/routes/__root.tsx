@@ -108,7 +108,31 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         content: "Da ideia ao SaaS: planejamento técnico, decisões e execução coordenada.",
       },
       { property: "og:type", content: "website" },
+      { property: "og:site_name", content: "Pathly" },
+      /*
+        A imagem de compartilhamento.
+
+        Precisa ser absoluta: o robô do WhatsApp, do LinkedIn e do X lê o HTML fora do contexto do
+        site, e um caminho relativo não resolve para nada. É por isso que o domínio aparece
+        escrito aqui — ele também vive em `sitemap[.]xml.ts` e nos templates de e-mail.
+
+        Largura e altura declaradas deixam a rede reservar o espaço antes de baixar os 340 KB, em
+        vez de o card pular de tamanho depois. `twitter:image` repete a mesma imagem porque o X
+        não lê `og:image` quando o card é `summary_large_image`.
+
+        Sem estas linhas, `twitter:card: summary_large_image` prometia uma imagem grande que não
+        existia — quem compartilhava um link do Pathly não via figura nenhuma.
+      */
+      { property: "og:image", content: "https://pathlyapp.app/og.png" },
+      { property: "og:image:type", content: "image/png" },
+      { property: "og:image:width", content: "1200" },
+      { property: "og:image:height", content: "630" },
+      {
+        property: "og:image:alt",
+        content: "Pathly — Da ideia ao SaaS. Planejamento técnico, decisões e execução coordenada.",
+      },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:image", content: "https://pathlyapp.app/og.png" },
     ],
     links: [
       {
