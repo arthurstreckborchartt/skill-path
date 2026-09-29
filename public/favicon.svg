@@ -1,14 +1,20 @@
+<!--
+  O ícone do Pathly: fundo branco, marca preta.
+
+  Sem gradiente e sem cor nenhuma, pelo mesmo motivo que o resto do app não tem: a identidade é
+  monocromática, e o ícone era a última peça que ainda destoava.
+
+  O quadrado branco fica. Num favicon sobre aba clara ele desaparece no fundo e sobra a marca, que
+  é o que se quer; sobre aba escura ele vira a placa que dá contraste. Sem ele, a marca preta
+  sumiria no tema escuro.
+
+  As proporções não mudaram: a marca ocupa metade da largura e está centrada, o que a mantém dentro
+  da zona segura de 80% que o Android usa para recortar ícone `maskable`.
+-->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
-  <defs>
-    <linearGradient id="pathlySignal" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#2bf2c5"/>
-      <stop offset="55%" stop-color="#00d0e2"/>
-      <stop offset="100%" stop-color="#56acf0"/>
-    </linearGradient>
-  </defs>
-  <rect width="64" height="64" rx="15" fill="url(#pathlySignal)"/>
+  <rect width="64" height="64" rx="15" fill="#ffffff"/>
   <g transform="translate(16 16) scale(1.3333)">
-    <path d="M5 19c0-5 4-5 6-7s1-6-1-7" stroke="#001911" stroke-width="2.4" stroke-linecap="round" fill="none"/>
-    <circle cx="18" cy="6.5" r="2.6" fill="#001911"/>
+    <path d="M5 19c0-5 4-5 6-7s1-6-1-7" stroke="#000000" stroke-width="2.4" stroke-linecap="round" fill="none"/>
+    <circle cx="18" cy="6.5" r="2.6" fill="#000000"/>
   </g>
 </svg>
