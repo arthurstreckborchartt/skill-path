@@ -116,15 +116,20 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         site, e um caminho relativo não resolve para nada. É por isso que o domínio aparece
         escrito aqui — ele também vive em `sitemap[.]xml.ts` e nos templates de e-mail.
 
-        Largura e altura declaradas deixam a rede reservar o espaço antes de baixar os 340 KB, em
-        vez de o card pular de tamanho depois. `twitter:image` repete a mesma imagem porque o X
-        não lê `og:image` quando o card é `summary_large_image`.
+        JPEG em qualidade 0.92, e não PNG: 46 KB contra 335 KB, sete vezes mais leve. A qualidade
+        foi medida, não escolhida no olho — em 0.92 o erro médio na manchete é 0,86 de 255 e não há
+        halo visível a 3x de ampliação; em 0.82 economiza 14 KB e o halo aparece em volta das
+        letras.
+
+        Largura e altura declaradas deixam a rede reservar o espaço antes de baixar, em vez de o
+        card pular de tamanho depois. `twitter:image` repete a mesma imagem porque o X não lê
+        `og:image` quando o card é `summary_large_image`.
 
         Sem estas linhas, `twitter:card: summary_large_image` prometia uma imagem grande que não
         existia — quem compartilhava um link do Pathly não via figura nenhuma.
       */
-      { property: "og:image", content: "https://pathlyapp.app/og.png" },
-      { property: "og:image:type", content: "image/png" },
+      { property: "og:image", content: "https://pathlyapp.app/og.jpg" },
+      { property: "og:image:type", content: "image/jpeg" },
       { property: "og:image:width", content: "1200" },
       { property: "og:image:height", content: "630" },
       {
@@ -132,7 +137,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         content: "Pathly — Da ideia ao SaaS. Planejamento técnico, decisões e execução coordenada.",
       },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:image", content: "https://pathlyapp.app/og.png" },
+      { name: "twitter:image", content: "https://pathlyapp.app/og.jpg" },
     ],
     links: [
       {
