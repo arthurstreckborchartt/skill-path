@@ -13,7 +13,7 @@ export const Route = createFileRoute("/cadastro")({
       { title: "Criar conta na Pathly" },
       {
         name: "description",
-        content: "Crie sua conta e transforme uma ideia em um SaaS planejado e executável.",
+        content: "Crie sua conta e transforme uma ideia em um produto planejado e executável.",
       },
       { property: "og:title", content: "Criar conta na Pathly" },
       {
@@ -79,7 +79,7 @@ function SignupPage() {
   return (
     <AuthLayout
       title="Criar meu workspace"
-      subtitle="Descreva seu SaaS e comece com um plano técnico organizado."
+      subtitle="Conte sua ideia e comece com um plano técnico organizado."
     >
       <form className="space-y-4" onSubmit={handleSubmit}>
         {error && <AuthError message={error} />}

@@ -106,7 +106,7 @@ function CheckoutPathly({
             </h1>
             <p className="mt-4 max-w-lg text-base leading-relaxed text-muted-foreground sm:text-lg">
               Planeje produtos completos, mantenha decisões no contexto e coordene a execução dos
-              seus SaaS.
+              seus projetos.
             </p>
 
             <div className="mt-8 grid gap-3 sm:grid-cols-2">

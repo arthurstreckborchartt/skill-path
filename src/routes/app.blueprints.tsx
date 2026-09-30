@@ -52,7 +52,7 @@ function TelaProjetos() {
     <div className="space-y-6">
       <PageHeader
         title="Projetos"
-        subtitle="Cada SaaS reúne conversa, decisões, plano técnico e execução"
+        subtitle="Cada projeto reúne conversa, decisões, plano técnico e execução"
         action={
           lista.estado === "pronta" && lista.projetos.length > 0 && !abrindo ? (
             <Chip tone="primary">

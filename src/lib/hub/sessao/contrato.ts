@@ -14,7 +14,7 @@ import type { AiDevelopmentProvider } from "../ia/contrato";
  * ferramentas rodam na máquina de quem usa, e nenhuma nuvem alcança `localhost`. Um produto que
  * prometesse conduzir a execução estaria mentindo em três de quatro casos.
  *
- * O que sobra é mais valioso do que parece. A diferença entre alguém que constrói um SaaS em três
+ * O que sobra é mais valioso do que parece. A diferença entre alguém que constrói um produto em três
  * meses e alguém que desiste quase nunca é a ferramenta: é perder o fio. Esquecer por que aquela
  * decisão foi tomada, refazer a tentativa que já falhou, entregar metade de uma etapa e começar
  * outra. A sessão é o fio.

@@ -184,7 +184,7 @@ export function ProjectChat({
           <div className="min-w-0">
             <h1 className="truncate text-sm font-semibold">{estado.nomeProjeto || "Projeto"}</h1>
             <p className="truncate text-xs text-muted-foreground">
-              Planejamento e execução do seu SaaS
+              Planejamento e execução do seu produto
             </p>
           </div>
         </div>
@@ -226,7 +226,7 @@ export function ProjectChat({
                     className="mt-4 justify-center font-display text-2xl font-semibold"
                     stagger={0.07}
                   >
-                    Vamos construir este SaaS
+                    Vamos construir isto
                   </WordsStagger>
                   <WordsStagger
                     className="mx-auto mt-2 max-w-lg justify-center text-sm leading-relaxed text-muted-foreground"

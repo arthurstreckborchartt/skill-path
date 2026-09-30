@@ -1,7 +1,7 @@
 /**
  * Contrato do Blueprint — o plano técnico completo de um projeto.
  *
- * O Blueprint é o que o Pathly entrega: a pessoa escreve "quero criar um SaaS de gestão de
+ * O Blueprint é o que o Pathly entrega: a pessoa escreve "quero criar um app de gestão de
  * academias" e recebe de volta problema, público, funcionalidades, stack, modelo de dados,
  * arquitetura, riscos e a trilha de execução.
  *
