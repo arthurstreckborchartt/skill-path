@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { contarProgresso, montarRoadmap, type ProgressoEtapa } from "./usar-roadmap";
 import type { Projeto } from "./usar-projetos";
@@ -44,47 +44,71 @@ type LinhaEtapa = { projeto_id: string; ordem: number; status: string };
  *
  * Um zero que aparece antes do dado chegar é pior que um esqueleto: ele é uma resposta, e a
  * pessoa lê "não fiz nada ainda" quando a verdade é "ainda não sei".
+ *
+ * **`null` também quando a consulta falha**, pelo mesmo motivo. Um mapa vazio diria "consultei e
+ * ninguém concluiu nada" — uma afirmação sobre o que não foi possível saber. Medido: com a
+ * consulta devolvendo 500, o cartão mostrava `0/4` e a barra em 0%, indistinguível do zero de
+ * verdade. Lista vazia continua sendo mapa vazio, porque aí o zero é sabido: não há projeto.
  */
 export function useContagens(projetos: readonly Projeto[]): Map<string, Contagem> | null {
   const [porEtapas, setPorEtapas] = useState<Map<string, ProgressoEtapa[]> | null>(null);
 
   const ids = projetos.map((p) => p.id).join(",");
 
-  const carregar = useCallback(async () => {
+  useEffect(() => {
     if (!ids) {
       setPorEtapas(new Map());
       return;
     }
 
-    const { data, error } = await supabase
-      .from("pathly_etapas")
-      .select("projeto_id,ordem,status")
-      .in("projeto_id", ids.split(","));
+    /*
+     * Resposta obsoleta não escreve.
+     *
+     * `ids` muda quando alguém cria ou apaga um projeto, e a consulta anterior continua em voo. Sem
+     * esta guarda a antiga pode chegar depois da nova e sobrescrever a contagem certa por uma que
+     * já não vale. É a mesma guarda de `useProjetos` e `useSession`.
+     */
+    let vivo = true;
 
-    if (error) {
-      setPorEtapas(new Map());
-      return;
-    }
+    void (async () => {
+      const { data, error } = await supabase
+        .from("pathly_etapas")
+        .select("projeto_id,ordem,status")
+        .in("projeto_id", ids.split(","));
 
-    const mapa = new Map<string, ProgressoEtapa[]>();
-    for (const l of (data ?? []) as LinhaEtapa[]) {
-      const status = (["pendente", "fazendo", "concluida", "pulada"] as const).includes(
-        l.status as never,
-      )
-        ? (l.status as ProgressoEtapa["status"])
-        : "pendente";
-      const lista = mapa.get(l.projeto_id) ?? [];
-      /* `checklistFeito`, `anotacoes` e `temConteudo` não entram: a contagem só olha `status`, e
-       * trazê-los engordaria a resposta sem mudar nenhum número. */
-      lista.push({ ordem: l.ordem, status, checklistFeito: [], anotacoes: "", temConteudo: false });
-      mapa.set(l.projeto_id, lista);
-    }
-    setPorEtapas(mapa);
+      if (!vivo) return;
+
+      if (error) {
+        setPorEtapas(null);
+        return;
+      }
+
+      const mapa = new Map<string, ProgressoEtapa[]>();
+      for (const l of (data ?? []) as LinhaEtapa[]) {
+        const status = (["pendente", "fazendo", "concluida", "pulada"] as const).includes(
+          l.status as never,
+        )
+          ? (l.status as ProgressoEtapa["status"])
+          : "pendente";
+        const lista = mapa.get(l.projeto_id) ?? [];
+        /* `checklistFeito`, `anotacoes` e `temConteudo` não entram: a contagem só olha `status`, e
+         * trazê-los engordaria a resposta sem mudar nenhum número. */
+        lista.push({
+          ordem: l.ordem,
+          status,
+          checklistFeito: [],
+          anotacoes: "",
+          temConteudo: false,
+        });
+        mapa.set(l.projeto_id, lista);
+      }
+      setPorEtapas(mapa);
+    })();
+
+    return () => {
+      vivo = false;
+    };
   }, [ids]);
-
-  useEffect(() => {
-    void carregar();
-  }, [carregar]);
 
   if (porEtapas === null) return null;
 
