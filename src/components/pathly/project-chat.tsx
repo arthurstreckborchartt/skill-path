@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { Check, ChevronUp, FileCode, ShieldCheck } from "lucide-react";
 import {
   Conversation,
@@ -19,6 +20,8 @@ import { Btn, Chip } from "@/components/pathly/ui";
 import { useDigitando } from "@/components/pathly/usar-digitando";
 import { WordsStagger } from "@/components/ui/words-stagger";
 import { useCopilot } from "@/lib/copilot/usar-copilot";
+import { rotear } from "@/lib/copilot/roteador";
+import { PARTES, facetaDaParte, type SlugDeParte } from "./partes";
 import {
   MODO_ROTULO,
   ROTULO_TIPO_PROPOSTA,
@@ -44,9 +47,18 @@ export function PathlyMark({ className }: { className?: string }) {
 
 export function ProjectChat({
   projetoId,
+  parteAberta,
   aoMudarAssunto,
 }: {
   projetoId: string;
+  /**
+   * A parte que está aberta ao lado, quando há uma.
+   *
+   * Vira a `facetaDaTela` do roteador. Sem isso o chat mandava `"produto"` fixo, e uma pergunta
+   * feita olhando o painel de Dados chegava ao modelo como se fosse sobre funcionalidades — o que
+   * quebrava justamente as perguntas curtas que dependem do contexto, como "e isso aqui?".
+   */
+  parteAberta?: SlugDeParte | null;
   /**
    * A última coisa que a pessoa escreveu, avisada para fora.
    *
@@ -56,7 +68,10 @@ export function ProjectChat({
    */
   aoMudarAssunto?: (pergunta: string | null) => void;
 }) {
-  const { estado, perguntar, aprovar, rejeitar, carregarMais } = useCopilot(projetoId, "produto");
+  const { estado, perguntar, aprovar, rejeitar, carregarMais } = useCopilot(
+    projetoId,
+    facetaDaParte(parteAberta),
+  );
   const [texto, setTexto] = useState("");
   const [modo, setModo] = useState<Modo | undefined>();
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -238,6 +253,7 @@ export function ProjectChat({
                 <ChatMessage
                   key={mensagem.id}
                   mensagem={mensagem}
+                  projetoId={projetoId}
                   animar={chegouAgora(mensagem.id)}
                 />
               ))}
@@ -279,11 +295,29 @@ export function ProjectChat({
                 aoDigitar();
               }}
               maxLength={2000}
-              placeholder="Descreva o que quer criar ou mudar…"
+              placeholder={
+                parteAberta
+                  ? `Pergunte sobre ${PARTES.find((p) => p.slug === parteAberta)?.rotulo.toLowerCase() ?? "este projeto"}…`
+                  : "Pergunte qualquer coisa sobre seu projeto…"
+              }
               className="min-h-24"
             />
             <PromptInputFooter>
               <PromptInputTools>
+                {/*
+                  O que a pergunta vai levar junto, dito em voz alta.
+
+                  Com um painel aberto, o servidor já recebe aquela faceta como contexto — mas
+                  isso acontecia em silêncio, e a pessoa não tinha como saber que "e isso aqui?"
+                  ia ser entendido. A etiqueta transforma um comportamento invisível em promessa.
+
+                  Sem painel aberto ela não aparece: não há o que prometer.
+                */}
+                {parteAberta && (
+                  <span className="mr-1 rounded-md bg-surface-2 px-2 py-1 text-[11px] text-muted-foreground">
+                    sobre {PARTES.find((p) => p.slug === parteAberta)?.rotulo.toLowerCase()}
+                  </span>
+                )}
                 {(["explicar", "guiar", "gerar"] as const).map((item) => (
                   <button
                     key={item}
@@ -314,9 +348,11 @@ export function ProjectChat({
 
 function ChatMessage({
   mensagem,
+  projetoId,
   animar,
 }: {
   mensagem: { papel: string; texto: string; resposta: RespostaCopilot | null };
+  projetoId: string;
   /** `false` para o que ja estava na tela quando ela abriu. */
   animar: boolean;
 }) {
@@ -379,8 +415,54 @@ function ChatMessage({
             {resposta.proximoPasso}
           </p>
         )}
+        <AcoesDaResposta resposta={resposta} projetoId={projetoId} />
       </MessageContent>
     </Message>
+  );
+}
+
+/**
+ * Os atalhos no pé de uma resposta.
+ *
+ * ## De onde eles vêm, e por que não do modelo
+ *
+ * A tentação era pedir ao modelo uma lista de ações junto da resposta. Seria pior: um botão
+ * inventado leva a lugar nenhum, e "[Adicionar ao roadmap]" que não adiciona nada é a forma mais
+ * cara de perder confiança — pior que não ter botão.
+ *
+ * Então o atalho sai de `rotear()`, rodando sobre o que o Pathly acabou de escrever. Se a
+ * resposta é sobre banco, o botão abre Dados. A faceta é calculada, não inventada, e por isso o
+ * botão sempre vai para onde diz que vai.
+ *
+ * ## Um só
+ *
+ * Uma fileira de botões no pé de toda resposta viraria ruído na trigésima mensagem. Um atalho,
+ * quando existe um assunto claro, e nada quando não existe.
+ */
+function AcoesDaResposta({
+  resposta,
+  projetoId,
+}: {
+  resposta: RespostaCopilot;
+  projetoId: string;
+}) {
+  const texto = resposta.blocos.join(" ");
+  if (texto.trim().length < 20) return null;
+
+  const faceta = rotear(texto).facetas[0];
+  const parte = faceta ? PARTES.find((p) => p.faceta === faceta) : undefined;
+  if (!parte) return null;
+
+  return (
+    <Link
+      to="/app/projeto/$id"
+      params={{ id: projetoId }}
+      search={{ parte: parte.slug }}
+      className="tap inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1.5 text-xs text-muted-foreground transition-colors hover:border-foreground/25 hover:text-foreground"
+    >
+      <parte.icone className="size-3.5" />
+      Ver {parte.rotulo.toLowerCase()}
+    </Link>
   );
 }
 

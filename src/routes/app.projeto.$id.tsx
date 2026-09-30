@@ -89,7 +89,8 @@ function ProjectPage() {
           <PainelDaParte projetoId={id} parte={parte} estado={contagens} />
         </div>
         <div className="order-2 min-w-0 lg:order-1 lg:sticky lg:top-8">
-          <ProjectChat projetoId={id} />
+          {/* A parte aberta vira o contexto da pergunta — ver `facetaDaParte`. */}
+          <ProjectChat projetoId={id} parteAberta={parte} />
         </div>
       </div>
     );

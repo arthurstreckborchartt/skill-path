@@ -11,6 +11,7 @@ import {
   SquareCheck,
 } from "lucide-react";
 import { BLOCOS, type Blueprint } from "@/lib/blueprint/contrato";
+import type { Faceta } from "@/lib/copilot/roteador";
 import type { Projeto } from "@/lib/blueprint/usar-projetos";
 
 /**
@@ -33,20 +34,34 @@ import type { Projeto } from "@/lib/blueprint/usar-projetos";
  * obrigaria a inventar uma para ela.
  */
 export const PARTES = [
-  { slug: "plano", rotulo: "Plano", icone: MapIcon },
-  { slug: "decisoes", rotulo: "Decisões", icone: Lightbulb },
-  { slug: "etapas", rotulo: "Etapas", icone: ListChecks },
-  { slug: "dados", rotulo: "Dados", icone: Database },
-  { slug: "api", rotulo: "API", icone: Plug },
-  { slug: "ia", rotulo: "IA", icone: Sparkles },
-  { slug: "validacao", rotulo: "Validação", icone: SquareCheck },
-  { slug: "seguranca", rotulo: "Segurança", icone: ShieldCheck },
-  { slug: "publicar", rotulo: "Publicar", icone: Rocket },
+  { slug: "plano", rotulo: "Plano", icone: MapIcon, faceta: "produto" },
+  { slug: "decisoes", rotulo: "Decisões", icone: Lightbulb, faceta: "stack" },
+  { slug: "etapas", rotulo: "Etapas", icone: ListChecks, faceta: "roadmap" },
+  { slug: "dados", rotulo: "Dados", icone: Database, faceta: "banco" },
+  { slug: "api", rotulo: "API", icone: Plug, faceta: "api" },
+  { slug: "ia", rotulo: "IA", icone: Sparkles, faceta: "ia" },
+  { slug: "validacao", rotulo: "Validação", icone: SquareCheck, faceta: "seguranca" },
+  { slug: "seguranca", rotulo: "Segurança", icone: ShieldCheck, faceta: "seguranca" },
+  { slug: "publicar", rotulo: "Publicar", icone: Rocket, faceta: "deploy" },
 ] as const satisfies readonly {
   slug: string;
   rotulo: string;
   icone: LucideIcon;
+  /**
+   * O assunto que esta parte representa para o Copilot.
+   *
+   * Existe porque `rotear(pergunta, facetaDaTela)` usa a faceta da tela para entender perguntas
+   * que não dizem o assunto — "não entendi essa parte" só funciona se o servidor souber que parte
+   * é essa. O chat mandava `"produto"` fixo, então a pergunta feita olhando o painel de Dados
+   * chegava ao modelo como se fosse sobre funcionalidades.
+   */
+  faceta: Faceta;
 }[];
+
+/** O assunto da parte aberta, para o chat contar ao servidor. `produto` é o padrão da conversa. */
+export function facetaDaParte(slug: SlugDeParte | null | undefined): Faceta {
+  return PARTES.find((p) => p.slug === slug)?.faceta ?? "produto";
+}
 
 export type SlugDeParte = (typeof PARTES)[number]["slug"];
 
