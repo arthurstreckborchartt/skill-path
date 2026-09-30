@@ -85,15 +85,24 @@ export function BlocoFundacao({ dados }: { dados: Fundacao }) {
         <Paragrafo>{dados.propostaDeValor}</Paragrafo>
       </Secao>
 
-      <Secao titulo="Como ganha dinheiro">
-        <div className="flex flex-wrap items-center gap-2">
-          <Chip tone="primary">{dados.modeloDeNegocio.tipo}</Chip>
-          <Chip tone="accent">{dados.modeloDeNegocio.precoSugerido}</Chip>
-        </div>
-        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-          {dados.modeloDeNegocio.justificativa}
-        </p>
-      </Secao>
+      {/*
+        A seção some quando não há modelo de negócio, em vez de aparecer vazia.
+
+        Um projeto pessoal, interno ou gratuito não cobra, e o plano não inventa preço para ele.
+        Uma seção "Como ganha dinheiro" em branco sugeriria que a IA deixou de fazer o trabalho —
+        quando a ausência é a resposta certa.
+      */}
+      {dados.modeloDeNegocio && (
+        <Secao titulo="Como ganha dinheiro">
+          <div className="flex flex-wrap items-center gap-2">
+            <Chip tone="primary">{dados.modeloDeNegocio.tipo}</Chip>
+            <Chip tone="accent">{dados.modeloDeNegocio.precoSugerido}</Chip>
+          </div>
+          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+            {dados.modeloDeNegocio.justificativa}
+          </p>
+        </Secao>
+      )}
     </div>
   );
 }

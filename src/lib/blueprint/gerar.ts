@@ -3,8 +3,16 @@ import { ESQUEMAS } from "./esquemas";
 import { DEPENDE_DE, VALIDADORES, podeGerar, type Bloco, type Blueprint } from "./contrato";
 import { diretrizesEmTexto, filtrarTecnico } from "./regras";
 import { fasesDoProjeto } from "./fases";
-import { validarExecucaoComFases } from "./contrato";
-import { ROTULO_NIVEL, ROTULO_TIPO, type Respostas } from "./respostas";
+import { validarExecucaoComFases, validarFundacaoComNatureza } from "./contrato";
+import {
+  ROTULO_NATUREZA,
+  ROTULO_NIVEL,
+  ROTULO_PLATAFORMA,
+  cobra,
+  type Natureza,
+  type Plataforma,
+  type Respostas,
+} from "./respostas";
 
 /**
  * Geração de um bloco do blueprint. **Só no servidor.**
@@ -59,8 +67,14 @@ function contexto(bp: Blueprint, bloco: Bloco): string {
       `Quem usa: ${f.persona.nome}, ${f.persona.papel}. ${f.persona.contexto}`,
       `Hoje resolve assim: ${f.persona.alternativaAtual}`,
       `Proposta de valor: ${f.propostaDeValor}`,
-      `Modelo de negócio: ${f.modeloDeNegocio.tipo}, ${f.modeloDeNegocio.precoSugerido}`,
     );
+    // Só entra no contexto quando existe. Escrever "Modelo de negócio: undefined" ensinaria o
+    // bloco seguinte a inventar um.
+    if (f.modeloDeNegocio) {
+      partes.push(
+        `Modelo de negócio: ${f.modeloDeNegocio.tipo}, ${f.modeloDeNegocio.precoSugerido}`,
+      );
+    }
   }
 
   if (DEPENDE_DE[bloco].includes("produto") && bp.produto) {
@@ -178,6 +192,42 @@ const TOKENS: Record<Bloco, number> = {
  * mesma regra que a tela aplica, escrita também aqui porque a tela não é o único caminho até o
  * endpoint.
  */
+/**
+ * A restrição que a plataforma impõe ao plano.
+ *
+ * Sem esta frase o modelo escreve o mesmo plano de aplicação web para tudo — foi o que ele fez
+ * enquanto o tipo era só um rótulo colado no prompt. Um app de celular saía sem uma palavra sobre
+ * loja; uma CLI saía com fase de telas.
+ *
+ * Cada linha diz o que muda **naquela** plataforma, não o que ela é. O modelo já sabe o que é um
+ * app de celular; o que ele não sabe é que o plano precisa contar a revisão da loja como prazo.
+ */
+const RESTRICAO_DA_PLATAFORMA: Record<Plataforma, string> = {
+  site: "É um site: conteúdo que as pessoas leem. Não invente banco de dados, contas ou painel administrativo se as respostas não pediram. Priorize desempenho de carregamento, SEO e o texto das páginas.",
+  webapp:
+    "É uma aplicação web: roda no navegador, as pessoas entram e usam. Estado, sessão e navegação entre telas são o centro.",
+  celular:
+    "É um app de celular. O plano PRECISA tratar: publicação na App Store e na Play Store, com o tempo de revisão contado como prazo real e fora do controle de quem constrói; contas de desenvolvedor e seus custos anuais; assinatura de build; permissões do sistema; e comportamento sem rede. Escolha entre nativo e multiplataforma explicando o porquê para ESTE projeto.",
+  desktop:
+    "É um app de computador. O plano PRECISA tratar: empacotamento por sistema operacional, instalador, assinatura de código (sem ela o sistema avisa que o app é suspeito) e como a atualização chega a quem já instalou.",
+  extensao:
+    "É uma extensão de navegador. O plano PRECISA tratar: o manifesto e suas permissões, a revisão da loja de extensões, e o limite do que uma extensão alcança na página.",
+  cli: "É uma ferramenta de linha de comando ou uma API, sem interface gráfica. Não crie fase nem etapa de tela. A experiência é a saída do comando, as mensagens de erro e a documentação.",
+};
+
+/** O que o plano precisa dizer sobre dinheiro — e quando dizer qualquer coisa seria invenção. */
+const RESTRICAO_DA_NATUREZA: Record<Natureza, string> = {
+  pago: "Alguém paga para usar. O modelo de negócio, com faixa de preço e justificativa, é obrigatório.",
+  marketplace:
+    "Conecta dois lados e fica com uma parte. O modelo de negócio precisa dizer qual é a comissão e de qual lado ela sai.",
+  interno:
+    "É para uso interno, de uma equipe ou empresa. NÃO invente modelo de negócio, preço ou plano de aquisição de usuários — não há venda. O sucesso é o tempo que a equipe economiza.",
+  pessoal:
+    "É um projeto pessoal ou portfólio. NÃO invente modelo de negócio, preço, persona de cliente nem estratégia de aquisição. O sucesso é o projeto existir e representar bem quem o fez.",
+  gratuito:
+    "É gratuito e não há plano de cobrar. NÃO invente modelo de negócio nem preço. Trate o custo de operação como restrição real, já que ninguém paga por ele.",
+};
+
 /** O que a pessoa respondeu, em texto, para o modelo ler antes de decidir qualquer coisa. */
 function questionario(r: Respostas): string {
   const sim = (b: boolean) => (b ? "sim" : "não");
@@ -185,9 +235,17 @@ function questionario(r: Respostas): string {
     `## O que a pessoa respondeu`,
     `O que quer criar: ${r.oQue}`,
     `Para quem: ${r.paraQuem}`,
-    `Problema que resolve: ${r.problema}`,
-    `Como pretende ganhar dinheiro: ${r.comoGanhaDinheiro || "ainda não sabe"}`,
-    `Tipo de projeto: ${ROTULO_TIPO[r.tipo]}`,
+    `Problema que resolve: ${r.problema || "não informado — e não foi exigido, ver a natureza abaixo"}`,
+    ...(cobra(r.natureza)
+      ? [`Como pretende ganhar dinheiro: ${r.comoGanhaDinheiro || "ainda não sabe"}`]
+      : []),
+    ``,
+    `Plataforma: ${ROTULO_PLATAFORMA[r.plataforma]}`,
+    RESTRICAO_DA_PLATAFORMA[r.plataforma],
+    ``,
+    `Natureza: ${ROTULO_NATUREZA[r.natureza]}`,
+    RESTRICAO_DA_NATUREZA[r.natureza],
+    ``,
     `Terá IA: ${sim(r.temIa)}`,
     `Terá pagamentos: ${sim(r.temPagamentos)}`,
     `Terá usuários autenticados: ${sim(r.temAutenticacao)}`,
@@ -262,10 +320,17 @@ export async function gerarBloco(
       usuario,
       schema: ESQUEMAS[bloco],
       formato: FORMATO[bloco],
+      /*
+       * Dois blocos precisam de contexto que `VALIDADORES` não tem: `execucao` precisa das fases
+       * do projeto, e `fundacao` precisa da natureza para saber se cobrar preço é exigência ou
+       * invenção.
+       */
       validar:
         bloco === "execucao"
           ? (v: unknown) => validarExecucaoComFases(v, ativas)
-          : (VALIDADORES[bloco] as (v: unknown) => unknown | null),
+          : bloco === "fundacao"
+            ? (v: unknown) => validarFundacaoComNatureza(v, respostas.natureza)
+            : (VALIDADORES[bloco] as (v: unknown) => unknown | null),
       tetoMs: TETOS_MS[bloco],
       maxTokens: TOKENS[bloco],
       ...(opcoes.comClaude ? { comClaude: true } : {}),

@@ -6,23 +6,106 @@
  * naturezas diferentes, com ciclos de vida diferentes.
  */
 
-export const TIPOS_PROJETO = [
-  "saas",
-  "aplicativo",
-  "marketplace",
-  "interno",
-  "plataforma",
-  "outro",
-] as const;
-export type TipoProjeto = (typeof TIPOS_PROJETO)[number];
+/**
+ * O que a pessoa está construindo, em dois eixos.
+ *
+ * ## Por que dois e não um
+ *
+ * A lista antiga tinha um campo só — SaaS, Aplicativo, Marketplace, Sistema interno, Plataforma,
+ * Outro — e ela misturava duas perguntas que não se respondem juntas. "Marketplace" não diz se é
+ * web ou celular; "Aplicativo" não diz se é pago. O roadmap precisa das duas respostas e estava
+ * adivinhando as duas.
+ *
+ * Pior: o campo era **decorativo**. `tipo` era colado no prompt da IA e não governava fase
+ * nenhuma. Um projeto de app de celular recebia a fase "Deploy" genérica, sem uma palavra sobre
+ * loja, revisão ou assinatura de build.
+ *
+ * Agora `plataforma` decide as fases técnicas e `natureza` decide o que o plano precisa ter.
+ */
 
-export const ROTULO_TIPO: Record<TipoProjeto, string> = {
-  saas: "SaaS",
-  aplicativo: "Aplicativo",
+export const PLATAFORMAS = ["site", "webapp", "celular", "desktop", "extensao", "cli"] as const;
+export type Plataforma = (typeof PLATAFORMAS)[number];
+
+export const ROTULO_PLATAFORMA: Record<Plataforma, string> = {
+  site: "Site",
+  webapp: "Aplicação web",
+  celular: "App de celular",
+  desktop: "App de computador",
+  extensao: "Extensão de navegador",
+  cli: "Ferramenta de linha de comando ou API",
+};
+
+/** Uma linha por plataforma, para a pessoa escolher sem adivinhar o que cada palavra abarca. */
+export const EXEMPLO_PLATAFORMA: Record<Plataforma, string> = {
+  site: "Institucional, landing page, portfólio, blog — conteúdo que as pessoas leem.",
+  webapp: "Roda no navegador e as pessoas entram e usam. SaaS, painel, sistema.",
+  celular: "iOS, Android, ou os dois. Publicado nas lojas.",
+  desktop: "Windows, macOS ou Linux, instalado na máquina.",
+  extensao: "Chrome, Firefox ou Edge, dentro do navegador de quem usa.",
+  cli: "Sem tela: um comando no terminal, ou uma API que outros programas consomem.",
+};
+
+export const NATUREZAS = ["pago", "marketplace", "interno", "pessoal", "gratuito"] as const;
+export type Natureza = (typeof NATUREZAS)[number];
+
+export const ROTULO_NATUREZA: Record<Natureza, string> = {
+  pago: "Produto pago",
   marketplace: "Marketplace",
-  interno: "Sistema interno",
-  plataforma: "Plataforma",
-  outro: "Outro",
+  interno: "Uso interno",
+  pessoal: "Pessoal ou portfólio",
+  gratuito: "Gratuito e aberto",
+};
+
+export const EXEMPLO_NATUREZA: Record<Natureza, string> = {
+  pago: "Alguém paga para usar — assinatura, licença, cobrança por uso.",
+  marketplace: "Conecta dois lados e fica com uma parte da transação.",
+  interno: "Para você, sua equipe ou sua empresa. Ninguém de fora usa.",
+  pessoal: "Seu, para mostrar trabalho ou resolver algo que só você tem.",
+  gratuito: "Qualquer um usa sem pagar, e não há plano de cobrar.",
+};
+
+/** Naturezas em que o plano precisa dizer como entra dinheiro. Nas outras, cobrar seria inventar. */
+export function cobra(n: Natureza): boolean {
+  return n === "pago" || n === "marketplace";
+}
+
+/**
+ * Plataformas que entregam pela loja de um terceiro.
+ *
+ * Muda a fase de publicação inteira: em vez de "colocar no ar", é empacotar, assinar, submeter e
+ * **esperar revisão de outra empresa** — que pode recusar. Chamar isso de "Deploy" esconde a
+ * única parte que a pessoa não controla.
+ */
+export function publicaEmLoja(p: Plataforma): boolean {
+  return p === "celular" || p === "extensao";
+}
+
+/** Plataformas que normalmente não guardam dados próprios. Só `site` — e mesmo assim, às vezes. */
+export function podeNaoTerBanco(p: Plataforma): boolean {
+  return p === "site";
+}
+
+// ---------------------------------------------------------------------------------------------
+// A ponte com os projetos que já existem
+// ---------------------------------------------------------------------------------------------
+
+/**
+ * Traduz o `tipo` antigo para os dois eixos novos.
+ *
+ * Projetos criados antes desta mudança têm `tipo: "saas"` gravado no banco e nenhum dos campos
+ * novos. Sem esta tabela eles cairiam no padrão e um marketplace viraria "site pessoal" — o plano
+ * mudaria de forma debaixo de quem já estava construindo.
+ *
+ * A tradução é conservadora: quando o tipo antigo não dizia a plataforma, assume `webapp`, que era
+ * o que o produto de fato gerava.
+ */
+const DO_TIPO_ANTIGO: Record<string, { plataforma: Plataforma; natureza: Natureza }> = {
+  saas: { plataforma: "webapp", natureza: "pago" },
+  aplicativo: { plataforma: "celular", natureza: "pago" },
+  marketplace: { plataforma: "webapp", natureza: "marketplace" },
+  interno: { plataforma: "webapp", natureza: "interno" },
+  plataforma: { plataforma: "webapp", natureza: "pago" },
+  outro: { plataforma: "webapp", natureza: "pessoal" },
 };
 
 export type NivelTecnico = "iniciante" | "intermediario" | "avancado";
@@ -42,7 +125,10 @@ export type Respostas = {
   paraQuem: string;
   problema: string;
   comoGanhaDinheiro: string;
-  tipo: TipoProjeto;
+  /** Onde o produto roda. Governa as fases técnicas do roadmap. */
+  plataforma: Plataforma;
+  /** De que ele vive. Governa o que o plano precisa ter — e o que seria invenção. */
+  natureza: Natureza;
 
   temIa: boolean;
   temPagamentos: boolean;
@@ -72,7 +158,13 @@ export const RESPOSTAS_VAZIAS: Respostas = {
   paraQuem: "",
   problema: "",
   comoGanhaDinheiro: "",
-  tipo: "saas",
+  /*
+   * `webapp` + `pago` é o padrão porque continua sendo o caso mais comum, e porque um padrão
+   * qualquer teria que ser escolhido. Mas os dois campos aparecem no questionário com as opções
+   * à vista — ninguém precisa descobrir que existe um padrão para trocá-lo.
+   */
+  plataforma: "webapp",
+  natureza: "pago",
   temIa: false,
   temPagamentos: false,
   temAutenticacao: false,
@@ -104,7 +196,7 @@ export const TETOS_RESPOSTA = {
  * por causa disso.
  */
 export function lerRespostas(valor: unknown): Respostas {
-  const v = (valor ?? {}) as Partial<Respostas>;
+  const v = (valor ?? {}) as Partial<Respostas> & { tipo?: string };
 
   const texto = (x: unknown, teto: number): string =>
     typeof x === "string" ? x.trim().slice(0, teto) : "";
@@ -113,12 +205,28 @@ export function lerRespostas(valor: unknown): Respostas {
     ? v.comoConstroi.filter((m): m is ModoDeConstruir => m === "ia" || m === "manual")
     : [];
 
+  /*
+   * A ordem importa: o campo novo ganha do antigo, e o antigo ganha do padrão.
+   *
+   * Assim um projeto que já foi reaberto e salvo com os eixos novos não volta a ser derivado do
+   * `tipo` que ficou na linha — o `tipo` continua gravado no banco e continuaria vencendo se a
+   * ordem fosse outra.
+   */
+  const antigo = typeof v.tipo === "string" ? DO_TIPO_ANTIGO[v.tipo] : undefined;
+  const plataforma = PLATAFORMAS.includes(v.plataforma as Plataforma)
+    ? (v.plataforma as Plataforma)
+    : (antigo?.plataforma ?? "webapp");
+  const natureza = NATUREZAS.includes(v.natureza as Natureza)
+    ? (v.natureza as Natureza)
+    : (antigo?.natureza ?? "pago");
+
   return {
     oQue: texto(v.oQue, TETOS_RESPOSTA.oQue),
     paraQuem: texto(v.paraQuem, TETOS_RESPOSTA.paraQuem),
     problema: texto(v.problema, TETOS_RESPOSTA.problema),
     comoGanhaDinheiro: texto(v.comoGanhaDinheiro, TETOS_RESPOSTA.comoGanhaDinheiro),
-    tipo: TIPOS_PROJETO.includes(v.tipo as TipoProjeto) ? (v.tipo as TipoProjeto) : "saas",
+    plataforma,
+    natureza,
     temIa: v.temIa === true,
     temPagamentos: v.temPagamentos === true,
     temAutenticacao: v.temAutenticacao === true,
@@ -137,7 +245,19 @@ export function lerRespostas(valor: unknown): Respostas {
   };
 }
 
-/** O questionário está completo o bastante para gerar um plano? */
+/**
+ * O questionário está completo o bastante para gerar um plano?
+ *
+ * `problema` deixou de ser exigido de todo mundo. Um portfólio não resolve dor de ninguém, e um
+ * projeto gratuito de fim de semana também não — obrigar essas pessoas a inventar uma dor produz
+ * um plano construído sobre uma frase falsa. Onde alguém paga, a dor volta a ser obrigatória:
+ * quem cobra sem saber o que resolve não tem produto, tem esperança.
+ */
 export function respostasSuficientes(r: Respostas): boolean {
-  return r.oQue.length >= 15 && r.paraQuem.length >= 5 && r.problema.length >= 15;
+  const base = r.oQue.length >= 15 && r.paraQuem.length >= 5;
+  return exigeProblema(r.natureza) ? base && r.problema.length >= 15 : base;
+}
+
+export function exigeProblema(n: Natureza): boolean {
+  return n === "pago" || n === "marketplace" || n === "interno";
 }

@@ -1,5 +1,5 @@
 import type { Blueprint } from "./contrato";
-import type { Respostas } from "./respostas";
+import { podeNaoTerBanco, publicaEmLoja, type Respostas } from "./respostas";
 
 /**
  * As 18 fases canônicas do roadmap — e a regra que decide quais existem em cada projeto.
@@ -36,6 +36,15 @@ export type Fase = {
    * técnico: se há backend, por exemplo, quem sabe é a stack, não o questionário.
    */
   aplicaSe?: (r: Respostas, bp: Blueprint) => boolean;
+  /**
+   * Nome e objetivo trocados para certas plataformas.
+   *
+   * Existe por causa da fase 15. "Deploy" e "Publicação nas lojas" ocupam o mesmo lugar no
+   * roadmap e são trabalhos diferentes: um você controla do começo ao fim, o outro termina
+   * esperando a revisão de outra empresa, que pode recusar. Chamar os dois de "Deploy" esconde
+   * justamente a parte que a pessoa não controla — e que costuma ser a que atrasa.
+   */
+  variante?: (r: Respostas) => { nome: string; objetivo: string } | null;
 };
 
 /** Um projeto tem backend quando o plano técnico definiu um que não seja "nenhum". */
@@ -43,6 +52,23 @@ function temBackend(_r: Respostas, bp: Blueprint): boolean {
   const backend = bp.tecnico?.stack.backend?.trim().toLowerCase() ?? "";
   if (!backend) return true; // Sem plano técnico ainda, assume que sim — é o caso comum.
   return !["nenhum", "não", "nao", "n/a", "sem backend", "-"].includes(backend);
+}
+
+/**
+ * Um site guarda dados?
+ *
+ * Só ele levanta a dúvida: as outras plataformas guardam alguma coisa por definição. Um
+ * institucional ou um portfólio muitas vezes é conteúdo estático, e nesse caso as fases de Banco,
+ * Backend e APIs são trabalho que não existe. A pergunta se resolve pelo que a pessoa respondeu —
+ * se há contas, uploads ou pagamentos, há dados.
+ */
+function siteGuardaDados(r: Respostas): boolean {
+  return r.temAutenticacao || r.temUploads || r.temPagamentos || r.temIntegracoes;
+}
+
+function temDados(r: Respostas, bp: Blueprint): boolean {
+  if (podeNaoTerBanco(r.plataforma) && !siteGuardaDados(r)) return false;
+  return temBackend(r, bp);
 }
 
 export const FASES: Fase[] = [
@@ -70,18 +96,19 @@ export const FASES: Fase[] = [
     numero: 5,
     nome: "Banco de dados",
     objetivo: "Modelar os dados. Nenhuma tela vem antes daqui.",
+    aplicaSe: temDados,
   },
   {
     numero: 6,
     nome: "Backend",
     objetivo: "Construir a lógica que faz o sistema funcionar.",
-    aplicaSe: temBackend,
+    aplicaSe: temDados,
   },
   {
     numero: 7,
     nome: "APIs",
     objetivo: "Expor o que o frontend precisa consumir, e nada além disso.",
-    aplicaSe: temBackend,
+    aplicaSe: temDados,
   },
   {
     numero: 8,
@@ -93,6 +120,20 @@ export const FASES: Fase[] = [
     numero: 9,
     nome: "Frontend",
     objetivo: "Construir as telas por onde a pessoa realmente usa o produto.",
+    /* Sem tela, não há fase de tela. Uma CLI ou uma API entregam pela saída, não pela interface. */
+    aplicaSe: (r) => r.plataforma !== "cli",
+    variante: (r) =>
+      r.plataforma === "site"
+        ? {
+            nome: "Páginas e conteúdo",
+            objetivo: "Construir as páginas e escrever o que vai nelas.",
+          }
+        : r.plataforma === "celular"
+          ? {
+              nome: "Telas do app",
+              objetivo: "Construir as telas e a navegação, no tamanho de mão.",
+            }
+          : null,
   },
   {
     numero: 10,
@@ -126,6 +167,20 @@ export const FASES: Fase[] = [
     numero: 15,
     nome: "Deploy",
     objetivo: "Tirar da sua máquina e colocar no ar, de forma repetível.",
+    variante: (r) =>
+      publicaEmLoja(r.plataforma)
+        ? {
+            nome: "Publicação nas lojas",
+            objetivo:
+              "Empacotar, assinar e submeter — e passar pela revisão de quem controla a loja.",
+          }
+        : r.plataforma === "desktop"
+          ? {
+              nome: "Empacotamento e distribuição",
+              objetivo:
+                "Gerar o instalador de cada sistema e assinar, para não assustar quem baixa.",
+            }
+          : null,
   },
   {
     numero: 16,
@@ -144,9 +199,18 @@ export const FASES: Fase[] = [
   },
 ];
 
-/** As fases que ESTE projeto tem, na ordem canônica. */
+/**
+ * As fases que ESTE projeto tem, na ordem canônica, já com o nome que vale para a plataforma.
+ *
+ * A variante é aplicada aqui, e não na tela, para que exista **uma** resposta à pergunta "como
+ * se chama a fase 15 neste projeto?". Se cada tela resolvesse por conta, o roadmap diria
+ * "Publicação nas lojas" e o brief da sessão diria "Deploy" — sobre a mesma etapa.
+ */
 export function fasesDoProjeto(r: Respostas, bp: Blueprint): Fase[] {
-  return FASES.filter((f) => !f.aplicaSe || f.aplicaSe(r, bp));
+  return FASES.filter((f) => !f.aplicaSe || f.aplicaSe(r, bp)).map((f) => {
+    const v = f.variante?.(r);
+    return v ? { ...f, nome: v.nome, objetivo: v.objetivo } : f;
+  });
 }
 
 /**
@@ -157,10 +221,22 @@ export function fasesDoProjeto(r: Respostas, bp: Blueprint): Fase[] {
  * decisão — e deixa claro onde mexer se ela estiver errada.
  */
 export function fasesForaComMotivo(r: Respostas, bp: Blueprint): { fase: Fase; porque: string }[] {
+  /*
+   * O motivo de uma fase de dados depende de qual das duas portas a fechou: um site sem contas,
+   * uploads nem pagamentos não guarda nada — e isso é diferente de "o plano técnico escolheu não
+   * ter backend". A frase errada manda a pessoa mexer no lugar errado para trazer a fase de volta.
+   */
+  const semDados = podeNaoTerBanco(r.plataforma) && !siteGuardaDados(r);
+  const porFaltaDeDados = semDados
+    ? "seu site é conteúdo: sem contas, uploads ou pagamentos, não há dado para guardar"
+    : "seu plano não tem backend próprio";
+
   const motivos: Record<number, string> = {
-    6: "seu plano não tem backend próprio",
-    7: "sem backend próprio, não há API para construir",
+    5: porFaltaDeDados,
+    6: porFaltaDeDados,
+    7: semDados ? porFaltaDeDados : "sem backend próprio, não há API para construir",
     8: "você respondeu que o sistema não tem contas de usuário",
+    9: "uma ferramenta de linha de comando ou API não tem tela para construir",
     10: "você respondeu que não há integrações externas",
     11: "você respondeu que o produto não usa IA",
     12: "você respondeu que o sistema não cobra dinheiro",

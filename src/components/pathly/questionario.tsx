@@ -1,10 +1,16 @@
 import { Chip } from "./ui";
 import { cn } from "@/lib/utils";
 import {
+  EXEMPLO_NATUREZA,
+  EXEMPLO_PLATAFORMA,
+  NATUREZAS,
+  PLATAFORMAS,
+  ROTULO_NATUREZA,
   ROTULO_NIVEL,
-  ROTULO_TIPO,
+  ROTULO_PLATAFORMA,
   TETOS_RESPOSTA,
-  TIPOS_PROJETO,
+  cobra,
+  exigeProblema,
   type ModoDeConstruir,
   type NivelTecnico,
   type Respostas,
@@ -191,35 +197,69 @@ export function Questionario({
             />
           </Campo>
 
-          <Campo rotulo="Qual problema resolve?">
-            <Texto
-              valor={respostas.problema}
-              aoMudar={(v) => set("problema", v)}
-              teto={TETOS_RESPOSTA.problema}
-              exemplo="Eles anotam venda em papel e só descobrem que acabou um insumo no meio do atendimento"
-            />
-          </Campo>
+          {/*
+            Os dois eixos vêm ANTES dos campos que eles escondem.
 
-          <Campo
-            rotulo="Como pretende ganhar dinheiro?"
-            ajuda="Pode deixar em branco se ainda não sabe."
-          >
-            <Texto
-              valor={respostas.comoGanhaDinheiro}
-              aoMudar={(v) => set("comoGanhaDinheiro", v)}
-              teto={TETOS_RESPOSTA.comoGanhaDinheiro}
-              linhas={2}
-              exemplo="Assinatura mensal"
-            />
-          </Campo>
+            Sem isso, alguém escolheria "pessoal" lá embaixo e veria "Qual problema resolve?"
+            desaparecer acima — um campo sumindo por causa de algo respondido depois dele. A ordem
+            aqui é a ordem em que as respostas dependem umas das outras.
 
-          <Campo rotulo="Que tipo de projeto é?">
+            Plataforma antes de natureza porque é a que muda mais o roadmap: ela decide se existe
+            fase de banco e se a publicação é um deploy seu ou uma revisão da Apple. E é a mais
+            fácil — quem quer um app de celular sabe disso antes de saber se vai cobrar.
+          */}
+          <Campo rotulo="Onde isso vai rodar?">
             <Opcoes
-              valor={respostas.tipo}
-              opcoes={TIPOS_PROJETO.map((t) => ({ v: t, texto: ROTULO_TIPO[t] }))}
-              aoMudar={(v) => set("tipo", v)}
+              valor={respostas.plataforma}
+              opcoes={PLATAFORMAS.map((p) => ({ v: p, texto: ROTULO_PLATAFORMA[p] }))}
+              aoMudar={(v) => set("plataforma", v)}
             />
+            <p className="mt-2 text-xs text-muted-foreground">
+              {EXEMPLO_PLATAFORMA[respostas.plataforma]}
+            </p>
           </Campo>
+
+          <Campo rotulo="De que ele vive?">
+            <Opcoes
+              valor={respostas.natureza}
+              opcoes={NATUREZAS.map((n) => ({ v: n, texto: ROTULO_NATUREZA[n] }))}
+              aoMudar={(v) => set("natureza", v)}
+            />
+            <p className="mt-2 text-xs text-muted-foreground">
+              {EXEMPLO_NATUREZA[respostas.natureza]}
+            </p>
+          </Campo>
+
+          {/*
+            A dor só é exigida de quem cobra ou de quem resolve algo para uma equipe. Obrigar um
+            portfólio a inventar uma dor produziria um plano construído sobre uma frase falsa — e
+            o resto do plano herda essa frase.
+          */}
+          {exigeProblema(respostas.natureza) && (
+            <Campo rotulo="Qual problema resolve?">
+              <Texto
+                valor={respostas.problema}
+                aoMudar={(v) => set("problema", v)}
+                teto={TETOS_RESPOSTA.problema}
+                exemplo="Eles anotam venda em papel e só descobrem que acabou um insumo no meio do atendimento"
+              />
+            </Campo>
+          )}
+
+          {cobra(respostas.natureza) && (
+            <Campo
+              rotulo="Como pretende ganhar dinheiro?"
+              ajuda="Pode deixar em branco se ainda não sabe."
+            >
+              <Texto
+                valor={respostas.comoGanhaDinheiro}
+                aoMudar={(v) => set("comoGanhaDinheiro", v)}
+                teto={TETOS_RESPOSTA.comoGanhaDinheiro}
+                linhas={2}
+                exemplo="Assinatura mensal"
+              />
+            </Campo>
+          )}
         </div>
       </section>
 
@@ -373,7 +413,8 @@ export function ResumoRespostas({ respostas }: { respostas: Respostas }) {
 
   return (
     <div className="flex flex-wrap gap-1.5">
-      <Chip tone="primary">{ROTULO_TIPO[respostas.tipo]}</Chip>
+      <Chip tone="primary">{ROTULO_PLATAFORMA[respostas.plataforma]}</Chip>
+      <Chip tone="accent">{ROTULO_NATUREZA[respostas.natureza]}</Chip>
       {ligados.map((x) => (
         <Chip key={x}>{x}</Chip>
       ))}

@@ -22,6 +22,9 @@
  * A ordem é fundacao -> produto -> tecnico -> execucao, e não pode ser invertida.
  */
 
+// `respostas` não importa nada, então esta seta não fecha ciclo.
+import { cobra, exigeProblema, type Natureza } from "./respostas";
+
 /** Os cinco blocos, na ordem obrigatória de geração. */
 export const BLOCOS = ["fundacao", "produto", "tecnico", "operacao", "execucao"] as const;
 export type Bloco = (typeof BLOCOS)[number];
@@ -65,7 +68,14 @@ export type Fundacao = {
   persona: Persona;
   /** Por que escolher isto e não a alternativa atual. */
   propostaDeValor: string;
-  modeloDeNegocio: {
+  /**
+   * Como entra dinheiro. **Ausente** quando a natureza do projeto não cobra.
+   *
+   * Era obrigatório de todo mundo, e isso obrigava um portfólio a ter faixa de preço. O campo
+   * opcional não é frouxidão: onde alguém paga, `validarFundacaoComNatureza` continua rejeitando
+   * a fundação sem ele.
+   */
+  modeloDeNegocio?: {
     /** assinatura, uso, licenca, comissao, gratuito */
     tipo: string;
     /** Faixa de preço sugerida e o raciocínio por trás dela. */
@@ -339,47 +349,86 @@ function frases(v: unknown, minimoItens: number): string[] | null {
   return limpo.length >= minimoItens ? limpo.map((x) => x.trim()) : null;
 }
 
-export function validarFundacao(valor: unknown): Fundacao | null {
+/**
+ * A fundação, conferida contra a natureza do projeto.
+ *
+ * ## Por que a natureza precisa chegar até aqui
+ *
+ * O prompt manda o modelo **não** inventar preço para um portfólio ou um projeto interno — é a
+ * coisa certa a pedir. Mas enquanto este validador exigia `modeloDeNegocio` de todo mundo, o
+ * modelo obedecia o prompt e o bloco era rejeitado em seguida, sempre. As duas regras estavam
+ * certas sozinhas e se contradiziam juntas.
+ *
+ * Onde alguém paga, a exigência continua inteira: quem cobra sem saber quanto e por quê não tem
+ * produto.
+ *
+ * A persona também afrouxa. Um portfólio não tem "alternativa atual" nem duas dores — pedir isso
+ * produziria uma persona inventada, que é pior que uma persona ausente porque parece pesquisa.
+ */
+export function validarFundacaoComNatureza(valor: unknown, natureza: Natureza): Fundacao | null {
   if (!valor || typeof valor !== "object") return null;
   const f = valor as Partial<Fundacao>;
 
   const nome = frase(f.nome, 2);
   const descricao = frase(f.descricao, 15);
-  const problema = frase(f.problema, 30);
   const publico = frase(f.publico, 10);
   const propostaDeValor = frase(f.propostaDeValor, 20);
-  if (!nome || !descricao || !problema || !publico || !propostaDeValor) return null;
+  if (!nome || !descricao || !publico || !propostaDeValor) return null;
+
+  const precisaDeProblema = exigeProblema(natureza);
+  const problema = frase(f.problema, 30);
+  if (precisaDeProblema && !problema) return null;
 
   const p = f.persona;
   const dores = frases(p?.dores, 2);
   const personaNome = frase(p?.nome, 2);
   const alternativaAtual = frase(p?.alternativaAtual, 5);
-  if (!p || !dores || !personaNome || !alternativaAtual) return null;
+  if (precisaDeProblema && (!p || !dores || !personaNome || !alternativaAtual)) return null;
 
   const m = f.modeloDeNegocio;
-  if (!m || !frase(m.tipo, 3) || !frase(m.precoSugerido, 2) || !frase(m.justificativa, 15)) {
-    return null;
-  }
+  const temModelo = Boolean(
+    m && frase(m.tipo, 3) && frase(m.precoSugerido, 2) && frase(m.justificativa, 15),
+  );
+  if (cobra(natureza) && !temModelo) return null;
 
   return {
     nome,
     descricao,
-    problema,
+    problema: problema ?? "",
     publico,
     persona: {
-      nome: personaNome,
-      papel: frase(p.papel, 2) ?? "",
-      contexto: frase(p.contexto, 10) ?? "",
-      dores,
-      alternativaAtual,
+      nome: personaNome ?? "",
+      papel: frase(p?.papel, 2) ?? "",
+      contexto: frase(p?.contexto, 10) ?? "",
+      dores: dores ?? [],
+      alternativaAtual: alternativaAtual ?? "",
     },
     propostaDeValor,
-    modeloDeNegocio: {
-      tipo: m.tipo.trim(),
-      precoSugerido: m.precoSugerido.trim(),
-      justificativa: m.justificativa.trim(),
-    },
+    /*
+     * Guardado quando existe, mesmo onde não era exigido: se o modelo escreveu algo útil sobre
+     * custo num projeto gratuito, jogar fora seria perder trabalho. O que a regra proíbe é
+     * **exigir**, não aceitar.
+     */
+    ...(temModelo && m
+      ? {
+          modeloDeNegocio: {
+            tipo: m.tipo.trim(),
+            precoSugerido: m.precoSugerido.trim(),
+            justificativa: m.justificativa.trim(),
+          },
+        }
+      : {}),
   };
+}
+
+/**
+ * A versão estrita, para quem não tem a natureza em mãos.
+ *
+ * `pago` é o padrão porque é o mais exigente: um validador que erra para o lado de pedir demais
+ * recusa um bloco bom; para o lado de pedir de menos, aceita um bloco vazio e ninguém descobre.
+ */
+export function validarFundacao(valor: unknown): Fundacao | null {
+  return validarFundacaoComNatureza(valor, "pago");
 }
 
 export function validarProduto(valor: unknown): Produto | null {
