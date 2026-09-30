@@ -116,6 +116,69 @@ export function posicaoDoPasso(p: Passo): number {
 }
 
 // =============================================================================================
+// O ciclo, em seis
+// =============================================================================================
+
+/**
+ * Os doze passos, agrupados nos seis que a pessoa precisa entender.
+ *
+ * ## Por que dois números
+ *
+ * Doze passos é a máquina: cada um existe porque há uma transição real a controlar, e cortar
+ * qualquer um deles perderia uma trava. Mas doze caixas numa tela não ensinam nada — viram o
+ * fluxograma enorme que ninguém lê.
+ *
+ * Seis é o modelo mental: planejar, implementar, testar, validar, atualizar o plano, seguir. É o
+ * que alguém repete de cabeça depois de ver uma vez.
+ *
+ * Os dois convivem sem se contradizer porque o agrupamento é uma função, não uma segunda lista.
+ * Um passo novo na máquina entra num grupo, e a tela não muda.
+ */
+export const CICLO = [
+  "planejar",
+  "implementar",
+  "testar",
+  "validar",
+  "atualizar",
+  "proximo",
+] as const;
+export type EtapaDoCiclo = (typeof CICLO)[number];
+
+export const ROTULO_CICLO: Record<EtapaDoCiclo, string> = {
+  planejar: "Planejar",
+  implementar: "Implementar",
+  testar: "Testar",
+  validar: "Validar",
+  atualizar: "Atualizar o plano",
+  proximo: "Próximo",
+};
+
+const GRUPO: Record<Passo, EtapaDoCiclo | null> = {
+  planejar: "planejar",
+  "gerar-tarefa": "planejar",
+  "preparar-contexto": "planejar",
+  /* Os cinco da implementação são o mesmo trabalho visto de perto: escolher com quem fazer,
+   * pedir, autorizar, fazer e receber de volta. Para quem olha o ciclo, é "implementar". */
+  "escolher-ferramenta": "implementar",
+  "solicitar-execucao": "implementar",
+  autorizar: "implementar",
+  executar: "implementar",
+  "receber-resultado": "implementar",
+  testar: "testar",
+  validar: "validar",
+  "atualizar-blueprint": "atualizar",
+  concluida: "proximo",
+  /* Cancelada e falhou não são lugares no ciclo: são saídas dele. A tela não os pinta como
+   * progresso, senão uma sessão que quebrou apareceria como uma que avançou. */
+  cancelada: null,
+  falhou: null,
+};
+
+export function cicloDoPasso(p: Passo): EtapaDoCiclo | null {
+  return GRUPO[p];
+}
+
+// =============================================================================================
 // O que cada passo significa depende de quem executa
 // =============================================================================================
 

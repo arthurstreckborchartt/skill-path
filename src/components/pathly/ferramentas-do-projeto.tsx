@@ -11,6 +11,7 @@ import {
   Wrench,
 } from "lucide-react";
 import { Btn, Chip, Panel, SectionLabel, Skeleton } from "@/components/pathly/ui";
+import { Ciclo } from "@/components/pathly/ciclo";
 import { useProjeto } from "@/lib/blueprint/usar-projetos";
 import { contarProgresso, ondeEstou, useProgresso, useRoadmap } from "@/lib/blueprint/usar-roadmap";
 import { useFerramentaDoProjeto } from "@/lib/hub/ia/usar-ferramentas";
@@ -284,6 +285,15 @@ function ProximaTarefa({
 
   return (
     <div className="space-y-4">
+      {/*
+        O ciclo abre o painel, e não fecha.
+
+        Ele é o enquadramento de tudo que vem abaixo: a etapa, os números e os botões só fazem
+        sentido dentro de "estou em qual momento do trabalho?". Lido depois, seria um resumo do
+        que a pessoa já leu.
+      */}
+      <Ciclo passo={s?.currentStep ?? null} />
+
       <div>
         <SectionLabel>{naFaseDeResultado ? "Resultado a conferir" : "Próxima tarefa"}</SectionLabel>
         <p className="mt-1 font-display text-lg font-semibold">
@@ -300,7 +310,12 @@ function ProximaTarefa({
         </Chip>
         <Chip tone="accent">{analise.decisoes} decisão(ões) ativa(s)</Chip>
         {analise.erros > 0 && <Chip tone="primary">{analise.erros} erro(s) anotado(s)</Chip>}
-        {s && <Chip tone="muted">sessão em {ROTULO_PASSO[s.currentStep].toLowerCase()}</Chip>}
+        {/*
+          O passo exato continua ao lado do ciclo, e não some: o ciclo diz "implementar", e esta
+          etiqueta diz qual dos cinco passos da implementação. Quem precisa do detalhe não perde;
+          quem só quer o momento lê a linha de cima.
+        */}
+        {s && <Chip tone="muted">{ROTULO_PASSO[s.currentStep].toLowerCase()}</Chip>}
       </div>
 
       {analise.sessoesVivas > 1 && (
