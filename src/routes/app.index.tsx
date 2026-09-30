@@ -140,13 +140,16 @@ function TelaInicial() {
           <span className="mx-auto grid size-11 place-items-center rounded-xl border border-border bg-foreground text-background">
             <PathlyMark className="size-5" />
           </span>
-          <h1 className="mt-5 font-display text-3xl font-semibold text-balance sm:text-4xl">
-            O que vamos criar?
+          {/*
+            Uma linha só, e nada abaixo dela.
+
+            O subtítulo explicava o que cabia ali ("site, aplicação web, app de celular…") — mas
+            quem chega já sabe o que quer construir, e a lista ocupava três linhas para responder
+            uma pergunta que ninguém fez. O campo abaixo já mostra um exemplo no placeholder.
+          */}
+          <h1 className="mt-5 font-display text-4xl font-bold text-balance sm:text-5xl">
+            O que vamos construir?
           </h1>
-          <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-muted-foreground">
-            Site, aplicação web, app de celular ou de computador. Conte a ideia — o resto a gente
-            descobre conversando.
-          </p>
         </section>
 
         <div

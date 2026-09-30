@@ -5,7 +5,7 @@ import { ContextoDaConversa } from "@/components/pathly/contexto-da-conversa";
 import { cn } from "@/lib/utils";
 import { FerramentasDoProjeto } from "@/components/pathly/ferramentas-do-projeto";
 import { PainelDaParte } from "@/components/pathly/partes-do-projeto";
-import { estadoDasPartes, lerParte, type SlugDeParte } from "@/components/pathly/partes";
+import { lerParte, type SlugDeParte } from "@/components/pathly/partes";
 import { useProjeto } from "@/lib/blueprint/usar-projetos";
 
 export const Route = createFileRoute("/app/projeto/$id")({
@@ -69,8 +69,6 @@ function ProjectPage() {
   const projeto = estado.estado === "pronto" ? estado.projeto : null;
   const [assunto, setAssunto] = useState<string | null>(null);
 
-  const contagens = projeto ? estadoDasPartes(projeto) : {};
-
   /*
    * O painel só é montado quando há assunto E blueprint. `ContextoDaConversa` ainda decide sozinho
    * se tem o que mostrar, e devolve `null` na maioria dos assuntos — mas montá-lo à toa faria as
@@ -85,7 +83,7 @@ function ProjectPage() {
     return (
       <div className="lg:grid lg:grid-cols-[minmax(0,26rem)_minmax(0,1fr)] lg:items-start lg:gap-6">
         <div className="min-w-0 lg:order-2">
-          <PainelDaParte projetoId={id} parte={parte} estado={contagens} />
+          <PainelDaParte projetoId={id} parte={parte} />
         </div>
 
         {/*

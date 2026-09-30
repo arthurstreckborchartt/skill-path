@@ -64,15 +64,7 @@ const TELAS: Record<SlugDeParte, LazyExoticComponent<ComponentType<PropsDaTela>>
  * abre uma. O que sobrou neste arquivo é o painel.
  */
 
-export function PainelDaParte({
-  projetoId,
-  parte,
-  estado,
-}: {
-  projetoId: string;
-  parte: SlugDeParte;
-  estado: Partial<Record<SlugDeParte, string>>;
-}) {
+export function PainelDaParte({ projetoId, parte }: { projetoId: string; parte: SlugDeParte }) {
   const Tela = TELAS[parte];
 
   return (
@@ -102,32 +94,26 @@ export function PainelDaParte({
         Voltar à conversa
       </Link>
 
-      <div className="flex items-center gap-1 overflow-x-auto border-b border-border px-2 py-2">
-        {PARTES.map(({ slug, rotulo }) => (
-          <Link
-            key={slug}
-            to="/app/projeto/$id"
-            params={{ id: projetoId }}
-            search={{ parte: slug }}
-            className={cn(
-              "tap shrink-0 rounded-md px-2.5 py-1.5 text-xs whitespace-nowrap transition-colors",
-              slug === parte
-                ? "bg-foreground font-medium text-background"
-                : "text-muted-foreground hover:bg-surface-2 hover:text-foreground",
-            )}
-          >
-            {rotulo}
-            {estado[slug] && (
-              <span className="ml-1.5 font-mono tabular-nums opacity-70">{estado[slug]}</span>
-            )}
-          </Link>
-        ))}
+      {/*
+        A fileira de nove abas saiu daqui.
+
+        Ela duplicava a coluna da sidebar — os mesmos nove destinos, duas vezes na mesma tela — e
+        era a cópia pior: rolava horizontalmente e, medido em 1280px, já cortava "Validação" ao
+        meio e escondia Segurança e Publicar. Num aparelho escondia quase tudo, incluindo o X que
+        era a única saída do painel.
+
+        A sidebar faz esse trabalho melhor: coluna vertical, nome por extenso, ícone, contador, e
+        a parte aberta marcada. No celular ela é a gaveta, a um toque no nome do projeto.
+
+        Sobra aqui só a saída — "Voltar à conversa" no celular, o X no desktop.
+      */}
+      <div className="hidden justify-end border-b border-border px-2 py-2 lg:flex">
         <Link
           to="/app/projeto/$id"
           params={{ id: projetoId }}
           search={{}}
           aria-label="Fechar painel"
-          className="tap ml-auto grid size-7 shrink-0 place-items-center rounded-md text-muted-foreground hover:text-foreground"
+          className="tap grid size-7 place-items-center rounded-md text-muted-foreground hover:text-foreground"
         >
           <X className="size-4" />
         </Link>

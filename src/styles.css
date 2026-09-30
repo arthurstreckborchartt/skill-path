@@ -265,6 +265,17 @@
   }
 
   html {
+    /*
+     * 17px em vez dos 16 que o navegador assume.
+     *
+     * O Tailwind mede tudo em `rem`, então este número é a escala da interface inteira: texto,
+     * espaçamento e larguras crescem juntos, e nada desalinha. Subir só a fonte deixaria o texto
+     * grande dentro de caixas do tamanho antigo.
+     *
+     * São ~6%. Pouco para desarrumar a tela, o bastante para o corpo de texto sair de 14 para 15
+     * e a leitura no celular parar de exigir aproximação.
+     */
+    font-size: 17px;
     -webkit-font-smoothing: antialiased;
     scroll-behavior: smooth;
     /* Barra de rolagem fora do caminho: a rolagem continua igual, só não aparece. */
@@ -298,6 +309,14 @@
     background-attachment: fixed;
     color: var(--color-foreground);
     font-family: var(--font-sans);
+    /*
+     * 500 em vez de 400: o traço fica mais cheio sem virar negrito.
+     *
+     * O peso já vem no `css2?...wght@400;500;600;700`, então não custa download nenhum. Os títulos
+     * usam 600 e 700 e continuam se destacando do corpo; o que some é o cinza fino do texto
+     * secundário, que era justamente o mais difícil de ler em tela pequena.
+     */
+    font-weight: 500;
   }
 
   /*
