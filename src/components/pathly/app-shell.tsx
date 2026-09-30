@@ -74,7 +74,13 @@ function Coluna({ aoNavegar }: { aoNavegar?: () => void }) {
 
   return (
     <div className="flex h-full flex-col gap-1 p-3" onClick={aoNavegar}>
-      <Link to="/" className="tap mb-4 px-2 pt-1">
+      {/*
+        Dentro do app a logo leva ao app, não à landing.
+
+        Esta casca só é montada com sessão — quem clica aqui já entrou, e mandá-lo para a página
+        de venda é devolvê-lo à porta de um lugar onde ele já está.
+      */}
+      <Link to="/app" className="tap mb-4 px-2 pt-1">
         <Logo />
       </Link>
 
@@ -260,7 +266,8 @@ function AppShellInner() {
             )}
           </button>
         ) : (
-          <Link to="/" className="tap">
+          /* Mesmo motivo da logo da sidebar: com sessão, a logo é atalho para o app. */
+          <Link to="/app" className="tap">
             <Logo compact />
           </Link>
         )}
