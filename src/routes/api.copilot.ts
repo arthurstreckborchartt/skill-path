@@ -3,6 +3,7 @@ import { lerEnv } from "@/lib/server-env";
 import { LIMITES, recusaParaResposta, registrarUso } from "@/lib/limite-uso";
 import { lerJsonLimitado, texto } from "@/lib/entrada-segura";
 import { completarBlueprint, type Blueprint } from "@/lib/blueprint/contrato";
+import { lerRespostas } from "@/lib/blueprint/respostas";
 import { validarModelo } from "@/lib/banco/contrato";
 import { validarMapa } from "@/lib/api/contrato";
 import { validarPlano } from "@/lib/arquitetura-ia/contrato";
@@ -251,6 +252,15 @@ export const Route = createFileRoute("/api/copilot")({
 
         const fontes: FontesContexto = {
           nome: projeto.nome,
+          /*
+           * A coluna `respostas` já vinha do banco e era descartada. Passa a entrar no contexto
+           * porque é de lá que sai a plataforma — e sem ela o Copilot respondia sobre um app de
+           * celular como se fosse uma aplicação web.
+           *
+           * `lerRespostas` normaliza: um projeto criado antes dos dois eixos tem só o `tipo`
+           * antigo gravado, e é ela que traduz.
+           */
+          respostas: lerRespostas(projeto.respostas),
           blueprint,
           modelo,
           api,

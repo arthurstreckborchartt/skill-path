@@ -70,6 +70,43 @@ export function cobra(n: Natureza): boolean {
 }
 
 /**
+ * A restrição que a plataforma impõe, em texto, para ir dentro de um prompt.
+ *
+ * Mora aqui e não no gerador do blueprint porque **dois** consumidores precisam dela: o plano,
+ * quando é escrito, e o Copilot, toda vez que responde. Duas cópias diriam coisas diferentes sobre
+ * o mesmo projeto no mesmo dia — o plano falaria de revisão da App Store e o Copilot responderia
+ * como se fosse um site.
+ *
+ * Cada linha diz o que muda **naquela** plataforma, não o que ela é. O modelo já sabe o que é um
+ * app de celular; o que ele não sabe é que aqui a revisão da loja conta como prazo.
+ */
+export const RESTRICAO_DA_PLATAFORMA: Record<Plataforma, string> = {
+  site: "É um site: conteúdo que as pessoas leem. Não invente banco de dados, contas ou painel administrativo se as respostas não pediram. Priorize desempenho de carregamento, SEO e o texto das páginas.",
+  webapp:
+    "É uma aplicação web: roda no navegador, as pessoas entram e usam. Estado, sessão e navegação entre telas são o centro.",
+  celular:
+    "É um app de celular. Trate sempre que vier ao caso: publicação na App Store e na Play Store, com o tempo de revisão contado como prazo real e fora do controle de quem constrói; contas de desenvolvedor e seus custos anuais; assinatura de build; permissões do sistema; e comportamento sem rede. Entre nativo e multiplataforma, explique o porquê para ESTE projeto.",
+  desktop:
+    "É um app de computador. Trate sempre que vier ao caso: empacotamento por sistema operacional, instalador, assinatura de código (sem ela o sistema avisa que o app é suspeito) e como a atualização chega a quem já instalou.",
+  extensao:
+    "É uma extensão de navegador. Trate sempre que vier ao caso: o manifesto e suas permissões, a revisão da loja de extensões, e o limite do que uma extensão alcança na página.",
+  cli: "É uma ferramenta de linha de comando ou uma API, sem interface gráfica. Não proponha tela. A experiência é a saída do comando, as mensagens de erro e a documentação.",
+};
+
+/** O que o projeto precisa dizer sobre dinheiro — e quando dizer qualquer coisa seria invenção. */
+export const RESTRICAO_DA_NATUREZA: Record<Natureza, string> = {
+  pago: "Alguém paga para usar. O modelo de negócio, com faixa de preço e justificativa, é obrigatório.",
+  marketplace:
+    "Conecta dois lados e fica com uma parte. O modelo de negócio precisa dizer qual é a comissão e de qual lado ela sai.",
+  interno:
+    "É para uso interno, de uma equipe ou empresa. NÃO invente modelo de negócio, preço ou plano de aquisição de usuários — não há venda. O sucesso é o tempo que a equipe economiza.",
+  pessoal:
+    "É um projeto pessoal ou portfólio. NÃO invente modelo de negócio, preço, persona de cliente nem estratégia de aquisição. O sucesso é o projeto existir e representar bem quem o fez.",
+  gratuito:
+    "É gratuito e não há plano de cobrar. NÃO invente modelo de negócio nem preço. Trate o custo de operação como restrição real, já que ninguém paga por ele.",
+};
+
+/**
  * Plataformas que entregam pela loja de um terceiro.
  *
  * Muda a fase de publicação inteira: em vez de "colocar no ar", é empacotar, assinar, submeter e

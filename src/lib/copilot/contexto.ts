@@ -1,4 +1,11 @@
 import type { Blueprint } from "@/lib/blueprint/contrato";
+import {
+  RESTRICAO_DA_NATUREZA,
+  RESTRICAO_DA_PLATAFORMA,
+  ROTULO_NATUREZA,
+  ROTULO_PLATAFORMA,
+  type Respostas,
+} from "@/lib/blueprint/respostas";
 import type { ModeloDeDados } from "@/lib/banco/contrato";
 import type { MapaApi } from "@/lib/api/contrato";
 import type { PlanoIa } from "@/lib/arquitetura-ia/contrato";
@@ -49,6 +56,14 @@ export const ORCAMENTO_TOKENS = 8000;
 
 export type FontesContexto = {
   nome: string;
+  /**
+   * O que a pessoa respondeu — e é daqui que sai a plataforma.
+   *
+   * Sem isto o Copilot ficava cego: ele respondia sobre um app de celular como se fosse uma
+   * aplicação web, porque nada no contexto dizia o contrário. O blueprint tem stack e
+   * arquitetura, mas não diz que a entrega passa pela revisão de uma loja.
+   */
+  respostas: Respostas;
   blueprint: Blueprint;
   modelo: ModeloDeDados | null;
   api: MapaApi | null;
@@ -90,6 +105,18 @@ function nucleo(f: FontesContexto): string {
     if (fu.descricao) l.push(`O que é: ${fu.descricao}`);
     if (fu.persona) l.push(`Quem usa: ${fu.persona.nome}, ${fu.persona.papel}`);
   }
+
+  /*
+   * A plataforma entra no núcleo, que é a fatia que nunca é cortada por orçamento.
+   *
+   * Uma resposta sobre app de celular escrita como se fosse web não é um detalhe perdido: manda
+   * a pessoa construir a coisa errada. É a informação mais barata e mais decisiva do contexto —
+   * duas linhas que mudam o resto todo.
+   */
+  l.push(`Plataforma: ${ROTULO_PLATAFORMA[f.respostas.plataforma]}`);
+  l.push(RESTRICAO_DA_PLATAFORMA[f.respostas.plataforma]);
+  l.push(`Natureza: ${ROTULO_NATUREZA[f.respostas.natureza]}`);
+  l.push(RESTRICAO_DA_NATUREZA[f.respostas.natureza]);
 
   const st = f.blueprint.tecnico?.stack;
   if (st) l.push(`Stack: ${st.frontend} / ${st.backend} / ${st.banco} / ${st.hospedagem}`);
