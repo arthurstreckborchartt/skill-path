@@ -10,6 +10,7 @@ import { PathlyMark } from "@/components/pathly/project-chat";
 import { ProgressBar, Skeleton } from "@/components/pathly/ui";
 import { useDigitando } from "@/components/pathly/usar-digitando";
 import { criarProjeto, useProjetos, type Projeto } from "@/lib/blueprint/usar-projetos";
+import { useContagens, type Contagem } from "@/lib/blueprint/usar-contagem";
 import { RESPOSTAS_VAZIAS } from "@/lib/blueprint/respostas";
 
 export const Route = createFileRoute("/app/")({
@@ -85,6 +86,8 @@ function TelaInicial() {
   }
 
   const recentes = projetos.estado === "pronta" ? projetos.projetos.slice(0, 6) : [];
+  // Uma consulta para todos os recentes, em vez de uma por cartao.
+  const contagens = useContagens(recentes);
 
   return (
     <div className="mx-auto flex min-h-[calc(100vh-14rem)] max-w-2xl flex-col justify-center py-6">
@@ -162,7 +165,7 @@ function TelaInicial() {
           </div>
           <div className="mt-3 space-y-1.5">
             {recentes.map((p) => (
-              <CartaoDeProjeto key={p.id} projeto={p} />
+              <CartaoDeProjeto key={p.id} projeto={p} contagem={contagens?.get(p.id) ?? null} />
             ))}
           </div>
         </section>
@@ -177,12 +180,22 @@ function TelaInicial() {
  * Três informações, e nenhuma métrica além delas. A pergunta que esta lista responde é "qual
  * deles eu continuo?" — e para isso basta saber em qual você estava e quanto falta.
  */
-function CartaoDeProjeto({ projeto }: { projeto: Projeto }) {
-  const pct =
-    projeto.etapasTotal > 0
-      ? Math.round((projeto.etapasConcluidas / projeto.etapasTotal) * 100)
-      : 0;
-
+function CartaoDeProjeto({
+  projeto,
+  contagem,
+}: {
+  projeto: Projeto;
+  /**
+   * `null` enquanto a contagem não chegou.
+   *
+   * A barra some nesse intervalo em vez de mostrar 0%. Um zero antes do dado é uma resposta
+   * errada — a pessoa lê "não fiz nada" quando a verdade é "ainda não sei".
+   *
+   * Não uso `projeto.etapasConcluidas`: a coluna do banco não é atualizada quando alguém conclui
+   * uma etapa, e num projeto real ela dizia 0 com duas etapas feitas. Ver `useContagens`.
+   */
+  contagem: Contagem | null;
+}) {
   return (
     <Link
       to="/app/projeto/$id"
@@ -195,11 +208,11 @@ function CartaoDeProjeto({ projeto }: { projeto: Projeto }) {
           {quando(projeto.atualizadoEm)}
         </span>
       </div>
-      {projeto.etapasTotal > 0 && (
+      {contagem && contagem.total > 0 && (
         <div className="mt-2 flex items-center gap-2.5">
-          <ProgressBar value={pct} className="h-1" />
+          <ProgressBar value={contagem.pct} className="h-1" />
           <span className="shrink-0 font-mono text-xs tabular-nums text-muted-foreground">
-            {pct}%
+            {contagem.feitas}/{contagem.total}
           </span>
         </div>
       )}

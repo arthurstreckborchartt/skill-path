@@ -85,18 +85,28 @@ function blocosProntos(bp: Blueprint): number {
 /**
  * Os números que aparecem ao lado do nome.
  *
- * Só dois, e de propósito: Plano e Etapas contam o que a própria linha do projeto já carrega. As
- * outras seis moram em tabelas próprias, e buscá-las custaria seis idas ao banco toda vez que
- * alguém abre a conversa — caro demais para um número numa coluna lateral.
+ * ## Por que Etapas vem de fora
  *
- * O dia em que essas contas vierem numa consulta só, elas entram aqui sem mudar nada da forma.
+ * `Plano` sai do próprio blueprint: contar blocos gerados é olhar o objeto que a tela já tem.
+ *
+ * `Etapas` **não pode** sair de `projeto.etapasConcluidas` / `etapasTotal`. Medido em produção:
+ * as colunas diziam `0/15` enquanto o projeto tinha 2 etapas concluídas e 13 no roadmap. A de
+ * concluídas nunca é atualizada, e a de total conta as etapas do blueprint em vez das que
+ * sobrevivem à filtragem de fases.
+ *
+ * O sintoma era a sidebar dizendo `Etapas 0/15` com o painel logo ao lado dizendo `2/13`. Agora a
+ * contagem chega por `contagem`, de `useContagens` — a mesma fonte que a home usa.
+ *
+ * As outras sete partes não mostram número: moram em tabelas próprias, e buscá-las custaria sete
+ * idas ao banco toda vez que alguém abre a conversa.
  */
-export function estadoDasPartes(projeto: Projeto): Partial<Record<SlugDeParte, string>> {
+export function estadoDasPartes(
+  projeto: Projeto,
+  contagem?: { feitas: number; total: number } | null,
+): Partial<Record<SlugDeParte, string>> {
   const prontos = blocosProntos(projeto.conteudo);
   return {
     ...(prontos > 0 ? { plano: `${prontos}/${BLOCOS.length}` } : {}),
-    ...(projeto.etapasTotal > 0
-      ? { etapas: `${projeto.etapasConcluidas}/${projeto.etapasTotal}` }
-      : {}),
+    ...(contagem && contagem.total > 0 ? { etapas: `${contagem.feitas}/${contagem.total}` } : {}),
   };
 }

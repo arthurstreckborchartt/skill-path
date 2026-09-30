@@ -7,6 +7,7 @@ import { FundoAnimado } from "./fundo-animado";
 import { AvatarConta } from "./avatar-conta";
 import { cn } from "@/lib/utils";
 import { useProjetos } from "@/lib/blueprint/usar-projetos";
+import { useContagens } from "@/lib/blueprint/usar-contagem";
 import { PARTES, estadoDasPartes } from "./partes";
 
 /**
@@ -67,7 +68,9 @@ function Coluna({ aoNavegar }: { aoNavegar?: () => void }) {
    * Os contadores saem da linha do projeto que a lista já trouxe — nenhuma consulta a mais.
    * "Etapas 7/18" ao lado do nome é o que responde "como está isto?" sem abrir nada.
    */
-  const contagens = aberto ? estadoDasPartes(aberto) : {};
+  // A contagem de etapas vem do roadmap derivado, nao das colunas da linha — ver estadoDasPartes.
+  const contagem = useContagens(aberto ? [aberto] : [])?.get(aberto?.id ?? "") ?? null;
+  const contagens = aberto ? estadoDasPartes(aberto, contagem) : {};
 
   return (
     <div className="flex h-full flex-col gap-1 p-3" onClick={aoNavegar}>
@@ -237,7 +240,9 @@ function AppShellInner() {
           type="button"
           onClick={() => setGaveta(true)}
           aria-label="Abrir projetos"
-          className="tap grid size-10 place-items-center rounded-md text-muted-foreground hover:text-foreground"
+          /* size-11 = 44px. Medido em 375px: com `size-10` ficava em 40px, e é o único jeito de
+             chegar à lista de projetos num aparelho. */
+          className="tap grid size-11 place-items-center rounded-md text-muted-foreground hover:text-foreground"
         >
           <Menu className="size-5" />
         </button>
