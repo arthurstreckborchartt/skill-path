@@ -187,6 +187,12 @@ const PALAVRAS: Record<Exclude<Faceta, "geral">, string[]> = {
     "dominio",
     "domínio",
     "ssl",
+    // "colocar no ar" é como as pessoas dizem em português; nenhuma delas escreve "fazer deploy"
+    // na primeira vez.
+    "no ar",
+    "subir o",
+    "lancar",
+    "lançar",
   ],
   erro: [
     "erro",
@@ -291,12 +297,32 @@ export type Roteamento = {
  * `facetaDaTela` vem de onde o Copilot foi aberto. Ela entra no resultado mesmo quando a pergunta
  * não menciona nada daquele assunto — é o que faz "não entendi essa parte" funcionar.
  */
+/**
+ * As palavras de cada faceta, normalizadas e **sem repetição**.
+ *
+ * As listas trazem variantes acentuadas e não acentuadas do mesmo termo — "usuario" e "usuário",
+ * "publico" e "público", "preco" e "preço". Depois de `semAcento` as duas viram a mesma coisa, e
+ * a contagem dobrava: uma frase com "usuários" dava **dois** pontos para `produto` em vez de um.
+ *
+ * O efeito era invisível enquanto o roteador só escolhia fatia de prompt. Virou visível quando ele
+ * passou a mover um painel na tela: "como eu modelo a tabela de usuarios?" caía em `produto`,
+ * porque o ponto dobrado vencia o "tabela" de `banco`.
+ *
+ * Calculado uma vez, no carregamento do módulo — não a cada pergunta.
+ */
+const PALAVRAS_NORMALIZADAS = Object.fromEntries(
+  (Object.entries(PALAVRAS) as [Faceta, string[]][]).map(([faceta, palavras]) => [
+    faceta,
+    [...new Set(palavras.map(semAcento))],
+  ]),
+) as Record<Exclude<Faceta, "geral">, string[]>;
+
 export function rotear(pergunta: string, facetaDaTela?: Faceta): Roteamento {
   const texto = semAcento(pergunta);
   const pontos: Partial<Record<Faceta, number>> = {};
 
-  for (const [faceta, palavras] of Object.entries(PALAVRAS) as [Faceta, string[]][]) {
-    const n = palavras.filter((p) => casa(texto, semAcento(p))).length;
+  for (const [faceta, palavras] of Object.entries(PALAVRAS_NORMALIZADAS) as [Faceta, string[]][]) {
+    const n = palavras.filter((p) => casa(texto, p)).length;
     if (n > 0) pontos[faceta] = n;
   }
 

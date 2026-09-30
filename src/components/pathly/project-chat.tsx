@@ -42,7 +42,20 @@ export function PathlyMark({ className }: { className?: string }) {
   );
 }
 
-export function ProjectChat({ projetoId }: { projetoId: string }) {
+export function ProjectChat({
+  projetoId,
+  aoMudarAssunto,
+}: {
+  projetoId: string;
+  /**
+   * A última coisa que a pessoa escreveu, avisada para fora.
+   *
+   * Existe para o painel de contexto da direita saber sobre o que a conversa está. A alternativa
+   * seria a página chamar `useCopilot` também, e aí seriam duas leituras da mesma conversa — duas
+   * requisições e duas verdades sobre qual é a última mensagem.
+   */
+  aoMudarAssunto?: (pergunta: string | null) => void;
+}) {
   const { estado, perguntar, aprovar, rejeitar, carregarMais } = useCopilot(projetoId, "produto");
   const [texto, setTexto] = useState("");
   const [modo, setModo] = useState<Modo | undefined>();
@@ -68,6 +81,20 @@ export function ProjectChat({ projetoId }: { projetoId: string }) {
   useEffect(() => {
     if (!estado.respondendo) inputRef.current?.focus();
   }, [estado.respondendo]);
+
+  /*
+   * A última pergunta da pessoa, avisada para fora quando muda.
+   *
+   * A do usuário e não a resposta do Pathly: o assunto de uma conversa é o que **ela** trouxe. A
+   * resposta fala do mesmo assunto por definição, e rotear por ela só acrescentaria as palavras
+   * que o modelo escolheu.
+   */
+  const ultimaPergunta =
+    [...estado.mensagens].reverse().find((m) => m.papel === "usuario")?.texto ?? null;
+
+  useEffect(() => {
+    aoMudarAssunto?.(ultimaPergunta);
+  }, [ultimaPergunta, aoMudarAssunto]);
 
   /*
    * A primeira mensagem do projeto, vinda da tela de criação pelo `sessionStorage`.

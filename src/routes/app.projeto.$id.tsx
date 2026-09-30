@@ -1,5 +1,8 @@
+import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { ProjectChat } from "@/components/pathly/project-chat";
+import { ContextoDaConversa } from "@/components/pathly/contexto-da-conversa";
+import { cn } from "@/lib/utils";
 import { FerramentasDoProjeto } from "@/components/pathly/ferramentas-do-projeto";
 import { PainelDaParte } from "@/components/pathly/partes-do-projeto";
 import { estadoDasPartes, lerParte, type SlugDeParte } from "@/components/pathly/partes";
@@ -64,8 +67,19 @@ function ProjectPage() {
   const { parte } = Route.useSearch();
   const { estado } = useProjeto(id);
   const projeto = estado.estado === "pronto" ? estado.projeto : null;
+  const [assunto, setAssunto] = useState<string | null>(null);
 
   const contagens = projeto ? estadoDasPartes(projeto) : {};
+
+  /*
+   * O painel só é montado quando há assunto E blueprint. `ContextoDaConversa` ainda decide sozinho
+   * se tem o que mostrar, e devolve `null` na maioria dos assuntos — mas montá-lo à toa faria as
+   * consultas de banco e API dispararem em conversas que não falam disso.
+   */
+  const contexto =
+    projeto && assunto ? (
+      <ContextoDaConversa projetoId={id} blueprint={projeto.conteudo} ultimaPergunta={assunto} />
+    ) : null;
 
   if (parte) {
     return (
@@ -81,10 +95,26 @@ function ProjectPage() {
     );
   }
 
+  /*
+   * A conversa é centrada enquanto não há contexto, e desliza para a esquerda quando um painel
+   * aparece — em vez de encolher no lugar. Deslizar mantém a coluna de texto na mesma largura, e
+   * é a linha do texto que a leitura acompanha; encolher reformataria tudo a cada assunto novo.
+   */
   return (
-    <div className="mx-auto w-full max-w-3xl space-y-5">
-      <ProjectChat projetoId={id} />
-      <FerramentasDoProjeto projetoId={id} />
+    <div
+      className={cn(
+        "mx-auto flex w-full flex-col gap-5",
+        contexto
+          ? "max-w-5xl lg:grid lg:grid-cols-[minmax(0,1fr)_16rem] lg:items-start lg:gap-6"
+          : "max-w-3xl",
+      )}
+    >
+      <div className="min-w-0 space-y-5">
+        <ProjectChat projetoId={id} aoMudarAssunto={setAssunto} />
+        <FerramentasDoProjeto projetoId={id} />
+      </div>
+
+      {contexto && <div className="lg:sticky lg:top-8">{contexto}</div>}
     </div>
   );
 }
