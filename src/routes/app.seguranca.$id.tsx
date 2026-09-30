@@ -21,7 +21,7 @@ import { Spinner } from "@/components/ui/spell-spinner";
 export const Route = createFileRoute("/app/seguranca/$id")({
   staticData: { sitemap: false },
   head: () => ({ meta: [{ title: "Segurança — Pathly" }] }),
-  component: TelaSeguranca,
+  component: RotaSeguranca,
 });
 
 const ABAS = [
@@ -33,8 +33,13 @@ const ABAS = [
 ] as const;
 type Aba = (typeof ABAS)[number]["id"];
 
-function TelaSeguranca() {
+/** A rota. Existe so para tirar o id da URL e entregar — a tela mesma tambem roda no painel. */
+function RotaSeguranca() {
   const { id } = Route.useParams();
+  return <TelaSeguranca id={id} />;
+}
+
+export function TelaSeguranca({ id, emPainel }: { id: string; emPainel?: boolean }) {
   const { estado: estadoProjeto } = useProjeto(id);
   const { estado, buscando, buscarExtras, alternarItem } = useSeguranca(id);
   const [aba, setAba] = useState<Aba>("achados");
@@ -80,13 +85,15 @@ function TelaSeguranca() {
 
   const cabecalho = (
     <div>
-      <Link
-        to="/app/blueprint/$id"
-        params={{ id }}
-        className="tap inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
-      >
-        <ArrowLeft className="size-4" /> Plano do projeto
-      </Link>
+      {!emPainel && (
+        <Link
+          to="/app/blueprint/$id"
+          params={{ id }}
+          className="tap inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+        >
+          <ArrowLeft className="size-4" /> Plano do projeto
+        </Link>
+      )}
       <h1 className="mt-3 font-display text-2xl font-semibold sm:text-3xl">
         Segurança — {projeto.nome}
       </h1>

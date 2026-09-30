@@ -35,6 +35,9 @@ import {
   type Tecnico,
 } from "@/lib/blueprint/contrato";
 import { gerarBloco, salvarRespostas, useProjeto } from "@/lib/blueprint/usar-projetos";
+// `import type` e não import: `partes-do-projeto` carrega esta tela por `lazy`, e um import de
+// valor fecharia o ciclo. O tipo some na compilação, então em tempo de execução não há seta.
+import type { SlugDeParte } from "@/components/pathly/partes";
 import { Spinner } from "@/components/ui/spell-spinner";
 
 export const Route = createFileRoute("/app/blueprint/$id")({
@@ -42,7 +45,7 @@ export const Route = createFileRoute("/app/blueprint/$id")({
   // Título fixo: o nome do projeto só existe depois da consulta, que é do cliente. Sem isto a
   // aba herdava o título da raiz, que fala de estudo e não tem nada a ver com esta tela.
   head: () => ({ meta: [{ title: "Plano do projeto — Pathly" }] }),
-  component: TelaBlueprint,
+  component: RotaBlueprint,
 });
 
 const TITULO: Record<Bloco, string> = {
@@ -93,8 +96,34 @@ const PORQUE_TRANCADO: Record<Bloco, string> = {
     "A ordem de construir sai do modelo de dados. Sem ele, a trilha vira uma lista de tarefas soltas que não encaixam.",
 };
 
-function TelaBlueprint() {
+/** As seis partes que esta tela atalha, e a rota de cada uma quando ela roda como página. */
+type RotaDeParte =
+  | "/app/roadmap/$id"
+  | "/app/banco/$id"
+  | "/app/api/$id"
+  | "/app/arquitetura-ia/$id"
+  | "/app/validacao/$id"
+  | "/app/seguranca/$id";
+
+/** A rota. Existe so para tirar o id da URL e entregar — a tela mesma tambem roda no painel. */
+function RotaBlueprint() {
   const { id } = Route.useParams();
+  return <TelaBlueprint id={id} />;
+}
+
+export function TelaBlueprint({ id, emPainel }: { id: string; emPainel?: boolean }) {
+  /**
+   * Para onde os atalhos desta tela levam.
+   *
+   * Como página, para a rota da parte. Dentro do painel, para a mesma parte **no painel** — senão
+   * um cartão que diz "Abrir" tiraria a conversa da tela, que é exatamente o que o painel existe
+   * para evitar.
+   */
+  const destino = (rota: RotaDeParte, parte: SlugDeParte) =>
+    emPainel
+      ? ({ to: "/app/projeto/$id", params: { id }, search: { parte } } as const)
+      : ({ to: rota, params: { id } } as const);
+
   const { estado, aplicar } = useProjeto(id);
   const [gerando, setGerando] = useState<Bloco | null>(null);
   const [erro, setErro] = useState<string | null>(null);
@@ -198,8 +227,7 @@ function TelaBlueprint() {
       {conteudo.execucao && (
         <Reveal>
           <Link
-            to="/app/roadmap/$id"
-            params={{ id }}
+            {...destino("/app/roadmap/$id", "etapas")}
             className="tap group flex items-center justify-between gap-4 rounded-md border border-foreground/20 bg-surface p-5 transition-colors hover:bg-surface-2"
           >
             <div className="min-w-0">
@@ -226,8 +254,7 @@ function TelaBlueprint() {
       {conteudo.produto && (
         <Reveal>
           <Link
-            to="/app/banco/$id"
-            params={{ id }}
+            {...destino("/app/banco/$id", "dados")}
             className="tap group flex items-center justify-between gap-4 rounded-xl border border-border bg-surface/50 p-5 transition-colors hover:border-primary/30"
           >
             <div className="min-w-0">
@@ -251,8 +278,7 @@ function TelaBlueprint() {
       {conteudo.produto && (
         <Reveal>
           <Link
-            to="/app/api/$id"
-            params={{ id }}
+            {...destino("/app/api/$id", "api")}
             className="tap group flex items-center justify-between gap-4 rounded-xl border border-border bg-surface/50 p-5 transition-colors hover:border-primary/30"
           >
             <div className="min-w-0">
@@ -279,8 +305,7 @@ function TelaBlueprint() {
       */}
       <Reveal>
         <Link
-          to="/app/validacao/$id"
-          params={{ id }}
+          {...destino("/app/validacao/$id", "validacao")}
           className="panel panel-hover tap group grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 p-5 sm:p-6"
         >
           <div className="min-w-0">
@@ -308,8 +333,7 @@ function TelaBlueprint() {
       {conteudo.produto && (
         <Reveal>
           <Link
-            to="/app/arquitetura-ia/$id"
-            params={{ id }}
+            {...destino("/app/arquitetura-ia/$id", "ia")}
             className="tap group flex items-center justify-between gap-4 rounded-xl border border-border bg-surface/50 p-5 transition-colors hover:border-primary/30"
           >
             <div className="min-w-0">
@@ -338,8 +362,7 @@ function TelaBlueprint() {
       */}
       <Reveal>
         <Link
-          to="/app/seguranca/$id"
-          params={{ id }}
+          {...destino("/app/seguranca/$id", "seguranca")}
           className="tap group flex items-center justify-between gap-4 rounded-xl border border-border bg-surface/50 p-5 transition-colors hover:border-primary/30"
         >
           <div className="min-w-0">

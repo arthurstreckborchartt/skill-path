@@ -43,7 +43,7 @@ export const Route = createFileRoute("/app/lancamento/$id")({
       },
     ],
   }),
-  component: TelaLancamento,
+  component: RotaLancamento,
 });
 
 /** Como cada estado se apresenta sem depender de cor — a identidade é monocromática. */
@@ -60,8 +60,13 @@ const ROTULO_FONTE: Record<Fonte, string> = {
   pendente: "Ninguém conferiu ainda",
 };
 
-function TelaLancamento() {
+/** A rota. Existe so para tirar o id da URL e entregar — a tela mesma tambem roda no painel. */
+function RotaLancamento() {
   const { id } = Route.useParams();
+  return <TelaLancamento id={id} />;
+}
+
+export function TelaLancamento({ id, emPainel }: { id: string; emPainel?: boolean }) {
   const { estado, relatorio, sondando, sondarBanco, confirmarPasso, erroConfirmacao } =
     useLancamento(id);
   const [ambienteAberto, setAmbienteAberto] = useState<Ambiente | null>(null);

@@ -1,106 +1,155 @@
+import { lazy, Suspense, type ComponentType, type LazyExoticComponent } from "react";
 import { Link } from "@tanstack/react-router";
-import {
-  Database,
-  ListChecks,
-  type LucideIcon,
-  Map as MapIcon,
-  Plug,
-  Rocket,
-  ShieldCheck,
-  Sparkles,
-  SquareCheck,
-} from "lucide-react";
+import { X } from "lucide-react";
+import { Skeleton } from "./ui";
+import { PARTES, type SlugDeParte } from "./partes";
 import { cn } from "@/lib/utils";
-import { BLOCOS, type Blueprint } from "@/lib/blueprint/contrato";
 import type { Projeto } from "@/lib/blueprint/usar-projetos";
 
 /**
- * As partes de um projeto, numa coluna só.
+ * As partes de um projeto — a coluna, as abas e o painel que as abre sem tirar a conversa da tela.
  *
- * ## O problema que ela resolve
+ * ## O que mudou
  *
- * Plano, Etapas, Dados, API, Arquitetura de IA, Validação, Segurança e Lançamento eram oito
- * destinos separados, e a única forma de saber o estado de um era abrir. A pessoa não tinha
- * resposta para "o que já está de pé neste projeto?" sem visitar oito telas.
+ * Plano, Etapas, Dados, API, IA, Validação, Segurança e Lançamento eram oito rotas. Abrir uma
+ * substituía a tela inteira, e a conversa — que é o centro do produto — desaparecia.
  *
- * Agora as oito ficam numa coluna ao lado da conversa, com o estado escrito ao lado do nome. É a
- * diferença entre uma navegação e um painel: uma leva a algum lugar, o outro **informa** antes de
- * levar.
+ * As oito telas foram soltas da própria rota: cada uma recebe o `id` por prop em vez de chamar
+ * `Route.useParams()`. Com isso a mesma tela roda dentro deste painel, e as rotas continuam
+ * existindo como casca de duas linhas — todo link que já existia continua abrindo.
  *
- * ## Por que só duas mostram número
+ * ## Por que `lazy`
  *
- * Plano e Etapas contam o que o próprio projeto já carrega — os blocos gerados e o progresso da
- * trilha, os dois lidos de uma única linha que a tela já tinha em mãos. As outras seis moram em
- * tabelas próprias, e buscá-las aqui custaria seis idas ao banco toda vez que alguém abre a
- * conversa.
- *
- * Um número que custa seis requisições para aparecer numa coluna lateral não vale o que atrasa. O
- * dia em que essas contas vierem numa consulta só, elas entram aqui sem mudar nada da forma.
+ * Importar as oito direto puxaria todas para o pacote da conversa, e quem só quer conversar
+ * baixaria oito telas que não vai abrir. Com `lazy` o código continua dividido e cada parte chega
+ * quando é pedida.
  */
 
-type Parte = {
-  rotulo: string;
-  icone: LucideIcon;
-  rota:
-    | "/app/blueprint/$id"
-    | "/app/roadmap/$id"
-    | "/app/banco/$id"
-    | "/app/api/$id"
-    | "/app/arquitetura-ia/$id"
-    | "/app/validacao/$id"
-    | "/app/seguranca/$id"
-    | "/app/lancamento/$id";
+type PropsDaTela = { id: string; emPainel?: boolean };
+
+const TELAS: Record<SlugDeParte, LazyExoticComponent<ComponentType<PropsDaTela>>> = {
+  plano: lazy(() =>
+    import("@/routes/app.blueprint.$id").then((m) => ({ default: m.TelaBlueprint })),
+  ),
+  etapas: lazy(() => import("@/routes/app.roadmap.$id").then((m) => ({ default: m.TelaRoadmap }))),
+  dados: lazy(() => import("@/routes/app.banco.$id").then((m) => ({ default: m.TelaBanco }))),
+  api: lazy(() => import("@/routes/app.api.$id").then((m) => ({ default: m.TelaApi }))),
+  ia: lazy(() =>
+    import("@/routes/app.arquitetura-ia.$id").then((m) => ({ default: m.TelaArquiteturaIa })),
+  ),
+  validacao: lazy(() =>
+    import("@/routes/app.validacao.$id").then((m) => ({ default: m.TelaValidacao })),
+  ),
+  seguranca: lazy(() =>
+    import("@/routes/app.seguranca.$id").then((m) => ({ default: m.TelaSeguranca })),
+  ),
+  publicar: lazy(() =>
+    import("@/routes/app.lancamento.$id").then((m) => ({ default: m.TelaLancamento })),
+  ),
 };
 
-const PARTES: readonly Parte[] = [
-  { rotulo: "Plano", icone: MapIcon, rota: "/app/blueprint/$id" },
-  { rotulo: "Etapas", icone: ListChecks, rota: "/app/roadmap/$id" },
-  { rotulo: "Dados", icone: Database, rota: "/app/banco/$id" },
-  { rotulo: "API", icone: Plug, rota: "/app/api/$id" },
-  { rotulo: "IA", icone: Sparkles, rota: "/app/arquitetura-ia/$id" },
-  { rotulo: "Validação", icone: SquareCheck, rota: "/app/validacao/$id" },
-  { rotulo: "Segurança", icone: ShieldCheck, rota: "/app/seguranca/$id" },
-  { rotulo: "Publicar", icone: Rocket, rota: "/app/lancamento/$id" },
-];
-
-/** Quantos dos cinco blocos do blueprint já existem. */
-function blocosProntos(bp: Blueprint): number {
-  return BLOCOS.filter((b) => bp[b]).length;
-}
-
-export function PartesDoProjeto({ projeto }: { projeto: Projeto }) {
-  const prontos = blocosProntos(projeto.conteudo);
-
-  const estado: Record<string, string | null> = {
-    Plano: prontos === 0 ? null : `${prontos}/${BLOCOS.length}`,
-    Etapas: projeto.etapasTotal === 0 ? null : `${projeto.etapasConcluidas}/${projeto.etapasTotal}`,
-  };
-
+export function PartesDoProjeto({
+  projeto,
+  aberta,
+  estado,
+}: {
+  projeto: Projeto;
+  aberta: SlugDeParte | null;
+  estado: Partial<Record<SlugDeParte, string>>;
+}) {
   return (
     <nav aria-label="Partes do projeto" className="flex flex-col gap-0.5">
-      {PARTES.map(({ rotulo, icone: Icone, rota }) => (
+      {PARTES.map(({ slug, rotulo, icone: Icone }) => (
         <Link
-          key={rotulo}
-          to={rota}
+          key={slug}
+          to="/app/projeto/$id"
           params={{ id: projeto.id }}
-          className="tap flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm text-muted-foreground transition-colors hover:bg-surface-2 hover:text-foreground"
+          search={{ parte: slug }}
+          className={cn(
+            "tap flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm transition-colors",
+            slug === aberta
+              ? "bg-surface-2 font-medium text-foreground"
+              : "text-muted-foreground hover:bg-surface-2 hover:text-foreground",
+          )}
         >
           <Icone className="size-4 shrink-0" />
           <span className="truncate">{rotulo}</span>
-          {estado[rotulo] && (
-            <span
-              className={cn(
-                "ml-auto shrink-0 font-mono text-xs tabular-nums",
-                // O número em si não vira sinal de alarme: é contagem, não estado de erro. O
-                // monocromático do produto não deixaria indicar por cor de qualquer forma.
-                "text-muted-foreground",
-              )}
-            >
-              {estado[rotulo]}
+          {estado[slug] && (
+            // Contagem, não alarme — e num produto monocromático não haveria cor para dizer isso.
+            <span className="ml-auto shrink-0 font-mono text-xs tabular-nums text-muted-foreground">
+              {estado[slug]}
             </span>
           )}
         </Link>
       ))}
     </nav>
+  );
+}
+
+export function PainelDaParte({
+  projetoId,
+  parte,
+  estado,
+}: {
+  projetoId: string;
+  parte: SlugDeParte;
+  estado: Partial<Record<SlugDeParte, string>>;
+}) {
+  const Tela = TELAS[parte];
+
+  return (
+    <section
+      aria-label={PARTES.find((p) => p.slug === parte)?.rotulo}
+      className="rounded-lg border border-border bg-surface"
+    >
+      {/*
+        As abas ficam no topo do painel, e não numa terceira coluna: com o painel aberto o que
+        falta é espaço horizontal, e uma coluna a mais espremeria a conversa até ela deixar de
+        servir para conversar.
+      */}
+      <div className="flex items-center gap-1 overflow-x-auto border-b border-border px-2 py-2">
+        {PARTES.map(({ slug, rotulo }) => (
+          <Link
+            key={slug}
+            to="/app/projeto/$id"
+            params={{ id: projetoId }}
+            search={{ parte: slug }}
+            className={cn(
+              "tap shrink-0 rounded-md px-2.5 py-1.5 text-xs whitespace-nowrap transition-colors",
+              slug === parte
+                ? "bg-foreground font-medium text-background"
+                : "text-muted-foreground hover:bg-surface-2 hover:text-foreground",
+            )}
+          >
+            {rotulo}
+            {estado[slug] && (
+              <span className="ml-1.5 font-mono tabular-nums opacity-70">{estado[slug]}</span>
+            )}
+          </Link>
+        ))}
+        <Link
+          to="/app/projeto/$id"
+          params={{ id: projetoId }}
+          search={{}}
+          aria-label="Fechar painel"
+          className="tap ml-auto grid size-7 shrink-0 place-items-center rounded-md text-muted-foreground hover:text-foreground"
+        >
+          <X className="size-4" />
+        </Link>
+      </div>
+
+      <div className="p-4 sm:p-5">
+        <Suspense
+          fallback={
+            <div className="space-y-3">
+              <Skeleton className="h-6 w-1/3 rounded-md" />
+              <Skeleton className="h-40 rounded-lg" />
+            </div>
+          }
+        >
+          <Tela id={projetoId} emPainel />
+        </Suspense>
+      </div>
+    </section>
   );
 }

@@ -38,12 +38,26 @@ export const Route = createFileRoute("/app/roadmap/$id")({
     const n = Number(busca["etapa"]);
     return Number.isInteger(n) && n > 0 ? { etapa: n } : {};
   },
-  component: TelaRoadmap,
+  component: RotaRoadmap,
 });
 
-function TelaRoadmap() {
+/** A rota. Tira o id e a etapa da URL e entrega — a tela mesma tambem roda dentro do painel. */
+function RotaRoadmap() {
   const { id } = Route.useParams();
-  const { etapa: etapaDaUrl } = Route.useSearch();
+  const { etapa } = Route.useSearch();
+  return <TelaRoadmap id={id} {...(etapa ? { etapaInicial: etapa } : {})} />;
+}
+
+export function TelaRoadmap({
+  id,
+  etapaInicial,
+  emPainel,
+}: {
+  id: string;
+  etapaInicial?: number;
+  emPainel?: boolean;
+}) {
+  const etapaDaUrl = etapaInicial;
   const { estado } = useProjeto(id);
   const { porOrdem, salvar } = useProgresso(id);
   const [aberta, setAberta] = useState<number | null>(etapaDaUrl ?? null);
@@ -104,13 +118,15 @@ function TelaRoadmap() {
   return (
     <div className="space-y-6">
       <div>
-        <Link
-          to="/app/blueprint/$id"
-          params={{ id }}
-          className="tap inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
-        >
-          <ArrowLeft className="size-4" /> Plano do projeto
-        </Link>
+        {!emPainel && (
+          <Link
+            to="/app/blueprint/$id"
+            params={{ id }}
+            className="tap inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft className="size-4" /> Plano do projeto
+          </Link>
+        )}
         <h1 className="mt-3 font-display text-2xl font-semibold sm:text-3xl">{projeto.nome}</h1>
       </div>
 

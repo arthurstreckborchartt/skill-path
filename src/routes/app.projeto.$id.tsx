@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ProjectChat } from "@/components/pathly/project-chat";
 import { FerramentasDoProjeto } from "@/components/pathly/ferramentas-do-projeto";
-import { PartesDoProjeto } from "@/components/pathly/partes-do-projeto";
+import { PainelDaParte, PartesDoProjeto } from "@/components/pathly/partes-do-projeto";
+import { estadoDasPartes, lerParte, type SlugDeParte } from "@/components/pathly/partes";
 import { SectionLabel, Skeleton } from "@/components/pathly/ui";
 import { useProjeto } from "@/lib/blueprint/usar-projetos";
 
@@ -20,29 +21,59 @@ export const Route = createFileRoute("/app/projeto/$id")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
+  /**
+   * `?parte=dados` abre aquela parte ao lado da conversa.
+   *
+   * Na URL, e não em estado de componente, por três razões: o botão voltar do navegador fecha o
+   * painel como a pessoa espera, o endereço pode ser compartilhado com a parte já aberta, e
+   * recarregar não perde onde ela estava.
+   *
+   * `lerParte` só aceita os oito slugs conhecidos. Qualquer outra coisa vira `null` e o painel não
+   * abre — um valor vindo da URL é entrada externa, e aqui ele escolhe qual componente renderiza.
+   */
+  validateSearch: (busca: Record<string, unknown>): { parte?: SlugDeParte } => {
+    const p = lerParte(busca["parte"]);
+    return p ? { parte: p } : {};
+  },
   component: ProjectPage,
 });
 
 /**
  * O projeto: a conversa no centro, o que ela produziu ao lado.
  *
- * ## A mudança de forma
+ * ## As duas formas
  *
- * Antes havia uma barra de botões no topo — Validação, Lançamento, Ver plano — e as outras cinco
- * partes só existiam dentro da tela do plano, a dois cliques. Quem quisesse saber o que já estava
- * de pé abria uma por uma.
+ * **Sem parte aberta**, a conversa ocupa a largura e a coluna da direita lista as oito partes com
+ * o estado ao lado do nome.
  *
- * Agora as oito ficam numa coluna, com o estado ao lado do nome. A conversa não divide espaço com
- * navegação: ela ocupa o centro, e a coluna responde "onde isto está" sem tirar ninguém de lá.
+ * **Com parte aberta**, a conversa encolhe e o painel entra ao lado dela, com as abas no topo. A
+ * conversa nunca sai da tela — que era o ponto: ela é o centro do produto, e substituí-la por uma
+ * tela de artefato desfaz o modelo inteiro.
  *
- * No celular a coluna vai para baixo da conversa, não para uma gaveta. Numa tela estreita a
- * conversa é o que a pessoa veio fazer, e empurrar o painel para um botão esconderia justamente o
- * resumo que ela veio ler.
+ * No celular não há duas colunas, então o painel entra acima da conversa: quem pediu para ver os
+ * dados quer ver os dados, e a conversa fica logo abaixo, inteira.
  */
 function ProjectPage() {
   const { id } = Route.useParams();
+  const { parte } = Route.useSearch();
   const { estado } = useProjeto(id);
   const projeto = estado.estado === "pronto" ? estado.projeto : null;
+
+  const contagens = projeto ? estadoDasPartes(projeto) : {};
+
+  if (parte) {
+    return (
+      <div className="flex flex-col gap-5 lg:grid lg:grid-cols-[minmax(0,26rem)_minmax(0,1fr)] lg:items-start lg:gap-6">
+        {/* No celular o painel vem primeiro; no desktop volta para a direita. */}
+        <div className="order-1 min-w-0 lg:order-2">
+          <PainelDaParte projetoId={id} parte={parte} estado={contagens} />
+        </div>
+        <div className="order-2 min-w-0 lg:order-1 lg:sticky lg:top-8">
+          <ProjectChat projetoId={id} />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-5 lg:grid lg:grid-cols-[minmax(0,1fr)_17rem] lg:items-start lg:gap-6">
@@ -55,7 +86,7 @@ function ProjectPage() {
           <SectionLabel>Este projeto</SectionLabel>
           <div className="mt-2">
             {projeto ? (
-              <PartesDoProjeto projeto={projeto} />
+              <PartesDoProjeto projeto={projeto} aberta={null} estado={contagens} />
             ) : (
               <div className="space-y-1.5">
                 {[0, 1, 2, 3].map((i) => (
@@ -67,8 +98,8 @@ function ProjectPage() {
         </section>
 
         {/*
-          "Onde eu parei" fica na mesma coluna das partes, e não acima da conversa como estava.
-          As duas coisas respondem à mesma pergunta — qual o estado do meu trabalho — e a conversa
+          "Onde eu parei" fica na mesma coluna das partes, e não acima da conversa como estava. As
+          duas coisas respondem à mesma pergunta — qual o estado do meu trabalho — e a conversa
           fica inteira para conversar.
         */}
         <FerramentasDoProjeto projetoId={id} />

@@ -12,7 +12,7 @@ import { Spinner } from "@/components/ui/spell-spinner";
 export const Route = createFileRoute("/app/api/$id")({
   staticData: { sitemap: false },
   head: () => ({ meta: [{ title: "API — Pathly" }] }),
-  component: TelaApi,
+  component: RotaApi,
 });
 
 const ABAS = [
@@ -27,8 +27,13 @@ type Aba = (typeof ABAS)[number]["id"];
 
 type Modo = "aprender" | "gerar";
 
-function TelaApi() {
+/** A rota. Existe so para tirar o id da URL e entregar — a tela mesma tambem roda no painel. */
+function RotaApi() {
   const { id } = Route.useParams();
+  return <TelaApi id={id} />;
+}
+
+export function TelaApi({ id, emPainel }: { id: string; emPainel?: boolean }) {
   const { estado: estadoProjeto } = useProjeto(id);
   const { estado, gerando, gerar, alternarTeste } = useMapaApi(id);
   const [modo, setModo] = useState<Modo>("aprender");
@@ -71,13 +76,15 @@ function TelaApi() {
 
   const cabecalho = (
     <div>
-      <Link
-        to="/app/blueprint/$id"
-        params={{ id }}
-        className="tap inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
-      >
-        <ArrowLeft className="size-4" /> Plano do projeto
-      </Link>
+      {!emPainel && (
+        <Link
+          to="/app/blueprint/$id"
+          params={{ id }}
+          className="tap inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+        >
+          <ArrowLeft className="size-4" /> Plano do projeto
+        </Link>
+      )}
       <h1 className="mt-3 font-display text-2xl font-semibold sm:text-3xl">API — {projeto.nome}</h1>
     </div>
   );

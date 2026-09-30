@@ -34,7 +34,7 @@ export const Route = createFileRoute("/app/validacao/$id")({
       },
     ],
   }),
-  component: TelaValidacao,
+  component: RotaValidacao,
 });
 
 /**
@@ -52,8 +52,13 @@ export const Route = createFileRoute("/app/validacao/$id")({
  * lista de trinta itens em cinza, o invertido é o que o olho encontra primeiro, que é exatamente
  * o que precisa acontecer com o que impede seguir.
  */
-function TelaValidacao() {
+/** A rota. Existe so para tirar o id da URL e entregar — a tela mesma tambem roda no painel. */
+function RotaValidacao() {
   const { id } = Route.useParams();
+  return <TelaValidacao id={id} />;
+}
+
+export function TelaValidacao({ id, emPainel }: { id: string; emPainel?: boolean }) {
   const { estado, sondando, sondarBanco, alternarConfirmacao } = useValidacao(id);
   const d = useRelatorio(estado);
   const [aberto, setAberto] = useState<string | null>(null);
@@ -80,20 +85,26 @@ function TelaValidacao() {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between gap-3">
-        <Link
-          to="/app/projeto/$id"
-          params={{ id }}
-          className="tap inline-flex min-h-10 items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
-        >
-          <ArrowLeft className="size-4" /> {estado.nomeProjeto || "Projeto"}
-        </Link>
-        <Link to="/app/blueprint/$id" params={{ id }}>
-          <Btn variant="outline" size="sm">
-            <LayoutPanelTop className="size-4" /> Ver plano
-          </Btn>
-        </Link>
-      </div>
+      {/*
+        A barra inteira some no painel: os dois links levam para fora da conversa, e as abas logo
+        acima já fazem o trabalho dela.
+      */}
+      {!emPainel && (
+        <div className="flex items-center justify-between gap-3">
+          <Link
+            to="/app/projeto/$id"
+            params={{ id }}
+            className="tap inline-flex min-h-10 items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft className="size-4" /> {estado.nomeProjeto || "Projeto"}
+          </Link>
+          <Link to="/app/blueprint/$id" params={{ id }}>
+            <Btn variant="outline" size="sm">
+              <LayoutPanelTop className="size-4" /> Ver plano
+            </Btn>
+          </Link>
+        </div>
+      )}
 
       <div>
         <h1 className="font-display text-2xl font-semibold sm:text-[1.75rem]">Validação</h1>
