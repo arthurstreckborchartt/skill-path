@@ -8,16 +8,16 @@ export const Route = createFileRoute("/")({
   staticData: { sitemap: true },
   head: () => ({
     meta: [
-      { title: "Pathly — Da ideia ao SaaS" },
+      { title: "Pathly — Da ideia ao produto" },
       {
         name: "description",
         content:
-          "Descreva o SaaS que quer criar. A Pathly organiza produto, arquitetura, segurança e execução.",
+          "Descreva o que quer criar — site, app, SaaS, extensão. A Pathly organiza produto, arquitetura, segurança e execução.",
       },
-      { property: "og:title", content: "Pathly — Da ideia ao SaaS" },
+      { property: "og:title", content: "Pathly — Da ideia ao produto" },
       {
         property: "og:description",
-        content: "Um workspace para planejar, decidir e coordenar a criação do seu SaaS.",
+        content: "Um workspace para planejar, decidir e coordenar a criação do seu produto.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -66,8 +66,15 @@ function Landing() {
       <main>
         <section className="border-b border-border px-5 pt-16 pb-14 sm:px-8 sm:pt-24">
           <div className="mx-auto max-w-5xl text-center">
+            {/*
+              A etiqueta enumera as plataformas em vez de dizer "qualquer produto".
+
+              "Qualquer coisa" não desenha imagem nenhuma na cabeça de quem lê; uma lista curta
+              desenha cinco. E é a lista real: são as plataformas que o questionário oferece e que
+              o roadmap sabe planejar de forma diferente.
+            */}
             <Chip tone="primary">
-              <Workflow className="size-3.5" /> Seu SaaS, do pedido à execução
+              <Workflow className="size-3.5" /> Site, app, SaaS, extensão — do pedido à execução
             </Chip>
             {/*
               O destaque desliza por trás de "construir" e o texto vira negativo por
@@ -85,7 +92,7 @@ function Landing() {
             <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
               <Link to="/cadastro">
                 <Btn size="lg" className="w-full sm:w-auto">
-                  Criar meu SaaS <ArrowRight className="size-4" />
+                  Começar a construir <ArrowRight className="size-4" />
                 </Btn>
               </Link>
               <Link to="/login">
@@ -173,7 +180,7 @@ function Landing() {
             <Reveal>
               <SectionLabel>Workspace do projeto</SectionLabel>
               <h2 className="mt-3 font-display text-3xl font-semibold sm:text-4xl">
-                Tudo o que define seu SaaS fica no mesmo contexto
+                Tudo o que define seu produto fica no mesmo contexto
               </h2>
               <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
                 A conversa não começa do zero a cada mensagem. O Pathly usa o plano, as decisões
@@ -216,7 +223,7 @@ function Landing() {
                 <h2 className="mt-5 font-display text-2xl font-semibold">Histórico por projeto</h2>
                 <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
                   Conversas, decisões e artefatos ficam salvos na sua conta e separados entre os
-                  seus SaaS.
+                  seus projetos.
                 </p>
                 <ul className="mt-5 space-y-2 text-sm text-muted-foreground">
                   {[
@@ -242,7 +249,7 @@ function Landing() {
                 Comece pela ideia. O plano vem depois.
               </h2>
               <p className="mx-auto mt-4 max-w-xl text-sm text-muted-foreground sm:text-base">
-                Crie um espaço para o seu SaaS e avance com contexto, controle e decisões claras.
+                Crie um espaço para o seu projeto e avance com contexto, controle e decisões claras.
               </p>
               <Link to="/cadastro" className="mt-8 inline-block">
                 <Btn size="lg">
@@ -257,7 +264,7 @@ function Landing() {
       <footer className="border-t border-border px-5 py-10 sm:px-8">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 text-xs text-muted-foreground sm:flex-row">
           <Logo />
-          <span>Pathly · Da ideia ao SaaS.</span>
+          <span>Pathly · Da ideia ao produto.</span>
           <div className="flex gap-4">
             <Link to="/termos">Termos de Uso</Link>
             <Link to="/privacidade">Política de Privacidade</Link>

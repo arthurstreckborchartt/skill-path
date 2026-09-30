@@ -96,16 +96,16 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       // iPhone 13. Só voltar a translucent depois de conferir tela por tela no aparelho.
       { name: "apple-mobile-web-app-status-bar-style", content: "default" },
       { name: "apple-mobile-web-app-title", content: "Pathly" },
-      { title: "Pathly — Planeje e construa seu SaaS" },
+      { title: "Pathly — Planeje e construa seu produto" },
       {
         name: "description",
         content:
-          "Descreva seu SaaS. A Pathly transforma a ideia em produto, arquitetura e execução coordenada.",
+          "Descreva o que quer criar — site, app, SaaS, extensão. A Pathly transforma a ideia em produto, arquitetura e execução coordenada.",
       },
       { property: "og:title", content: "Pathly" },
       {
         property: "og:description",
-        content: "Da ideia ao SaaS: planejamento técnico, decisões e execução coordenada.",
+        content: "Da ideia ao produto: planejamento técnico, decisões e execução coordenada.",
       },
       { property: "og:type", content: "website" },
       { property: "og:site_name", content: "Pathly" },
@@ -134,7 +134,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:image:height", content: "630" },
       {
         property: "og:image:alt",
-        content: "Pathly — Da ideia ao SaaS. Planejamento técnico, decisões e execução coordenada.",
+        content:
+          "Pathly — Da ideia ao produto. Planejamento técnico, decisões e execução coordenada.",
       },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:image", content: "https://pathlyapp.app/og.jpg" },
