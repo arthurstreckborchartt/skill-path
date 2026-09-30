@@ -1,8 +1,10 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowRight, Braces, Check, Database, Plug, ShieldCheck, Workflow } from "lucide-react";
 import { Btn, Chip, Logo, Panel, Reveal, SectionLabel } from "@/components/pathly/ui";
 import { HighlightedText } from "@/components/ui/highlighted-text";
 import { PathlyMark } from "@/components/pathly/project-chat";
+import { useSession } from "@/lib/auth";
 
 export const Route = createFileRoute("/")({
   staticData: { sitemap: true },
@@ -34,6 +36,26 @@ const stages = [
 ];
 
 function Landing() {
+  const navigate = useNavigate();
+  const { session, loading } = useSession();
+
+  /*
+   * Com sessão, a landing sai da frente.
+   *
+   * `replace` e não `push`: sem isso, voltar a partir de `/app` cairia aqui, seria redirecionado
+   * de novo, e o botão de voltar viraria uma armadilha.
+   *
+   * **Sem portão de carregamento, ao contrário de `/app`.** Lá, decidir antes de ler a sessão
+   * custaria mostrar a casca privada a quem não entrou, então um "Carregando…" compensa. Aqui o
+   * erro simétrico é pior: esta é a página de venda, está no sitemap, e segurá-la atrás de um
+   * estado neutro mostraria "Carregando…" a todo visitante anônimo e a todo robô de busca — o
+   * público inteiro para quem a página existe. Ela renderiza para todos, e só quem tem sessão é
+   * levado embora, depois.
+   */
+  useEffect(() => {
+    if (!loading && session) navigate({ to: "/app", replace: true });
+  }, [loading, session, navigate]);
+
   return (
     <div className="min-h-screen">
       <header className="sticky top-0 z-40 border-b border-border bg-background/90 pt-[env(safe-area-inset-top)]">
