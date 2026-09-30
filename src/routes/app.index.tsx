@@ -57,8 +57,20 @@ function TelaInicial() {
   const campo = useRef<HTMLTextAreaElement>(null);
   const { ref: moldura, aoDigitar } = useDigitando();
 
+  /*
+   * O foco automático é só no desktop.
+   *
+   * No celular, focar ao montar abre o teclado antes de a pessoa ter lido qualquer coisa: ele come
+   * metade da tela, tapa a lista de projetos e transforma "o que vamos criar?" numa pergunta feita
+   * para uma tela que já sumiu. Quem chegou para continuar um projeto tem que fechar o teclado
+   * antes de conseguir enxergar a lista.
+   *
+   * No desktop não há esse custo — o cursor já piscando poupa um clique e não esconde nada.
+   *
+   * `1024px` é o mesmo ponto em que o layout troca (`lg:`), então foco e forma mudam juntos.
+   */
   useEffect(() => {
-    campo.current?.focus();
+    if (window.matchMedia("(min-width: 1024px)").matches) campo.current?.focus();
   }, []);
 
   async function criar(texto: string) {
@@ -90,18 +102,52 @@ function TelaInicial() {
   const contagens = useContagens(recentes);
 
   return (
-    <div className="mx-auto flex min-h-[calc(100vh-14rem)] max-w-2xl flex-col justify-center py-6">
-      <section className="text-center">
-        <span className="mx-auto grid size-11 place-items-center rounded-xl border border-border bg-foreground text-background">
-          <PathlyMark className="size-5" />
-        </span>
-        <h1 className="mt-5 font-display text-3xl font-semibold text-balance sm:text-4xl">
-          O que vamos criar?
-        </h1>
-        <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-muted-foreground">
-          Site, aplicação web, app de celular ou de computador. Conte a ideia — o resto a gente
-          descobre conversando.
-        </p>
+    <div className="mx-auto w-full max-w-2xl">
+      {/*
+        A primeira dobra: a pergunta no meio, o campo embaixo.
+
+        No celular o campo encosta no fim da tela, onde o polegar alcança sem reposicionar a mão —
+        e a pergunta ocupa o espaço que sobra em cima, em vez de os dois flutuarem juntos no meio
+        com um terço da tela vazio embaixo. Medido antes: 331px de sobra sob o campo.
+
+        No desktop o grupo volta ao centro (`lg:justify-center` com a saudação em altura natural):
+        lá não existe polegar, o campo não ganha nada indo para baixo, e a leitura em tela larga
+        prefere o centro óptico.
+
+        `100svh` e não `100vh`: no navegador de celular o `vh` conta a barra de endereço que se
+        esconde ao rolar, então o `vh` mede uma tela maior do que a que existe. O resto da casca já
+        usava `svh` — aqui tinha ficado para trás.
+
+        Sem `position: fixed`, de propósito: a animação de entrada do `<main>` aplica um transform,
+        e um transform faz o `<main>` virar o containing block de todo `fixed` dentro dele. O campo
+        fica no fim de uma coluna flex, que chega ao mesmo lugar sem brigar com a animação.
+      */}
+      {/*
+        A altura da dobra é a tela menos a casca, e a conta é medida, não estimada.
+
+        No celular: 69px de barra (12 de topo + 44 de alvo + 12 de base + 1 de borda) + 12 do
+        `pt-3` do `<main>` + 32 do `pb-2rem` = **113px**. Sem isto sobra uma rolagem de 9px numa
+        tela que deveria encaixar exata — o suficiente para a página repicar ao toque.
+
+        As duas `env()` entram porque a barra reserva a área segura de cima e o `<main>` a de
+        baixo. No emulador elas valem zero e some a diferença; num aparelho com entalhe valem
+        dezenas de pixels, e sem elas a conta erraria justamente onde o defeito apareceria.
+
+        No desktop não há barra: `pt-8` + `pb-12` = 5rem.
+      */}
+      <div className="flex min-h-[calc(100svh-113px-env(safe-area-inset-top)-env(safe-area-inset-bottom))] flex-col lg:min-h-[calc(100svh-5rem)] lg:justify-center">
+        <section className="flex flex-1 flex-col justify-center px-1 text-center lg:flex-none">
+          <span className="mx-auto grid size-11 place-items-center rounded-xl border border-border bg-foreground text-background">
+            <PathlyMark className="size-5" />
+          </span>
+          <h1 className="mt-5 font-display text-3xl font-semibold text-balance sm:text-4xl">
+            O que vamos criar?
+          </h1>
+          <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-muted-foreground">
+            Site, aplicação web, app de celular ou de computador. Conte a ideia — o resto a gente
+            descobre conversando.
+          </p>
+        </section>
 
         <div
           ref={moldura}
@@ -117,7 +163,9 @@ function TelaInicial() {
                 aoDigitar();
               }}
               placeholder="Um app para donos de food truck controlarem estoque e vendas do dia…"
-              className="min-h-24 text-base"
+              /* Mais baixo no celular: ali cada linha do campo é uma linha a menos de tela para o
+                 resto, e o campo cresce sozinho conforme a pessoa escreve. */
+              className="min-h-20 text-base sm:min-h-24"
               disabled={ocupado}
             />
             <PromptInputFooter className="justify-end">
@@ -130,11 +178,11 @@ function TelaInicial() {
         </div>
 
         {erro && (
-          <p role="alert" className="mt-3 text-sm font-medium">
+          <p role="alert" className="mt-3 text-center text-sm font-medium">
             {erro}
           </p>
         )}
-      </section>
+      </div>
 
       {/*
         Os projetos vêm abaixo e só quando existem. A tela de quem nunca criou nada não tem uma
