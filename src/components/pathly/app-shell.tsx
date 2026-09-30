@@ -1,53 +1,112 @@
+import { useEffect, useState } from "react";
 import { Link, Outlet, useRouterState } from "@tanstack/react-router";
-import { FolderKanban, Home, Plug, Search, Settings, User } from "lucide-react";
-import { Btn, Logo } from "./ui";
+import { Menu, Plus, Settings, X } from "lucide-react";
+import { Logo } from "./ui";
 import { Copilot } from "./copilot";
 import { FundoAnimado } from "./fundo-animado";
 import { AvatarConta } from "./avatar-conta";
 import { cn } from "@/lib/utils";
+import { useProjetos } from "@/lib/blueprint/usar-projetos";
 
-// Oportunidades (vagas) fica fora da navegação por enquanto: a tela ainda usa dados de
-// exemplo (mock), e mostrar vaga fictícia pra usuário real derruba confiança. A rota
-// continua existindo (não foi apagada), só não aparece nos menus até ter dado real.
-//
-// "Projetos" aponta para /app/blueprints, a tela nova. A antiga (/app/projetos) segue
-// existindo e funcionando, só saiu do menu — mesmo tratamento dado a oportunidades. Ela
-// lista projetos de portfólio derivados das etapas da rota, e será removida junto com o
-// restante do workspace, não antes.
-const primaryNav = [
-  { to: "/app", label: "Criar", icon: Home, exact: true },
-  { to: "/app/blueprints", label: "Projetos", icon: FolderKanban },
-  { to: "/app/integracoes", label: "Integrações", icon: Plug },
-  { to: "/app/perfil", label: "Perfil", icon: User },
-];
+/**
+ * A casca do app.
+ *
+ * ## O que ela deixou de ser
+ *
+ * Era uma navegação de quatro seções — Criar, Projetos, Integrações, Perfil — e a pessoa escolhia
+ * entre elas antes de chegar ao trabalho. Com vinte e cinco rotas por baixo, a pergunta "onde fica
+ * aquilo?" acontecia o tempo todo.
+ *
+ * Agora a lista da esquerda é a lista de projetos, como a lista de conversas de um chat. "Criar"
+ * virou o botão no topo dela; Integrações e Perfil desceram para Ajustes, onde já moravam de
+ * verdade. Restou uma coluna e um centro.
+ *
+ * ## A busca falsa saiu
+ *
+ * Havia uma barra de busca no topo que era uma `<div>` — não recebia foco, não abria nada, e o
+ * `⌘K` desenhado ao lado dela não existia. Prometer busca e não ter é pior que não ter.
+ */
 
-const mobileNav = [
-  { to: "/app", label: "Criar", icon: Home, exact: true },
-  { to: "/app/blueprints", label: "Projetos", icon: FolderKanban },
-  { to: "/app/integracoes", label: "Integrações", icon: Plug },
-  { to: "/app/perfil", label: "Perfil", icon: User },
-];
-
-function SideItem({
-  to,
-  label,
-  icon: Icon,
-  exact,
-}: {
-  to: string;
-  label: string;
-  icon: typeof Home;
-  exact?: boolean;
-}) {
+function ItemDeProjeto({ id, nome, ativo }: { id: string; nome: string; ativo: boolean }) {
   return (
     <Link
-      to={to}
-      activeOptions={{ exact: exact === true }}
-      className="tap group flex items-center gap-3 rounded-md border border-transparent px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground data-[status=active]:border-sidebar-border data-[status=active]:bg-sidebar-accent data-[status=active]:font-medium data-[status=active]:text-foreground"
+      to="/app/projeto/$id"
+      params={{ id }}
+      className={cn(
+        "tap block truncate rounded-md px-3 py-2 text-sm transition-colors",
+        ativo
+          ? "bg-sidebar-accent font-medium text-foreground"
+          : "text-muted-foreground hover:bg-sidebar-accent hover:text-foreground",
+      )}
+      title={nome}
     >
-      <Icon className="size-4.5 shrink-0" />
-      <span className="truncate">{label}</span>
+      {nome}
     </Link>
+  );
+}
+
+/**
+ * A coluna da esquerda. Uma só, usada no desktop fixa e no celular como gaveta.
+ *
+ * Escrever duas versões produziria duas listas de projetos que um dia discordariam — foi o que
+ * aconteceu com a navegação antiga, que tinha `primaryNav` e `mobileNav` copiados um do outro.
+ */
+function Coluna({ aoNavegar }: { aoNavegar?: () => void }) {
+  const projetos = useProjetos();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const idAberto = pathname.match(/^\/app\/[a-z-]+\/([0-9a-f-]{36})/i)?.[1] ?? null;
+
+  return (
+    <div className="flex h-full flex-col gap-1 p-3" onClick={aoNavegar}>
+      <Link to="/" className="tap mb-4 px-2 pt-1">
+        <Logo />
+      </Link>
+
+      <Link
+        to="/app"
+        className="tap mb-2 flex items-center gap-2 rounded-md border border-sidebar-border px-3 py-2.5 text-sm font-medium transition-colors hover:bg-sidebar-accent"
+      >
+        <Plus className="size-4 shrink-0" />
+        Novo projeto
+      </Link>
+
+      <div className="-mx-1 min-h-0 flex-1 overflow-y-auto px-1">
+        {projetos.estado === "pronta" && projetos.projetos.length > 0 && (
+          <nav className="flex flex-col gap-0.5">
+            {projetos.projetos.map((p) => (
+              <ItemDeProjeto key={p.id} id={p.id} nome={p.nome} ativo={p.id === idAberto} />
+            ))}
+          </nav>
+        )}
+
+        {/*
+          O vazio não se desculpa e não repete o botão que já está logo acima: diz o que a lista
+          vai guardar, e só.
+        */}
+        {projetos.estado === "pronta" && projetos.projetos.length === 0 && (
+          <p className="px-3 py-2 text-xs leading-relaxed text-muted-foreground">
+            Seus projetos aparecem aqui.
+          </p>
+        )}
+
+        {projetos.estado === "carregando" && (
+          <div className="space-y-1.5 px-3 py-2">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="h-3.5 animate-pulse rounded bg-sidebar-accent" />
+            ))}
+          </div>
+        )}
+      </div>
+
+      <Link
+        to="/app/configuracoes"
+        className="tap mt-1 flex items-center gap-3 rounded-md px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground"
+      >
+        <AvatarConta size={20} />
+        <span className="truncate">Ajustes</span>
+        <Settings className="ml-auto size-4 shrink-0" />
+      </Link>
+    </div>
   );
 }
 
@@ -57,73 +116,73 @@ export function AppShell() {
 
 function AppShellInner() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const [gaveta, setGaveta] = useState(false);
+
+  // A gaveta fecha ao trocar de rota. Sem isto ela ficaria aberta por cima da tela que acabou de
+  // abrir, e a pessoa teria que fechá-la para ver o que pediu.
+  useEffect(() => setGaveta(false), [pathname]);
 
   return (
     /*
-      `bg-background` saiu daqui: o fundo opaco escondia o shader. Quem pinta o fundo agora e o
-      <body>, e o gradiente fica entre ele e o conteudo.
-
-      `isolate` e o que torna isso possivel. O gradiente usa `z-index: -1` para ficar atras do
-      conteudo; sem um contexto de empilhamento proprio neste elemento, esse -1 sobe ate a raiz da
-      pagina e vai parar atras do fundo do <body>, sumindo. Com `isolate`, ele fica preso entre o
-      fundo (transparente) deste container e tudo que esta dentro.
+      `isolate` continua sendo o que mantém o gradiente do fundo entre o <body> e o conteúdo: o
+      shader usa `z-index: -1`, e sem um contexto de empilhamento próprio aqui esse -1 sobe até a
+      raiz da página e some atrás do fundo do <body>.
     */
     <div className="relative isolate min-h-screen">
       <FundoAnimado />
-      {/* Desktop sidebar */}
-      <aside className="fixed top-0 left-0 z-30 hidden h-screen w-60 flex-col border-r border-sidebar-border bg-sidebar p-4 lg:flex">
-        <Link to="/" className="tap mb-8 px-2 pt-1">
-          <Logo />
-        </Link>
 
-        <nav className="flex flex-col gap-1">
-          {primaryNav.map((item) => (
-            <SideItem key={item.to} {...item} />
-          ))}
-        </nav>
-
-        <div className="mt-auto" />
-        <Link
-          to="/app/configuracoes"
-          className="tap mt-2 flex items-center gap-3 rounded-md px-2 py-2.5 text-xs text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"
-        >
-          <Settings className="size-4" /> Configurações
-        </Link>
+      <aside className="fixed top-0 left-0 z-30 hidden h-screen w-64 flex-col border-r border-sidebar-border bg-sidebar lg:flex">
+        <Coluna />
       </aside>
 
-      {/* Mobile top bar */}
-      <header className="sticky top-0 z-30 flex items-center justify-between border-b border-border bg-background px-4 pt-[calc(0.75rem+env(safe-area-inset-top))] pb-3 lg:hidden">
+      {/* ---------- Celular: barra e gaveta ---------- */}
+      <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-border bg-background px-3 pt-[calc(0.75rem+env(safe-area-inset-top))] pb-3 lg:hidden">
+        <button
+          type="button"
+          onClick={() => setGaveta(true)}
+          aria-label="Abrir projetos"
+          className="tap grid size-10 place-items-center rounded-md text-muted-foreground hover:text-foreground"
+        >
+          <Menu className="size-5" />
+        </button>
         <Link to="/" className="tap">
-          <Logo />
+          <Logo compact />
         </Link>
-        <Link to="/app/configuracoes">
-          <Btn variant="ghost" size="sm">
-            <Settings className="size-4" />
-          </Btn>
+        <Link to="/app/configuracoes" className="tap ml-auto grid size-10 place-items-center">
+          <AvatarConta size={22} />
         </Link>
       </header>
 
-      <div className="fixed top-0 right-0 left-60 z-20 hidden h-16 items-center border-b border-border bg-background px-8 lg:flex">
-        <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-5">
-          <div className="flex h-9 w-full max-w-lg items-center gap-2 rounded-md border border-border bg-surface px-3 text-xs text-muted-foreground">
-            <Search className="size-3.5 shrink-0" />
-            <span className="truncate">Buscar projetos, decisões ou artefatos…</span>
-            <kbd className="ml-auto shrink-0 rounded border border-border bg-surface-2 px-1.5 py-0.5 font-sans text-[10px]">
-              ⌘K
-            </kbd>
+      {gaveta && (
+        <div className="fixed inset-0 z-40 lg:hidden">
+          <button
+            type="button"
+            aria-label="Fechar"
+            onClick={() => setGaveta(false)}
+            className="absolute inset-0 bg-foreground/20"
+          />
+          <div className="absolute inset-y-0 left-0 w-72 border-r border-sidebar-border bg-sidebar">
+            <button
+              type="button"
+              onClick={() => setGaveta(false)}
+              aria-label="Fechar projetos"
+              className="tap absolute top-3 right-3 z-10 grid size-9 place-items-center rounded-md text-muted-foreground"
+            >
+              <X className="size-4" />
+            </button>
+            <Coluna aoNavegar={() => setGaveta(false)} />
           </div>
-          <span className="shrink-0 text-xs text-muted-foreground">Pathly Workspace</span>
         </div>
-      </div>
+      )}
 
       <main
         key={pathname}
-        // 8rem + área segura: a barra inferior (56px) nunca cobre o fim do conteúdo no iPhone.
-        // `backwards` e não `both`: o `both` deixa o transform da animação aplicado para sempre,
-        // e um transform aqui faz o <main> virar o containing block de todo `position: fixed`
-        // que estiver dentro dele. Com `backwards` o preenchimento vale só antes de começar, o
-        // visual da entrada é idêntico, e o transform some quando a animação termina.
-        className="animate-[fade-up_0.35s_cubic-bezier(0.16,1,0.3,1)_backwards] px-4 pt-6 pb-[calc(8rem+env(safe-area-inset-bottom))] sm:px-6 lg:ml-60 lg:px-8 lg:pt-24 lg:pb-12"
+        /*
+          `backwards` e não `both`: com `both` o transform da animação fica aplicado para sempre, e
+          um transform aqui faz o <main> virar o containing block de todo `position: fixed` que
+          estiver dentro dele.
+        */
+        className="animate-[fade-up_0.35s_cubic-bezier(0.16,1,0.3,1)_backwards] px-4 pt-5 pb-[calc(3rem+env(safe-area-inset-bottom))] sm:px-6 lg:ml-64 lg:px-8 lg:pt-8 lg:pb-12"
       >
         <div className="mx-auto w-full max-w-7xl">
           <Outlet />
@@ -131,53 +190,10 @@ function AppShellInner() {
       </main>
 
       {/*
-        Irmão do <main>, e não filho: a animação de entrada do <main> aplica um transform, e
-        qualquer position:fixed lá dentro passaria a se posicionar em relação a ele durante a
-        animação — o botão flutuante pularia a cada troca de rota.
+        Irmão do <main>, e não filho: a animação de entrada aplica um transform, e qualquer
+        `position: fixed` lá dentro passaria a se posicionar em relação a ele durante a animação.
       */}
       <Copilot />
-
-      {/* Mobile bottom nav */}
-      <nav className="pb-safe fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background lg:hidden">
-        <ul className="grid grid-cols-4">
-          {mobileNav.map(({ to, label, icon: Icon, exact }) => (
-            <li key={to}>
-              <Link
-                to={to}
-                activeOptions={{ exact: exact === true }}
-                /*
-                  O `hover:` do Tailwind v4 já nasce dentro de `@media (hover: hover)`, então o
-                  destaque não gruda em tela de toque — onde o "hover" de um toque ficaria aceso
-                  até alguém tocar em outro lugar.
-                */
-                className={cn(
-                  "tap group flex min-h-14 flex-col items-center justify-center gap-1 text-[11px] text-muted-foreground",
-                  // Sem fundo no hover: o bloco cinza atrás do item pesava mais que o próprio
-                  // item. O que acende é o desenho — ícone e rótulo clareiam juntos, porque o
-                  // ícone tira a cor de `currentColor`.
-                  "transition-colors hover:text-foreground",
-                  "data-[status=active]:text-primary",
-                )}
-              >
-                {/*
-                  Perfil mostra o avatar da conta, e não um ícone genérico: é a única aba que fala
-                  de uma pessoa específica, e o desenho dela identifica mais rápido que um
-                  contorno igual ao de qualquer outro app.
-
-                  20px e não 5 como os ícones: o desenho precisa de área para se distinguir. A
-                  altura mínima de 56px da barra não muda por causa disso.
-                */}
-                {to === "/app/perfil" ? (
-                  <AvatarConta size={20} className="transition-transform group-active:scale-90" />
-                ) : (
-                  <Icon className="size-5 transition-transform group-active:scale-90" />
-                )}
-                {label}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </nav>
     </div>
   );
 }
