@@ -31,6 +31,16 @@ const TELAS: Record<SlugDeParte, LazyExoticComponent<ComponentType<PropsDaTela>>
   plano: lazy(() =>
     import("@/routes/app.blueprint.$id").then((m) => ({ default: m.TelaBlueprint })),
   ),
+  /*
+   * Decisões é a única que nunca foi uma rota: nasceu direto como painel. As decisões eram
+   * gravadas e mandadas para o prompt do Copilot desde sempre, mas nunca apareceram para quem as
+   * tomou.
+   */
+  decisoes: lazy(() =>
+    import("./decisoes-do-projeto").then((m) => ({
+      default: ({ id }: PropsDaTela) => <m.DecisoesDoProjeto projetoId={id} />,
+    })),
+  ),
   etapas: lazy(() => import("@/routes/app.roadmap.$id").then((m) => ({ default: m.TelaRoadmap }))),
   dados: lazy(() => import("@/routes/app.banco.$id").then((m) => ({ default: m.TelaBanco }))),
   api: lazy(() => import("@/routes/app.api.$id").then((m) => ({ default: m.TelaApi }))),
@@ -48,43 +58,11 @@ const TELAS: Record<SlugDeParte, LazyExoticComponent<ComponentType<PropsDaTela>>
   ),
 };
 
-export function PartesDoProjeto({
-  projeto,
-  aberta,
-  estado,
-}: {
-  projeto: Projeto;
-  aberta: SlugDeParte | null;
-  estado: Partial<Record<SlugDeParte, string>>;
-}) {
-  return (
-    <nav aria-label="Partes do projeto" className="flex flex-col gap-0.5">
-      {PARTES.map(({ slug, rotulo, icone: Icone }) => (
-        <Link
-          key={slug}
-          to="/app/projeto/$id"
-          params={{ id: projeto.id }}
-          search={{ parte: slug }}
-          className={cn(
-            "tap flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm transition-colors",
-            slug === aberta
-              ? "bg-surface-2 font-medium text-foreground"
-              : "text-muted-foreground hover:bg-surface-2 hover:text-foreground",
-          )}
-        >
-          <Icone className="size-4 shrink-0" />
-          <span className="truncate">{rotulo}</span>
-          {estado[slug] && (
-            // Contagem, não alarme — e num produto monocromático não haveria cor para dizer isso.
-            <span className="ml-auto shrink-0 font-mono text-xs tabular-nums text-muted-foreground">
-              {estado[slug]}
-            </span>
-          )}
-        </Link>
-      ))}
-    </nav>
-  );
-}
+/*
+ * A coluna vertical de partes morava aqui e foi para a sidebar, junto do nome do projeto. Lá ela
+ * é contexto: fica visível com qualquer parte aberta, em vez de sumir na hora em que a pessoa
+ * abre uma. O que sobrou neste arquivo é o painel.
+ */
 
 export function PainelDaParte({
   projetoId,

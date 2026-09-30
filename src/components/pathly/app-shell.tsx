@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { Link, Outlet, useRouterState } from "@tanstack/react-router";
-import { Menu, Plus, Settings, X } from "lucide-react";
+import { FolderKanban, Menu, MessagesSquare, Plus, Settings, X } from "lucide-react";
 import { Logo } from "./ui";
 import { Copilot } from "./copilot";
 import { FundoAnimado } from "./fundo-animado";
 import { AvatarConta } from "./avatar-conta";
 import { cn } from "@/lib/utils";
 import { useProjetos } from "@/lib/blueprint/usar-projetos";
+import { PARTES, estadoDasPartes } from "./partes";
 
 /**
  * A casca do app.
@@ -54,7 +55,19 @@ function ItemDeProjeto({ id, nome, ativo }: { id: string; nome: string; ativo: b
 function Coluna({ aoNavegar }: { aoNavegar?: () => void }) {
   const projetos = useProjetos();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const busca = useRouterState({ select: (s) => s.location.search }) as { parte?: string };
   const idAberto = pathname.match(/^\/app\/[a-z-]+\/([0-9a-f-]{36})/i)?.[1] ?? null;
+
+  const aberto =
+    projetos.estado === "pronta"
+      ? (projetos.projetos.find((p) => p.id === idAberto) ?? null)
+      : null;
+
+  /*
+   * Os contadores saem da linha do projeto que a lista já trouxe — nenhuma consulta a mais.
+   * "Etapas 7/18" ao lado do nome é o que responde "como está isto?" sem abrir nada.
+   */
+  const contagens = aberto ? estadoDasPartes(aberto) : {};
 
   return (
     <div className="flex h-full flex-col gap-1 p-3" onClick={aoNavegar}>
@@ -71,30 +84,97 @@ function Coluna({ aoNavegar }: { aoNavegar?: () => void }) {
       </Link>
 
       <div className="-mx-1 min-h-0 flex-1 overflow-y-auto px-1">
-        {projetos.estado === "pronta" && projetos.projetos.length > 0 && (
-          <nav className="flex flex-col gap-0.5">
-            {projetos.projetos.map((p) => (
-              <ItemDeProjeto key={p.id} id={p.id} nome={p.nome} ativo={p.id === idAberto} />
-            ))}
-          </nav>
-        )}
-
         {/*
-          O vazio não se desculpa e não repete o botão que já está logo acima: diz o que a lista
-          vai guardar, e só.
-        */}
-        {projetos.estado === "pronta" && projetos.projetos.length === 0 && (
-          <p className="px-3 py-2 text-xs leading-relaxed text-muted-foreground">
-            Seus projetos aparecem aqui.
-          </p>
-        )}
+          A coluna tem dois rostos, e o que decide é onde a pessoa está.
 
-        {projetos.estado === "carregando" && (
-          <div className="space-y-1.5 px-3 py-2">
-            {[0, 1, 2].map((i) => (
-              <div key={i} className="h-3.5 animate-pulse rounded bg-sidebar-accent" />
+          Dentro de um projeto, ela mostra **aquele** projeto: o nome e as partes dele. Fora, a
+          lista de projetos. A lista inteira sempre visível competiria com o contexto do trabalho
+          em curso — e trocar de projeto é raro comparado a andar dentro de um.
+        */}
+        {aberto ? (
+          <div className="flex flex-col gap-0.5">
+            <p className="px-3 pt-1 pb-1 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
+              Projeto
+            </p>
+            <p className="truncate px-3 pb-2 text-sm font-medium" title={aberto.nome}>
+              {aberto.nome}
+            </p>
+
+            <Link
+              to="/app/projeto/$id"
+              params={{ id: aberto.id }}
+              search={{}}
+              className={cn(
+                "tap flex items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-colors",
+                !busca.parte
+                  ? "bg-sidebar-accent font-medium text-foreground"
+                  : "text-muted-foreground hover:bg-sidebar-accent hover:text-foreground",
+              )}
+            >
+              <MessagesSquare className="size-4 shrink-0" />
+              Conversa
+            </Link>
+
+            {PARTES.map(({ slug, rotulo, icone: Icone }) => (
+              <Link
+                key={slug}
+                to="/app/projeto/$id"
+                params={{ id: aberto.id }}
+                search={{ parte: slug }}
+                className={cn(
+                  "tap flex items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-colors",
+                  busca.parte === slug
+                    ? "bg-sidebar-accent font-medium text-foreground"
+                    : "text-muted-foreground hover:bg-sidebar-accent hover:text-foreground",
+                )}
+              >
+                <Icone className="size-4 shrink-0" />
+                <span className="truncate">{rotulo}</span>
+                {contagens[slug] && (
+                  // Contagem, não alarme — num produto monocromático não haveria cor para isso.
+                  <span className="ml-auto shrink-0 font-mono text-xs tabular-nums opacity-70">
+                    {contagens[slug]}
+                  </span>
+                )}
+              </Link>
             ))}
+
+            <Link
+              to="/app/blueprints"
+              className="tap mt-3 flex items-center gap-2.5 border-t border-sidebar-border px-3 pt-3 pb-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
+            >
+              <FolderKanban className="size-4 shrink-0" />
+              Todos os projetos
+            </Link>
           </div>
+        ) : (
+          <>
+            {projetos.estado === "pronta" && projetos.projetos.length > 0 && (
+              <nav className="flex flex-col gap-0.5">
+                {projetos.projetos.map((p) => (
+                  <ItemDeProjeto key={p.id} id={p.id} nome={p.nome} ativo={false} />
+                ))}
+              </nav>
+            )}
+
+            {/*
+              O vazio não se desculpa e não repete o botão que já está logo acima: diz o que a
+              lista vai guardar, e só.
+            */}
+            {projetos.estado === "pronta" && projetos.projetos.length === 0 && (
+              <p className="px-3 py-2 text-xs leading-relaxed text-muted-foreground">
+                Seus projetos aparecem aqui.
+              </p>
+            )}
+
+            {projetos.estado === "carregando" && (
+              <div className="space-y-1.5 px-3 py-2">
+                {[0, 1, 2].map((i) => (
+                  <div key={i} className="h-3.5 animate-pulse rounded bg-sidebar-accent" />
+                ))}
+              </div>
+            )}
+          </>
         )}
       </div>
 

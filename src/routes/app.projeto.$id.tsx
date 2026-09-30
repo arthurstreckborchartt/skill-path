@@ -1,9 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ProjectChat } from "@/components/pathly/project-chat";
 import { FerramentasDoProjeto } from "@/components/pathly/ferramentas-do-projeto";
-import { PainelDaParte, PartesDoProjeto } from "@/components/pathly/partes-do-projeto";
+import { PainelDaParte } from "@/components/pathly/partes-do-projeto";
 import { estadoDasPartes, lerParte, type SlugDeParte } from "@/components/pathly/partes";
-import { SectionLabel, Skeleton } from "@/components/pathly/ui";
 import { useProjeto } from "@/lib/blueprint/usar-projetos";
 
 export const Route = createFileRoute("/app/projeto/$id")({
@@ -24,12 +23,12 @@ export const Route = createFileRoute("/app/projeto/$id")({
   /**
    * `?parte=dados` abre aquela parte ao lado da conversa.
    *
-   * Na URL, e não em estado de componente, por três razões: o botão voltar do navegador fecha o
-   * painel como a pessoa espera, o endereço pode ser compartilhado com a parte já aberta, e
-   * recarregar não perde onde ela estava.
+   * Na URL, e não em estado de componente: o botão voltar do navegador fecha o painel como a
+   * pessoa espera, o endereço pode ser compartilhado com a parte aberta, e recarregar não perde
+   * o lugar. A sidebar lê a mesma query para saber o que destacar.
    *
-   * `lerParte` só aceita os oito slugs conhecidos. Qualquer outra coisa vira `null` e o painel não
-   * abre — um valor vindo da URL é entrada externa, e aqui ele escolhe qual componente renderiza.
+   * `lerParte` só aceita os slugs conhecidos — o valor vem da URL e aqui ele escolhe qual
+   * componente renderiza.
    */
   validateSearch: (busca: Record<string, unknown>): { parte?: SlugDeParte } => {
     const p = lerParte(busca["parte"]);
@@ -39,19 +38,26 @@ export const Route = createFileRoute("/app/projeto/$id")({
 });
 
 /**
- * O projeto: a conversa no centro, o que ela produziu ao lado.
+ * O projeto: a conversa, e o que ela produziu.
  *
- * ## As duas formas
+ * ## Onde as partes foram parar
  *
- * **Sem parte aberta**, a conversa ocupa a largura e a coluna da direita lista as oito partes com
- * o estado ao lado do nome.
+ * Elas ficaram um tempo numa coluna à direita desta página. Subiram para a sidebar, junto do nome
+ * do projeto, por dois motivos.
  *
- * **Com parte aberta**, a conversa encolhe e o painel entra ao lado dela, com as abas no topo. A
- * conversa nunca sai da tela — que era o ponto: ela é o centro do produto, e substituí-la por uma
- * tela de artefato desfaz o modelo inteiro.
+ * O primeiro é que lá elas são **contexto**, não conteúdo: ficam visíveis em qualquer parte
+ * aberta, e a pessoa sempre sabe onde está dentro do projeto. Na coluna da direita elas sumiam
+ * assim que uma parte abria.
  *
- * No celular não há duas colunas, então o painel entra acima da conversa: quem pediu para ver os
- * dados quer ver os dados, e a conversa fica logo abaixo, inteira.
+ * O segundo é que a direita ficou livre. É onde vão aparecer os painéis que reagem ao assunto da
+ * conversa — quando ela toca em banco, o banco aparece — e isso não caberia numa tela que já
+ * tivesse três colunas.
+ *
+ * ## Sem parte aberta, a conversa é a tela
+ *
+ * Não há coluna lateral de apoio, não há cartões em volta. Só a conversa e, abaixo dela, onde
+ * você parou. É o estado que a pessoa vê na maior parte do tempo, e é o mais limpo que ele
+ * consegue ser.
  */
 function ProjectPage() {
   const { id } = Route.useParams();
@@ -76,34 +82,9 @@ function ProjectPage() {
   }
 
   return (
-    <div className="flex flex-col gap-5 lg:grid lg:grid-cols-[minmax(0,1fr)_17rem] lg:items-start lg:gap-6">
-      <div className="order-1 min-w-0">
-        <ProjectChat projetoId={id} />
-      </div>
-
-      <aside className="order-2 flex flex-col gap-5 lg:sticky lg:top-8">
-        <section>
-          <SectionLabel>Este projeto</SectionLabel>
-          <div className="mt-2">
-            {projeto ? (
-              <PartesDoProjeto projeto={projeto} aberta={null} estado={contagens} />
-            ) : (
-              <div className="space-y-1.5">
-                {[0, 1, 2, 3].map((i) => (
-                  <Skeleton key={i} className="h-9 rounded-md" />
-                ))}
-              </div>
-            )}
-          </div>
-        </section>
-
-        {/*
-          "Onde eu parei" fica na mesma coluna das partes, e não acima da conversa como estava. As
-          duas coisas respondem à mesma pergunta — qual o estado do meu trabalho — e a conversa
-          fica inteira para conversar.
-        */}
-        <FerramentasDoProjeto projetoId={id} />
-      </aside>
+    <div className="mx-auto w-full max-w-3xl space-y-5">
+      <ProjectChat projetoId={id} />
+      <FerramentasDoProjeto projetoId={id} />
     </div>
   );
 }

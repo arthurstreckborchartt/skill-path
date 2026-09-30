@@ -116,6 +116,20 @@ export type StatusDecisao = (typeof STATUS_DECISAO)[number];
 export const ORIGENS_DECISAO = ["copilot", "usuario", "importacao", "sistema"] as const;
 export type OrigemDecisao = (typeof ORIGENS_DECISAO)[number];
 
+/**
+ * De onde a decisão veio, em palavras.
+ *
+ * Aparece ao lado de cada decisão na tela. Importa porque "você decidiu" e "o Pathly propôs e
+ * você aprovou" são coisas diferentes daqui a três meses, quando alguém perguntar por que o banco
+ * é aquele — e a resposta muda o quanto se confia no motivo escrito ao lado.
+ */
+export const ROTULO_ORIGEM: Record<OrigemDecisao, string> = {
+  copilot: "proposta do Pathly",
+  usuario: "você decidiu",
+  importacao: "veio do plano",
+  sistema: "do sistema",
+};
+
 export type Decisao = {
   id: string;
   /** O assunto, estável entre versões: "banco", "auth", "hospedagem". */
