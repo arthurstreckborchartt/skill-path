@@ -83,12 +83,20 @@ function ProjectPage() {
 
   if (parte) {
     return (
-      <div className="flex flex-col gap-5 lg:grid lg:grid-cols-[minmax(0,26rem)_minmax(0,1fr)] lg:items-start lg:gap-6">
-        {/* No celular o painel vem primeiro; no desktop volta para a direita. */}
-        <div className="order-1 min-w-0 lg:order-2">
+      <div className="lg:grid lg:grid-cols-[minmax(0,26rem)_minmax(0,1fr)] lg:items-start lg:gap-6">
+        <div className="min-w-0 lg:order-2">
           <PainelDaParte projetoId={id} parte={parte} estado={contagens} />
         </div>
-        <div className="order-2 min-w-0 lg:order-1 lg:sticky lg:top-8">
+
+        {/*
+          No celular a parte aberta é a tela: a conversa sai de vista.
+
+          Empilhar as duas numa tela de 375px daria meia conversa e meio painel, e nenhum dos dois
+          serviria. Quem tocou em "Dados" quer ver os dados; a barra de cima diz onde ele está, e
+          o botão dentro do painel volta para a conversa — que continua ali, com o histórico
+          inteiro, a um toque.
+        */}
+        <div className="hidden min-w-0 lg:order-1 lg:block lg:sticky lg:top-8">
           {/* A parte aberta vira o contexto da pergunta — ver `facetaDaParte`. */}
           <ProjectChat projetoId={id} parteAberta={parte} />
         </div>

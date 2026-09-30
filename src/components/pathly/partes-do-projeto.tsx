@@ -1,6 +1,6 @@
 import { lazy, Suspense, type ComponentType, type LazyExoticComponent } from "react";
 import { Link } from "@tanstack/react-router";
-import { X } from "lucide-react";
+import { ArrowLeft, X } from "lucide-react";
 import { Skeleton } from "./ui";
 import { PARTES, type SlugDeParte } from "./partes";
 import { cn } from "@/lib/utils";
@@ -85,6 +85,23 @@ export function PainelDaParte({
         falta é espaço horizontal, e uma coluna a mais espremeria a conversa até ela deixar de
         servir para conversar.
       */}
+      {/*
+        A volta para a conversa, só no celular.
+
+        O X de fechar fica no fim desta fileira, que com nove abas rola para fora da tela num
+        aparelho — a saída existia e não dava para alcançar. No desktop a conversa está ao lado e
+        o botão seria ruído.
+      */}
+      <Link
+        to="/app/projeto/$id"
+        params={{ id: projetoId }}
+        search={{}}
+        className="tap flex items-center gap-1.5 border-b border-border px-3 py-2.5 text-sm text-muted-foreground lg:hidden"
+      >
+        <ArrowLeft className="size-4" />
+        Voltar à conversa
+      </Link>
+
       <div className="flex items-center gap-1 overflow-x-auto border-b border-border px-2 py-2">
         {PARTES.map(({ slug, rotulo }) => (
           <Link

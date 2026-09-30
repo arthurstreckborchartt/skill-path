@@ -196,7 +196,23 @@ export function AppShell() {
 
 function AppShellInner() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const busca = useRouterState({ select: (s) => s.location.search }) as { parte?: string };
+  const projetos = useProjetos();
   const [gaveta, setGaveta] = useState(false);
+
+  /*
+   * Qual projeto está aberto, para a barra do celular dizer.
+   *
+   * Numa tela estreita a barra é a única coisa fixa, e gastá-la com o logo — que não muda nunca e
+   * não informa nada — desperdiça a linha mais valiosa do aparelho. Quem está no celular precisa
+   * saber em que projeto está e em que parte dele.
+   */
+  const idAberto = pathname.match(/^\/app\/[a-z-]+\/([0-9a-f-]{36})/i)?.[1] ?? null;
+  const projetoAberto =
+    projetos.estado === "pronta"
+      ? (projetos.projetos.find((p) => p.id === idAberto) ?? null)
+      : null;
+  const parteAberta = PARTES.find((p) => p.slug === busca.parte);
 
   // A gaveta fecha ao trocar de rota. Sem isto ela ficaria aberta por cima da tela que acabou de
   // abrir, e a pessoa teria que fechá-la para ver o que pediu.
@@ -225,9 +241,24 @@ function AppShellInner() {
         >
           <Menu className="size-5" />
         </button>
-        <Link to="/" className="tap">
-          <Logo compact />
-        </Link>
+        {projetoAberto ? (
+          <button
+            type="button"
+            onClick={() => setGaveta(true)}
+            /* min-h-11 = 44px. Medido em 375px: sem isto o botão fica com 37px, e ele é o alvo
+               mais usado da barra — é por ele que se abre a gaveta com as partes. */
+            className="tap flex min-h-11 min-w-0 flex-1 flex-col items-start justify-center"
+          >
+            <span className="w-full truncate text-sm font-medium">{projetoAberto.nome}</span>
+            {parteAberta && (
+              <span className="text-[11px] text-muted-foreground">{parteAberta.rotulo}</span>
+            )}
+          </button>
+        ) : (
+          <Link to="/" className="tap">
+            <Logo compact />
+          </Link>
+        )}
         <Link to="/app/configuracoes" className="tap ml-auto grid size-10 place-items-center">
           <AvatarConta size={22} />
         </Link>
@@ -262,7 +293,15 @@ function AppShellInner() {
           um transform aqui faz o <main> virar o containing block de todo `position: fixed` que
           estiver dentro dele.
         */
-        className="animate-[fade-up_0.35s_cubic-bezier(0.16,1,0.3,1)_backwards] px-4 pt-5 pb-[calc(3rem+env(safe-area-inset-bottom))] sm:px-6 lg:ml-64 lg:px-8 lg:pt-8 lg:pb-12"
+        /*
+          No celular a margem lateral cai de 16px para 12px, e a de cima de 20px para 12px.
+
+          Medido num aparelho de 375px: a largura útil vai de 343px para 351px. São 8px, e não é
+          uma revolução — mas numa tela onde a conversa deve ocupar quase tudo, margem é a última
+          coisa que merece espaço. No desktop a folga volta, porque lá sobra e a linha de texto
+          precisa de limite.
+        */
+        className="animate-[fade-up_0.35s_cubic-bezier(0.16,1,0.3,1)_backwards] px-3 pt-3 pb-[calc(2rem+env(safe-area-inset-bottom))] sm:px-6 sm:pt-5 lg:ml-64 lg:px-8 lg:pt-8 lg:pb-12"
       >
         <div className="mx-auto w-full max-w-7xl">
           <Outlet />

@@ -1,6 +1,8 @@
+import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Check } from "lucide-react";
+import { Check, ChevronDown } from "lucide-react";
 import { Skeleton } from "./ui";
+import { cn } from "@/lib/utils";
 import { PARTES, type SlugDeParte } from "./partes";
 import { useModeloDeDados } from "@/lib/banco/usar-banco";
 import { useMapaApi } from "@/lib/api/usar-api";
@@ -205,37 +207,72 @@ function Cartao({
 }) {
   const nomeDaParte = PARTES.find((p) => p.slug === conteudo.parte)?.rotulo;
 
+  /*
+   * No celular o painel nasce fechado, numa linha só.
+   *
+   * Aberto, ele empurraria a conversa para cima a cada assunto novo — e um cartão que aparece
+   * sozinho e rouba espaço do que a pessoa está lendo é intrusão, não contexto. Fechado, ele
+   * anuncia que existe algo ali e espera ser chamado.
+   *
+   * No desktop a coluna da direita é espaço que já estava sobrando, então ele nasce aberto: não
+   * tira nada de ninguém.
+   */
+  const [aberto, setAberto] = useState(false);
+  const temDetalhe = conteudo.itens.length > 0;
+
   return (
-    <aside className="rounded-lg border border-border bg-surface p-4">
-      <p className="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
-        {conteudo.rotulo}
-      </p>
-      <p className="mt-1.5 text-sm font-medium break-words">{conteudo.valor}</p>
+    <aside className="overflow-hidden rounded-lg border border-border bg-surface">
+      <button
+        type="button"
+        onClick={() => setAberto((a) => !a)}
+        aria-expanded={aberto}
+        className="tap flex w-full items-center gap-2 p-4 text-left lg:cursor-default"
+      >
+        <span className="min-w-0 flex-1">
+          <span className="block text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
+            {conteudo.rotulo}
+          </span>
+          <span className="mt-1 block text-sm font-medium break-words">{conteudo.valor}</span>
+        </span>
+        {temDetalhe && (
+          <ChevronDown
+            className={cn(
+              "size-4 shrink-0 text-muted-foreground transition-transform lg:hidden",
+              aberto && "rotate-180",
+            )}
+          />
+        )}
+      </button>
 
-      {conteudo.itens.length > 0 && (
-        <ul className="mt-3 space-y-1.5">
-          {conteudo.itens.map((i) => (
-            <li key={i} className="flex items-start gap-2 text-xs text-muted-foreground">
-              <Check className="mt-0.5 size-3 shrink-0" />
-              <span className="min-w-0 break-words">{i}</span>
-            </li>
-          ))}
-          {restantes > 0 && (
-            <li className="pl-5 text-xs text-muted-foreground">e mais {restantes}</li>
-          )}
-        </ul>
-      )}
+      <div className={cn("px-4 pb-4", !aberto && temDetalhe && "hidden lg:block")}>
+        {temDetalhe && (
+          <ul className="space-y-1.5">
+            {conteudo.itens.map((i) => (
+              <li key={i} className="flex items-start gap-2 text-xs text-muted-foreground">
+                <Check className="mt-0.5 size-3 shrink-0" />
+                <span className="min-w-0 break-words">{i}</span>
+              </li>
+            ))}
+            {restantes > 0 && (
+              <li className="pl-5 text-xs text-muted-foreground">e mais {restantes}</li>
+            )}
+          </ul>
+        )}
 
-      {conteudo.parte && nomeDaParte && (
-        <Link
-          to="/app/projeto/$id"
-          params={{ id: projetoId }}
-          search={{ parte: conteudo.parte }}
-          className="tap mt-4 inline-block text-xs underline underline-offset-2"
-        >
-          Ver {nomeDaParte.toLowerCase()}
-        </Link>
-      )}
+        {conteudo.parte && nomeDaParte && (
+          <Link
+            to="/app/projeto/$id"
+            params={{ id: projetoId }}
+            search={{ parte: conteudo.parte }}
+            className={cn(
+              "tap inline-block text-xs underline underline-offset-2",
+              temDetalhe && "mt-4",
+            )}
+          >
+            Ver {nomeDaParte.toLowerCase()}
+          </Link>
+        )}
+      </div>
     </aside>
   );
 }
