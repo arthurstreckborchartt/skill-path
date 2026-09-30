@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
 import { AuthLayout, AuthError, AuthField, AuthSocial } from "@/components/pathly/auth";
 import { Btn } from "@/components/pathly/ui";
-import { authErrorMessage, signInWithGoogle } from "@/lib/auth";
+import { authErrorMessage, signInWithGoogle, useSession } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/cadastro")({
@@ -33,6 +33,21 @@ function SignupPage() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
+  /*
+   * Com sessão, não há conta a criar: a pessoa já tem uma.
+   *
+   * Aqui não existe o caso da recuperação de senha, que em `/login` obriga a segurar o
+   * redirecionamento — nenhuma sessão legítima precisa desta tela.
+   *
+   * `notice` não atrapalha: quando o cadastro exige confirmação por e-mail, não há sessão ainda, e
+   * o aviso de "confira sua caixa de entrada" continua visível até a pessoa confirmar.
+   */
+  const { session, loading } = useSession();
+
+  useEffect(() => {
+    if (!loading && session) navigate({ to: "/app", replace: true });
+  }, [loading, session, navigate]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

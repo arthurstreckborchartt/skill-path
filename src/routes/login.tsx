@@ -3,7 +3,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
 import { AuthLayout, AuthError, AuthField, AuthSocial } from "@/components/pathly/auth";
 import { Btn } from "@/components/pathly/ui";
-import { authErrorMessage, signInWithGoogle } from "@/lib/auth";
+import { authErrorMessage, signInWithGoogle, useSession } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/login")({
@@ -30,12 +30,46 @@ function LoginPage() {
   // recuperação e emite este evento: aí a tela vira "defina a nova senha" em vez de login.
   const [recovering, setRecovering] = useState(false);
 
+  /*
+   * A recuperação de senha chega pela URL, e eu preciso saber disso antes do evento.
+   *
+   * `PASSWORD_RECOVERY` é assíncrono, e a sessão de recuperação pode ser lida antes dele. Se eu
+   * decidisse só pelo evento, haveria uma janela em que a sessão já existe, `recovering` ainda é
+   * `false`, e o efeito abaixo mandaria a pessoa para `/app` — sem nunca deixá-la trocar a senha,
+   * que é a única coisa que ela veio fazer.
+   *
+   * O `supabase-js` consome o fragmento da URL assim que carrega, então leio no primeiro render,
+   * antes de qualquer efeito.
+   */
+  const [veioDeRecuperacao] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return /type=recovery/.test(window.location.hash + window.location.search);
+  });
+
   useEffect(() => {
     const { data } = supabase.auth.onAuthStateChange((event) => {
       if (event === "PASSWORD_RECOVERY") setRecovering(true);
     });
     return () => data.subscription.unsubscribe();
   }, []);
+
+  /*
+   * Com sessão, esta tela não tem o que fazer.
+   *
+   * Quem já entrou e abre `/login` — por favorito, por histórico, pelo "Entrar" da landing — via o
+   * formulário e lia aquilo como "perdi o login", quando a sessão estava intacta o tempo todo.
+   *
+   * Sem portão de carregamento, pelo mesmo motivo da landing: segurar a tela atrás de um estado
+   * neutro atrasaria o formulário para quem realmente precisa dele, que é a maioria de quem chega
+   * aqui. `replace` para o voltar não repicar entre `/app` e esta tela.
+   */
+  const { session, loading } = useSession();
+
+  useEffect(() => {
+    if (loading || !session) return;
+    if (recovering || veioDeRecuperacao) return;
+    navigate({ to: "/app", replace: true });
+  }, [loading, session, recovering, veioDeRecuperacao, navigate]);
 
   async function handleReset() {
     if (!email.trim()) {
