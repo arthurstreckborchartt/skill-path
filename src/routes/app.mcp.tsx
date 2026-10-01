@@ -4,6 +4,7 @@ import { Plug, ShieldAlert, Trash2 } from "lucide-react";
 import { Btn, Chip, PageHeader, Panel, Skeleton } from "@/components/pathly/ui";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
+import { rotuloImpacto } from "@/lib/integracoes/contrato";
 
 export const Route = createFileRoute("/app/mcp")({
   staticData: { sitemap: false },
@@ -235,12 +236,6 @@ function tabelaNova<T>(nome: string): TabelaNova<T> {
   return (supabase as unknown as { from: (t: string) => TabelaNova<T> }).from(nome);
 }
 
-const ROTULO_IMPACTO: Record<string, string> = {
-  leitura: "Só leitura",
-  escrita: "Escreve",
-  destrutiva: "Destrutiva",
-};
-
 function TelaMcp() {
   const [estado, setEstado] = useState<Estado>({ fase: "carregando" });
   const [endereco, setEndereco] = useState("");
@@ -435,7 +430,7 @@ function TelaMcp() {
                       <span className="font-mono text-sm">{f.nome}</span>
                       <Chip tone={f.impacto === "destrutiva" ? "accent" : "muted"}>
                         {f.impacto === "destrutiva" && <ShieldAlert className="size-3" />}
-                        {ROTULO_IMPACTO[f.impacto] ?? f.impacto}
+                        {rotuloImpacto(f.impacto)}
                       </Chip>
                     </div>
 

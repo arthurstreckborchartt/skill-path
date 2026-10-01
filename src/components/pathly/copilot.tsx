@@ -17,6 +17,7 @@ import {
 } from "@/components/ai-elements/prompt-input";
 import { Shimmer } from "@/components/ai-elements/shimmer";
 import { BlocoCopiavel } from "./banco-vistas";
+import { CartaoChamada } from "./cartao-chamada";
 import { GeradorDePrompt } from "./gerador-de-prompt";
 import { cn } from "@/lib/utils";
 import { useCopilot } from "@/lib/copilot/usar-copilot";
@@ -25,6 +26,7 @@ import {
   ROTULO_TIPO_PROPOSTA,
   type Modo,
   type Proposta,
+  type RespostaCopilot,
 } from "@/lib/copilot/contrato";
 import type { Faceta } from "@/lib/copilot/roteador";
 
@@ -355,13 +357,14 @@ function Mensagem({ mensagem }: { mensagem: { papel: string; texto: string; resp
     );
   }
 
-  const r = mensagem.resposta as {
-    blocos: string[];
-    passos: { titulo: string; detalhe: string; comoValidar: string }[];
-    artefato: { titulo: string; conteudo: string } | null;
-    proximoPasso: string;
-    alertaComplexidade: string | null;
-  } | null;
+  /*
+   * O tipo real, e não uma cópia da forma escrita à mão aqui.
+   *
+   * A cópia tinha cinco dos sete campos de `RespostaCopilot`. Nada avisava quando ela ficava para
+   * trás: um campo novo no contrato simplesmente não existia nesta tela, e a sugestão de chamada
+   * de ferramenta era exatamente esse caso.
+   */
+  const r = mensagem.resposta as RespostaCopilot | null;
 
   if (!r) {
     return (
@@ -414,6 +417,11 @@ function Mensagem({ mensagem }: { mensagem: { papel: string; texto: string; resp
             <span className="font-medium text-foreground/70">Depois disto:</span> {r.proximoPasso}
           </p>
         )}
+
+        {/* `?? []`: mensagem gravada antes desta versão não tem o campo. */}
+        {(r.chamadasSugeridas ?? []).map((chamada, i) => (
+          <CartaoChamada key={`${chamada.ferramenta}-${i}`} chamada={chamada} />
+        ))}
       </MessageContent>
     </Message>
   );

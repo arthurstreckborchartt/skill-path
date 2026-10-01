@@ -162,8 +162,23 @@ O caminho de saída não depende de reverter na ordem certa.
    botao "Pedir execucao" na tela — que grava acao `pendente` e nao chama nada.
    O executor recusa tres coisas antes da rede: servidor que a pessoa nao conectou, endereco que
    nao confere com o conectado, e ferramenta que o servidor nao oferece mais.
-3. **Levar para a conversa.** O Copilot passa a poder propor uma chamada — como proposta, que é o
-   que ele já faz com mudança de plano.
+3. **Levar para a conversa.** ✅ Feito, e **não** como `Proposta`. O plano dizia "como proposta, que
+   é o que ele já faz com mudança de plano", e ao implementar ficou claro que o molde não serve:
+   uma proposta tem `campoAfetado` (caminho no Blueprint) e `valorProposto`, e aprovar grava ali.
+   Uma chamada de ferramenta não tem caminho nem valor — ela sai do Pathly. Entrar nesse tipo
+   exigiria `campoAfetado: null` e um desvio no caminho de aprovação, que é a escrita perigosa do
+   sistema. A chamada usa o portão que já existe: `pathly_acoes_externas`.
+
+   E a sugestão **não vira pendência sozinha**. São três gestos: o Copilot sugere, a pessoa pede
+   (nasce a linha `pendente`), a pessoa aprova em Integrações (e executar segue sendo o gesto
+   seguinte). O terceiro gesto parece cerimônia e não é: a descrição de cada ferramenta é escrita
+   por quem opera o servidor e entra no contexto do modelo. Se sugerir já criasse pendência, uma
+   descrição bem redigida encheria a fila de aprovação de alguém. Sugerindo sem gravar, o pior que
+   esse texto consegue é um cartão ignorado.
+
+   O modelo devolve o **número** da ferramenta na lista do contexto, nunca o endereço — e repete o
+   nome, redundante, para que número errado com nome certo caia em vez de virar outra chamada.
+   `servidor` e `impacto` saem do banco; do modelo vêm só `ref`, nome, argumentos e motivo.
 
 A fase 1 entrega valor sozinha e é reversível sem resíduo. Sugiro aprovar só ela primeiro.
 

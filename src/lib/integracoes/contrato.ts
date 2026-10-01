@@ -83,6 +83,25 @@ export const ROTULO_IMPACTO: Record<Impacto, string> = {
   destrutiva: "Destrutiva",
 };
 
+export function ehImpacto(valor: string): valor is Impacto {
+  return (IMPACTOS as readonly string[]).includes(valor);
+}
+
+/**
+ * O rótulo de um impacto que veio como texto solto.
+ *
+ * Existe porque `impacto` chega do banco como `text` em duas tabelas — ações externas e
+ * ferramentas MCP —, e `ROTULO_IMPACTO` é indexado pela união. Sem um lugar para estreitar, cada
+ * tela escrevia o próprio mapa: a de MCP tinha uma cópia idêntica desta, que concordava hoje e
+ * discordaria no dia em que um impacto novo entrasse só de um lado.
+ *
+ * Valor desconhecido volta como veio, e não como "Escreve": inventar rótulo para o que não
+ * reconheço faria a tela afirmar um risco que ninguém classificou.
+ */
+export function rotuloImpacto(valor: string): string {
+  return ehImpacto(valor) ? ROTULO_IMPACTO[valor] : valor;
+}
+
 export type AcaoExterna = {
   id: string;
   provedor: Provedor;

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Check, ChevronUp, FileCode, ShieldCheck } from "lucide-react";
+import { CartaoChamada } from "./cartao-chamada";
 import {
   Conversation,
   ConversationContent,
@@ -415,6 +416,14 @@ function ChatMessage({
             {resposta.proximoPasso}
           </p>
         )}
+        {/*
+          `?? []` e não `.length`: mensagens gravadas antes desta versão não têm o campo. A resposta
+          inteira é persistida como JSON, então o histórico guarda o formato do dia em que foi
+          escrito — e uma conversa antiga não pode quebrar a tela por isso.
+        */}
+        {(resposta.chamadasSugeridas ?? []).map((chamada, i) => (
+          <CartaoChamada key={`${chamada.ferramenta}-${i}`} chamada={chamada} />
+        ))}
         <AcoesDaResposta resposta={resposta} projetoId={projetoId} />
       </MessageContent>
     </Message>

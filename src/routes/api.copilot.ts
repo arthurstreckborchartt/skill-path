@@ -9,6 +9,7 @@ import { validarMapa } from "@/lib/api/contrato";
 import { validarPlano } from "@/lib/arquitetura-ia/contrato";
 import { gerarResposta } from "@/lib/copilot/gerar";
 import { montarContexto, type FontesContexto } from "@/lib/copilot/contexto";
+import type { FerramentaConhecida } from "@/lib/copilot/chamada-sugerida";
 import { rotear, FACETAS, type Faceta } from "@/lib/copilot/roteador";
 import { calcularProgresso, calcularProximoPasso } from "@/lib/copilot/proximo-passo";
 import { MODOS } from "@/lib/copilot/contrato";
@@ -53,6 +54,13 @@ type LinhaDecisao = {
 type LinhaPropostaResumo = { id: string; tipo: string; titulo: string; motivo: string };
 
 type LinhaMensagemResumo = { id: string; papel: string; conteudo: unknown; criado_em: string };
+
+type LinhaFerramentaMcp = {
+  servidor: string;
+  nome: string;
+  impacto: string;
+  descricao_do_servidor: string | null;
+};
 
 type LinhaProjeto = {
   id: string;
@@ -159,23 +167,39 @@ export const Route = createFileRoute("/api/copilot")({
          * existe para cobrir. O orçamento de tokens continua valendo: o que não entra no contexto
          * não é enviado, só não foi buscado à toa.
          */
-        const [rBanco, rApi, rIa, rDecisoes, rPropostas, rMensagens] = await Promise.all([
-          doProjeto("pathly_modelos_dados", "modelo"),
-          doProjeto("pathly_apis", "mapa"),
-          doProjeto("pathly_arquitetura_ia", "plano"),
-          fetch(
-            `${supabaseUrl}/rest/v1/pathly_copilot_decisoes?select=id,chave,titulo,valor,motivo,status,substitui_decisao_id,origem,confirmado_em,criado_em&projeto_id=eq.${encodeURIComponent(projetoId)}&status=eq.ativa`,
-            { headers: comoUsuario },
-          ),
-          fetch(
-            `${supabaseUrl}/rest/v1/pathly_copilot_propostas?select=id,tipo,titulo,motivo,status&projeto_id=eq.${encodeURIComponent(projetoId)}&status=eq.pendente`,
-            { headers: comoUsuario },
-          ),
-          fetch(
-            `${supabaseUrl}/rest/v1/pathly_copilot_mensagens?select=id,papel,conteudo,criado_em&projeto_id=eq.${encodeURIComponent(projetoId)}&order=criado_em.desc&limit=6`,
-            { headers: comoUsuario },
-          ),
-        ]);
+        const [rBanco, rApi, rIa, rDecisoes, rPropostas, rMensagens, rFerramentas] =
+          await Promise.all([
+            doProjeto("pathly_modelos_dados", "modelo"),
+            doProjeto("pathly_apis", "mapa"),
+            doProjeto("pathly_arquitetura_ia", "plano"),
+            fetch(
+              `${supabaseUrl}/rest/v1/pathly_copilot_decisoes?select=id,chave,titulo,valor,motivo,status,substitui_decisao_id,origem,confirmado_em,criado_em&projeto_id=eq.${encodeURIComponent(projetoId)}&status=eq.ativa`,
+              { headers: comoUsuario },
+            ),
+            fetch(
+              `${supabaseUrl}/rest/v1/pathly_copilot_propostas?select=id,tipo,titulo,motivo,status&projeto_id=eq.${encodeURIComponent(projetoId)}&status=eq.pendente`,
+              { headers: comoUsuario },
+            ),
+            fetch(
+              `${supabaseUrl}/rest/v1/pathly_copilot_mensagens?select=id,papel,conteudo,criado_em&projeto_id=eq.${encodeURIComponent(projetoId)}&order=criado_em.desc&limit=6`,
+              { headers: comoUsuario },
+            ),
+            /*
+             * As ferramentas MCP são da pessoa, não do projeto: `pathly_mcp_ferramentas` não tem
+             * `projeto_id`. Quem conectou um servidor conectou para a conta.
+             *
+             * Ordem fixa para que o `ref` que o modelo devolve seja depurável — e `limit` porque uma
+             * lista sem teto entraria inteira no prompt. Trinta já é mais ferramenta do que cabe numa
+             * conversa útil; passando disso, o corte de orçamento derrubaria a fatia toda.
+             *
+             * Se as tabelas ainda não existem no banco, isto volta não-ok e a lista fica vazia — o
+             * mesmo caminho de quem não conectou nada.
+             */
+            fetch(
+              `${supabaseUrl}/rest/v1/pathly_mcp_ferramentas?select=servidor,nome,impacto,descricao_do_servidor&user_id=eq.${userId}&order=servidor.asc,nome.asc&limit=30`,
+              { headers: comoUsuario },
+            ),
+          ]);
 
         const primeiro = async <T>(r: Response, campo: string): Promise<T | null> => {
           if (!r.ok) return null;
@@ -236,6 +260,21 @@ export const Route = createFileRoute("/api/copilot")({
               .reverse()
           : [];
 
+        /*
+         * O catálogo que o modelo vai poder citar — e contra o qual o que ele citar é conferido.
+         *
+         * `impacto` vem daqui, do banco, e nunca do modelo: classificar risco de uma ferramenta é
+         * decisão da pessoa na tela de MCP, não opinião de quem escreveu a resposta.
+         */
+        const ferramentasMcp: FerramentaConhecida[] = rFerramentas.ok
+          ? ((await rFerramentas.json()) as LinhaFerramentaMcp[]).map((f) => ({
+              servidor: f.servidor,
+              nome: f.nome,
+              impacto: f.impacto,
+              descricaoDoServidor: f.descricao_do_servidor ?? "",
+            }))
+          : [];
+
         const blueprint = completarBlueprint(projeto.conteudo ?? {});
         const estado = {
           blueprint,
@@ -277,6 +316,7 @@ export const Route = createFileRoute("/api/copilot")({
            * dela pode apontar para outro banco. O cliente manda o resumo quando tiver.
            */
           estadoBanco: null,
+          ferramentasMcp,
           proximoPasso: calcularProximoPasso(projetoId, estado),
           progresso: calcularProgresso(estado),
           etapaAtual: facetaDaTela ?? null,
@@ -296,6 +336,17 @@ export const Route = createFileRoute("/api/copilot")({
 
         const gerado = await gerarResposta(contexto.texto, pergunta, modo, lerEnv, {
           comClaude: pro,
+          /*
+           * A mesma lista que foi para o contexto vai para o validador. Tem que ser a mesma: se o
+           * modelo lê uma lista e a validação confere contra outra, `ref` aponta para a ferramenta
+           * errada — e o erro seria invisível, porque o nome ainda poderia casar por coincidência.
+           *
+           * Passa vazia quando a fatia foi cortada por orçamento, e aí nada sobrevive: o modelo
+           * não viu a lista, então qualquer ferramenta que ele nomeie veio da memória dele.
+           */
+          ferramentasMcp: contexto.fatiasIncluidas.includes("ferramentas-mcp")
+            ? ferramentasMcp
+            : [],
         });
 
         if (!gerado.ok) {

@@ -13,6 +13,7 @@ import type { Decisao, MensagemCopilot, Proposta } from "./contrato";
 import type { MudancaRegistrada } from "./historico";
 import type { ResumoBanco } from "./estado-banco";
 import type { Faceta } from "./roteador";
+import { listarParaContexto, type FerramentaConhecida } from "./chamada-sugerida";
 import type { ProximoPasso } from "./proximo-passo";
 
 /**
@@ -73,6 +74,13 @@ export type FontesContexto = {
   mudancasRecentes: MudancaRegistrada[];
   mensagensRecentes: MensagemCopilot[];
   estadoBanco: ResumoBanco | null;
+  /**
+   * As ferramentas MCP que a pessoa conectou.
+   *
+   * Vazio quando ela não conectou nada — e aí o Copilot não fica sabendo que MCP existe, que é o
+   * certo: oferecer chamada de ferramenta a quem não tem servidor é prometer o que não dá.
+   */
+  ferramentasMcp: readonly FerramentaConhecida[];
   proximoPasso: ProximoPasso;
   progresso: number;
   etapaAtual: string | null;
@@ -315,6 +323,16 @@ export function montarContexto(
   push("estado-banco", estadoDoBanco(f), true);
   push("decisoes", decisoes(f), true);
   push("propostas-pendentes", propostas(f), true);
+
+  /*
+   * Entra cedo para sobreviver ao corte, e NÃO como essencial.
+   *
+   * Cedo porque uma lista cortada é pior que lista ausente: o modelo que vê três ferramentas de
+   * dez sugere a errada e a pessoa não entende por quê. Não essencial porque uma pessoa com
+   * quarenta ferramentas conectadas não pode empurrar o núcleo do projeto fora do orçamento — se
+   * algo tem que cair, que seja isto, e `fatiasCortadas` dirá que caiu.
+   */
+  push("ferramentas-mcp", listarParaContexto(f.ferramentasMcp));
 
   // As fatias das facetas, sem repetir a mesma função quando duas facetas pedem a mesma coisa.
   const jaIncluidas = new Set<string>();

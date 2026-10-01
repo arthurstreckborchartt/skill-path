@@ -18,6 +18,12 @@
  * histórico de quem mudou o quê. A proposta existe para que a mudança tenha um autor.
  */
 
+import {
+  resolverChamadas,
+  type ChamadaSugerida,
+  type FerramentaConhecida,
+} from "./chamada-sugerida";
+
 // ---------------------------------------------------------------------------------------------
 // Mensagens
 // ---------------------------------------------------------------------------------------------
@@ -93,6 +99,16 @@ export type RespostaCopilot = {
    * proposta pendente na tela, com botão de aprovar. Nunca vira escrita direta.
    */
   propostas: PropostaSugerida[];
+  /**
+   * Chamadas de ferramenta MCP que a resposta sugere — e que também NÃO acontecem sozinhas.
+   *
+   * Diferente de `propostas` em dois pontos: não muda o plano, e não vira nem pendência. Virar
+   * pedido de aprovação depende de um clique da pessoa. Ver `chamada-sugerida.ts`.
+   *
+   * Vem vazio quando a pessoa não conectou servidor nenhum, e vem vazio quando o modelo nomeou
+   * ferramenta que não está na lista dela.
+   */
+  chamadasSugeridas: ChamadaSugerida[];
   /** Tecnologia cara recomendada sem justificativa concreta. Ver `TECNOLOGIAS_CARAS`. */
   alertaComplexidade: string | null;
 };
@@ -329,9 +345,17 @@ function detectarComplexidade(blocos: string[]): string | null {
   return `Esta resposta cita ${achadas.join(", ")}. Confira se a justificativa convence antes de seguir — a pergunta certa é qual a menor arquitetura que resolve o seu problema.`;
 }
 
-export function validarResposta(valor: unknown): RespostaCopilot | null {
+/**
+ * @param ferramentasMcp A lista que foi para o contexto, para resolver as chamadas sugeridas.
+ *   Omitir é o mesmo que não ter nenhuma: sem catálogo, nenhuma sugestão sobrevive. Falha fechada
+ *   de propósito — quem não passou a lista não tem como conferir o que o modelo nomeou.
+ */
+export function validarResposta(
+  valor: unknown,
+  ferramentasMcp: readonly FerramentaConhecida[] = [],
+): RespostaCopilot | null {
   if (!valor || typeof valor !== "object") return null;
-  const r = valor as Partial<RespostaCopilot>;
+  const r = valor as Partial<RespostaCopilot> & { chamadas?: unknown };
 
   const blocos = lista(r.blocos);
   if (blocos.length === 0) return null;
@@ -353,6 +377,7 @@ export function validarResposta(valor: unknown): RespostaCopilot | null {
     artefato: validarArtefato(r.artefato),
     proximoPasso: texto(r.proximoPasso, 5) ?? "",
     propostas,
+    chamadasSugeridas: resolverChamadas(r.chamadas, ferramentasMcp),
     alertaComplexidade: detectarComplexidade(blocos),
   };
 }
