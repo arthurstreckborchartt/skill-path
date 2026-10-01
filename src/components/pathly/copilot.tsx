@@ -11,13 +11,13 @@ import { Message, MessageContent, MessageResponse } from "@/components/ai-elemen
 import {
   PromptInput,
   PromptInputFooter,
-  PromptInputSubmit,
   PromptInputTextarea,
   PromptInputTools,
 } from "@/components/ai-elements/prompt-input";
 import { Shimmer } from "@/components/ai-elements/shimmer";
 import { BlocoCopiavel } from "./banco-vistas";
 import { CartaoChamada } from "./cartao-chamada";
+import { BotaoEnviar } from "./botao-enviar";
 import { GeradorDePrompt } from "./gerador-de-prompt";
 import { cn } from "@/lib/utils";
 import { useCopilot } from "@/lib/copilot/usar-copilot";
@@ -280,9 +280,9 @@ function Painel({
                   </button>
                 ))}
               </PromptInputTools>
-              <PromptInputSubmit
-                status={estado.respondendo ? "submitted" : "ready"}
-                disabled={estado.respondendo || !texto.trim()}
+              <BotaoEnviar
+                carregando={estado.respondendo}
+                desabilitado={estado.respondendo || !texto.trim()}
               />
             </PromptInputFooter>
           </PromptInput>

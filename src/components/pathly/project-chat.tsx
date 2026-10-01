@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Check, ChevronUp, FileCode, ShieldCheck } from "lucide-react";
 import { CartaoChamada } from "./cartao-chamada";
+import { BotaoEnviar } from "./botao-enviar";
 import {
   Conversation,
   ConversationContent,
@@ -11,7 +12,6 @@ import { Message, MessageContent, MessageResponse } from "@/components/ai-elemen
 import {
   PromptInput,
   PromptInputFooter,
-  PromptInputSubmit,
   PromptInputTextarea,
   PromptInputTools,
 } from "@/components/ai-elements/prompt-input";
@@ -335,9 +335,9 @@ export function ProjectChat({
                   </button>
                 ))}
               </PromptInputTools>
-              <PromptInputSubmit
-                status={estado.respondendo ? "submitted" : "ready"}
-                disabled={estado.respondendo || !texto.trim()}
+              <BotaoEnviar
+                carregando={estado.respondendo}
+                desabilitado={estado.respondendo || !texto.trim()}
               />
             </PromptInputFooter>
           </PromptInput>

@@ -191,12 +191,28 @@
    * Croma entre 0.14 e 0.19 — cerca de metade do máximo destes matizes. Subiu de 0.09–0.13 para
    * a cor ficar viva o bastante para se notar num anel fino; acima disso começa a lembrar fita de
    * LED, e a interface toda deixa de parecer preta e branca com um detalhe.
+   *
+   * ## Por que oito, e por que nesta ordem
+   *
+   * Eram cinco, e numeradas fora de ordem — o rosa, que fica entre o verde e o roxo na roda de
+   * matiz, era o número 5. Quem lesse `--composer-1, 2, 3, 4` no gradiente não tinha como saber
+   * que a sequência pulava uma cor.
+   *
+   * Agora a numeração É a ordem do giro: 350° → 160°, descendo o matiz de parada em parada. Isso
+   * deixa o degradê suave de graça, porque vizinhos na lista são vizinhos na roda — e torna um
+   * erro visível, já que tirar uma parada abre um salto de matiz que se enxerga no anel.
+   *
+   * O passo é de ~25°. Mais apertado que isso e as cores viram uma faixa só; mais largo e aparece
+   * a banda entre elas.
    */
-  --composer-1: oklch(0.6 0.19 295); /* roxo */
-  --composer-2: oklch(0.62 0.17 255); /* azul */
-  --composer-3: oklch(0.66 0.15 210); /* ciano */
-  --composer-4: oklch(0.68 0.14 165); /* verde */
-  --composer-5: oklch(0.64 0.18 350); /* rosa */
+  --composer-1: oklch(0.64 0.18 350); /* rosa */
+  --composer-2: oklch(0.62 0.19 325); /* magenta */
+  --composer-3: oklch(0.6 0.19 295); /* roxo */
+  --composer-4: oklch(0.61 0.18 270); /* índigo */
+  --composer-5: oklch(0.62 0.17 245); /* azul */
+  --composer-6: oklch(0.66 0.15 212); /* ciano */
+  --composer-7: oklch(0.67 0.14 190); /* turquesa */
+  --composer-8: oklch(0.68 0.14 160); /* verde */
 }
 
 .dark {
@@ -252,11 +268,14 @@
   --shadow-glow: none;
 
   /* Mesmos matizes, mais claros: sobre o fundo escuro do app um croma igual apagaria. */
-  --composer-1: oklch(0.7 0.19 295);
-  --composer-2: oklch(0.72 0.17 255);
-  --composer-3: oklch(0.78 0.15 210);
-  --composer-4: oklch(0.78 0.14 165);
-  --composer-5: oklch(0.74 0.18 350);
+  --composer-1: oklch(0.74 0.18 350);
+  --composer-2: oklch(0.72 0.19 325);
+  --composer-3: oklch(0.7 0.19 295);
+  --composer-4: oklch(0.71 0.18 270);
+  --composer-5: oklch(0.72 0.17 245);
+  --composer-6: oklch(0.78 0.15 212);
+  --composer-7: oklch(0.78 0.14 190);
+  --composer-8: oklch(0.78 0.14 160);
 }
 
 @layer base {
@@ -301,6 +320,68 @@
       animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
       scroll-behavior: auto !important;
+    }
+
+    /*
+     * A exceção: a moldura do compositor continua girando.
+     *
+     * ## Por que ela mora aqui, e não junto das outras regras da moldura
+     *
+     * A regra acima é `!important`, e para declarações `!important` a ordem dos layers se inverte:
+     * o que está em `@layer base` vence o que está fora de layer nenhum. As regras da moldura são
+     * sem layer, então nada escrito lá embaixo — nem com `!important` — religa esta animação. A
+     * exceção só funciona dentro do mesmo layer, e é por isso que ela está longe do resto.
+     *
+     * ## Por que `var()` e não os números de novo
+     *
+     * As durações vivem uma vez só, cada uma na regra do pseudo-elemento que a usa. Repeti-las
+     * aqui criaria duas fontes para "quanto tempo o arco leva para dar a volta", que concordariam
+     * hoje e discordariam no dia em que alguém ajustasse uma delas.
+     *
+     * ## A escolha, dita por inteiro
+     *
+     * Isto desobedece `prefers-reduced-motion` neste componente. A troca é deliberada: o anel é a
+     * identidade do compositor, e medido nesta máquina o sinal não vem de uma escolha da pessoa —
+     * o Windows reporta animações LIGADAS, e quem força `reduce` é o navegador embutido do painel.
+     * Honrar o sinal ali apagava o efeito para quem nunca pediu isso. O movimento é lento, preso a
+     * uma faixa de 1px, e não desloca nada na tela.
+     */
+    .chat-composer-frame::after,
+    .chat-composer-frame::before {
+      animation-duration: var(--composer-giro) !important;
+      animation-iteration-count: infinite !important;
+      transition-duration: var(--composer-fade) !important;
+    }
+
+    .chat-composer-frame {
+      transition-duration: var(--composer-fade) !important;
+    }
+
+    /*
+     * O círculo de carregando continua girando.
+     *
+     * Um spinner parado não é "menos movimento", é um indicador quebrado: ele existe para dizer
+     * "estou trabalhando", e parado diz o contrário — que travou. A pessoa fica sem saber se
+     * espera ou se clica de novo.
+     *
+     * A classe é só âncora, e marca um spinner de cada vez em vez de religar `.animate-spin` no
+     * app inteiro. Se outro indicador aparecer com o mesmo problema, ele entra aqui por nome — a
+     * lista crescendo é o registro de onde isso importou de verdade.
+     */
+    .botao-enviar-girando {
+      animation-duration: 1s !important;
+      animation-iteration-count: infinite !important;
+    }
+
+    /*
+     * E a troca entre a seta e o círculo continua sendo uma troca, não um corte.
+     *
+     * Sem isto a duração cai para 0.01ms e os dois ícones trocam no mesmo quadro — que é
+     * exatamente o corte seco que o componente veio consertar. São 300ms num quadrado de 16px,
+     * sem deslocar nada em volta.
+     */
+    .botao-enviar-troca {
+      transition-duration: 300ms !important;
     }
   }
 
@@ -384,9 +465,15 @@
  *
  * ## Por que a luz é um arco, e não um anel inteiro
  *
- * Um `conic-gradient` com as cinco cores ao redor de todo o contorno lê como arco-íris. Aqui o
- * gradiente é quase todo transparente e carrega **um único arco** de luz, que dá a volta. O que se
- * vê é uma luz percorrendo a borda — o resto do contorno continua sendo o cinza de sempre.
+ * Um `conic-gradient` com cor ao redor de TODO o contorno lê como arco-íris: sem começo nem fim,
+ * ele vira um adesivo, e girar deixa de se notar porque não há o que acompanhar. Aqui o gradiente
+ * carrega **um único arco** de luz, que dá a volta — e os ~110° que sobram transparentes são o que
+ * dá cabeça e cauda a ele. É esse trecho escuro que faz a luz parecer percorrer a borda em vez de
+ * o anel inteiro piscar.
+ *
+ * O arco ocupa 240° dos 360, com as oito cores em ~25° cada e as pontas desvanecendo para
+ * transparente. Era metade disso, com quatro cores: alargou porque, estreito, só duas ou três
+ * cores apareciam ao mesmo tempo e a varredura de matiz não se lia como varredura.
  */
 .chat-composer-frame {
   --composer-radius: 1.375rem;
@@ -395,7 +482,7 @@
    * do campo e calculado a partir dela — os dois discordarem deixa um canto quadrado dentro de
    * uma moldura redonda.
    */
-  --composer-anel: 2px;
+  --composer-anel: 3px;
   /*
    * Intensidade do arco que viaja.
    *
@@ -414,7 +501,12 @@
   border-radius: var(--composer-radius);
   /* Em repouso a moldura é exatamente a borda que o resto do app usa. */
   background: var(--border);
-  transition: background 0.4s ease;
+  /*
+   * A duração sai de uma variável porque a exceção de `prefers-reduced-motion`, em `@layer base`,
+   * precisa citá-la sem repetir o número. Ver o comentário lá.
+   */
+  --composer-fade: 0.4s;
+  transition: background var(--composer-fade) ease;
 }
 
 /*
@@ -432,12 +524,16 @@
   background: conic-gradient(
     in oklab from var(--composer-angle),
     transparent 0deg,
-    transparent 140deg,
-    var(--composer-1) 192deg,
-    var(--composer-2) 232deg,
-    var(--composer-3) 272deg,
-    var(--composer-4) 312deg,
-    transparent 352deg,
+    transparent 110deg,
+    var(--composer-1) 152deg,
+    var(--composer-2) 177deg,
+    var(--composer-3) 202deg,
+    var(--composer-4) 227deg,
+    var(--composer-5) 252deg,
+    var(--composer-6) 277deg,
+    var(--composer-7) 302deg,
+    var(--composer-8) 327deg,
+    transparent 350deg,
     transparent 360deg
   );
   opacity: var(--composer-luz);
@@ -448,15 +544,18 @@
    * de antes, uma palavra curta terminava antes de a luz aparecer. Na saida o inverso: sumir
    * depressa entregaria o cronometro por tras do efeito.
    */
-  transition: opacity 0.7s ease;
-  animation: composer-spin 3.2s linear infinite;
+  --composer-fade: 0.7s;
+  --composer-giro: 3.2s;
+  transition: opacity var(--composer-fade) ease;
+  animation: composer-spin var(--composer-giro) linear infinite;
   pointer-events: none;
 }
 
 .chat-composer-frame[data-typing="true"]::after,
 .chat-composer-frame[data-processing="true"]::after,
 .chat-composer-frame[data-processing="true"]::before {
-  transition-duration: 0.2s;
+  /* A variável, e não `transition-duration` direto: é ela que a exceção em `@layer base` lê. */
+  --composer-fade: 0.2s;
 }
 
 /*
@@ -477,14 +576,16 @@
     in oklab from var(--composer-angle),
     transparent 0deg,
     transparent 250deg,
-    var(--composer-5) 300deg,
-    var(--composer-1) 330deg,
+    var(--composer-1) 300deg,
+    var(--composer-3) 330deg,
     transparent 358deg,
     transparent 360deg
   );
   opacity: 0;
-  transition: opacity 0.55s ease;
-  animation: composer-spin 1.7s linear infinite;
+  --composer-fade: 0.55s;
+  --composer-giro: 1.7s;
+  transition: opacity var(--composer-fade) ease;
+  animation: composer-spin var(--composer-giro) linear infinite;
   pointer-events: none;
 }
 
@@ -496,14 +597,24 @@
   background: color-mix(in oklab, var(--foreground) 26%, var(--border));
 }
 
-/* Digitando: o arco acende e dá a volta. É o estado que a tela inteira existe para servir. */
-.chat-composer-frame[data-typing="true"] {
-  --composer-luz: 1;
-}
-
-/* Processando: o primeiro arco continua, o segundo entra por cima e o conjunto ganha ritmo. */
+/*
+ * Digitando: o arco acende e dá a volta. É o estado que a tela inteira existe para servir.
+ *
+ * O `background` volta para `--border` e isso é o que torna a cor forte, não a opacidade.
+ *
+ * O arco mora atrás do fundo da moldura (`z-index: -1`), então o fundo é um filtro em cima dele.
+ * Com o cinza do foco — ~36% de branco — a cor chegava lavada justamente no estado em que ela
+ * deveria aparecer: `--composer-luz: 1` não adiantava nada, porque o teto não era a opacidade do
+ * arco, era o branco por cima. Voltando ao fundo de repouso, o filtro cai para 13% e as cores
+ * chegam quase inteiras.
+ *
+ * Não é perda de sinal: o tom levantado existia para dizer "foco". Digitando, quem diz isso é a
+ * cor andando — e dois sinais para a mesma coisa é o que estava enfraquecendo o mais forte.
+ */
+.chat-composer-frame[data-typing="true"],
 .chat-composer-frame[data-processing="true"] {
   --composer-luz: 1;
+  background: var(--border);
 }
 
 .chat-composer-frame[data-processing="true"]::before {
@@ -560,15 +671,17 @@
 }
 
 /*
- * Sem movimento: os dois arcos somem e fica só a borda cinza. Um arco colorido parado numa quina
- * é mancha, não informação — exatamente o que esta versão veio consertar.
+ * Nenhuma regra de `prefers-reduced-motion` aqui, de propósito.
+ *
+ * Já houve duas, e as duas apagavam o efeito: primeiro `display: none` nos dois arcos, depois um
+ * degradê parado no lugar deles. As duas partiam de que a preferência tinha sido escolhida pela
+ * pessoa. Medido nesta máquina, não foi: o Windows reporta animações ligadas, e quem força
+ * `reduce` é o navegador embutido do painel. A moldura ficava sem identidade para quem nunca
+ * pediu isso.
+ *
+ * O que sobrou da preferência está em `@layer base`, onde a exceção devolve as durações — é lá que
+ * ela precisa morar, porque a regra global é `!important` e layer vence quem está fora de layer.
  */
-@media (prefers-reduced-motion: reduce) {
-  .chat-composer-frame::after,
-  .chat-composer-frame::before {
-    display: none;
-  }
-}
 
 /*
  * `both` para a barra respeitar o deslocamento inicial durante o `animation-delay` e ficar no

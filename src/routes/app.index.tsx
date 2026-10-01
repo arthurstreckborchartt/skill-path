@@ -3,9 +3,9 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
   PromptInput,
   PromptInputFooter,
-  PromptInputSubmit,
   PromptInputTextarea,
 } from "@/components/ai-elements/prompt-input";
+import { BotaoEnviar } from "@/components/pathly/botao-enviar";
 import { PathlyMark } from "@/components/pathly/project-chat";
 import { ProgressBar, Skeleton } from "@/components/pathly/ui";
 import { useDigitando } from "@/components/pathly/usar-digitando";
@@ -172,9 +172,9 @@ function TelaInicial() {
               disabled={ocupado}
             />
             <PromptInputFooter className="justify-end">
-              <PromptInputSubmit
-                status={ocupado ? "submitted" : "ready"}
-                disabled={ideia.trim().length < 15 || ocupado}
+              <BotaoEnviar
+                carregando={ocupado}
+                desabilitado={ideia.trim().length < 15 || ocupado}
               />
             </PromptInputFooter>
           </PromptInput>
