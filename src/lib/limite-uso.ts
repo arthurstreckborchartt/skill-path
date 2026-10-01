@@ -336,6 +336,15 @@ export const LIMITES = {
    */
   integracoes: { limite: 30, janelaMinutos: 60 },
   /**
+   * Conectar servidor MCP.
+   *
+   * Baixo de proposito: cada chamada faz o servidor sair para um endereco que a pessoa escolheu,
+   * e o teto e o que impede usar o Pathly como sonda de rede — pedir cem enderecos por hora para
+   * descobrir o que responde. Dez cobre quem esta de fato conectando ferramentas; quem passa
+   * disso nao esta conectando.
+   */
+  mcpConectar: { limite: 10, janelaMinutos: 60 },
+  /**
    * O MCP Gateway.
    *
    * Mais alto que os outros de propósito: quem chama aqui é um agente trabalhando, e ler contexto

@@ -39,6 +39,7 @@ import { Route as AppConfiguracoesRouteImport } from './routes/app.configuracoes
 import { Route as AppFerramentasRouteImport } from './routes/app.ferramentas'
 import { Route as AppHabilidadesRouteImport } from './routes/app.habilidades'
 import { Route as AppIntegracoesRouteImport } from './routes/app.integracoes'
+import { Route as AppMcpRouteImport } from './routes/app.mcp'
 import { Route as AppObsidianRouteImport } from './routes/app.obsidian'
 import { Route as AppOportunidadesRouteImport } from './routes/app.oportunidades'
 import { Route as AppPerfilRouteImport } from './routes/app.perfil'
@@ -49,6 +50,7 @@ import { Route as AppRevisarRouteImport } from './routes/app.revisar'
 import { Route as AppRotaRouteImport } from './routes/app.rota'
 import { Route as ApiIaChaveRouteImport } from './routes/api.ia.chave'
 import { Route as ApiIntegracoesExecutarRouteImport } from './routes/api.integracoes.executar'
+import { Route as ApiMcpConectarRouteImport } from './routes/api.mcp.conectar'
 import { Route as ApiPonteCodigoRouteImport } from './routes/api.ponte.codigo'
 import { Route as AppApiIdRouteImport } from './routes/app.api.$id'
 import { Route as AppAprenderActivityIdRouteImport } from './routes/app.aprender.$activityId'
@@ -216,6 +218,11 @@ const AppIntegracoesRoute = AppIntegracoesRouteImport.update({
   path: '/integracoes',
   getParentRoute: () => AppRoute,
 } as any)
+const AppMcpRoute = AppMcpRouteImport.update({
+  id: '/mcp',
+  path: '/mcp',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppObsidianRoute = AppObsidianRouteImport.update({
   id: '/obsidian',
   path: '/obsidian',
@@ -264,6 +271,11 @@ const ApiIaChaveRoute = ApiIaChaveRouteImport.update({
 const ApiIntegracoesExecutarRoute = ApiIntegracoesExecutarRouteImport.update({
   id: '/api/integracoes/executar',
   path: '/api/integracoes/executar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiMcpConectarRoute = ApiMcpConectarRouteImport.update({
+  id: '/api/mcp/conectar',
+  path: '/api/mcp/conectar',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPonteCodigoRoute = ApiPonteCodigoRouteImport.update({
@@ -374,6 +386,7 @@ export interface FileRoutesByFullPath {
   '/app/ferramentas': typeof AppFerramentasRoute
   '/app/habilidades': typeof AppHabilidadesRoute
   '/app/integracoes': typeof AppIntegracoesRoute
+  '/app/mcp': typeof AppMcpRoute
   '/app/obsidian': typeof AppObsidianRoute
   '/app/oportunidades': typeof AppOportunidadesRoute
   '/app/perfil': typeof AppPerfilRoute
@@ -385,6 +398,7 @@ export interface FileRoutesByFullPath {
   '/app/': typeof AppIndexRoute
   '/api/ia/chave': typeof ApiIaChaveRoute
   '/api/integracoes/executar': typeof ApiIntegracoesExecutarRoute
+  '/api/mcp/conectar': typeof ApiMcpConectarRoute
   '/api/ponte/codigo': typeof ApiPonteCodigoRoute
   '/app/api/$id': typeof AppApiIdRoute
   '/app/aprender/$activityId': typeof AppAprenderActivityIdRoute
@@ -430,6 +444,7 @@ export interface FileRoutesByTo {
   '/app/ferramentas': typeof AppFerramentasRoute
   '/app/habilidades': typeof AppHabilidadesRoute
   '/app/integracoes': typeof AppIntegracoesRoute
+  '/app/mcp': typeof AppMcpRoute
   '/app/obsidian': typeof AppObsidianRoute
   '/app/oportunidades': typeof AppOportunidadesRoute
   '/app/perfil': typeof AppPerfilRoute
@@ -441,6 +456,7 @@ export interface FileRoutesByTo {
   '/app': typeof AppIndexRoute
   '/api/ia/chave': typeof ApiIaChaveRoute
   '/api/integracoes/executar': typeof ApiIntegracoesExecutarRoute
+  '/api/mcp/conectar': typeof ApiMcpConectarRoute
   '/api/ponte/codigo': typeof ApiPonteCodigoRoute
   '/app/api/$id': typeof AppApiIdRoute
   '/app/aprender/$activityId': typeof AppAprenderActivityIdRoute
@@ -488,6 +504,7 @@ export interface FileRoutesById {
   '/app/ferramentas': typeof AppFerramentasRoute
   '/app/habilidades': typeof AppHabilidadesRoute
   '/app/integracoes': typeof AppIntegracoesRoute
+  '/app/mcp': typeof AppMcpRoute
   '/app/obsidian': typeof AppObsidianRoute
   '/app/oportunidades': typeof AppOportunidadesRoute
   '/app/perfil': typeof AppPerfilRoute
@@ -499,6 +516,7 @@ export interface FileRoutesById {
   '/app/': typeof AppIndexRoute
   '/api/ia/chave': typeof ApiIaChaveRoute
   '/api/integracoes/executar': typeof ApiIntegracoesExecutarRoute
+  '/api/mcp/conectar': typeof ApiMcpConectarRoute
   '/api/ponte/codigo': typeof ApiPonteCodigoRoute
   '/app/api/$id': typeof AppApiIdRoute
   '/app/aprender/$activityId': typeof AppAprenderActivityIdRoute
@@ -547,6 +565,7 @@ export interface FileRouteTypes {
     | '/app/ferramentas'
     | '/app/habilidades'
     | '/app/integracoes'
+    | '/app/mcp'
     | '/app/obsidian'
     | '/app/oportunidades'
     | '/app/perfil'
@@ -558,6 +577,7 @@ export interface FileRouteTypes {
     | '/app/'
     | '/api/ia/chave'
     | '/api/integracoes/executar'
+    | '/api/mcp/conectar'
     | '/api/ponte/codigo'
     | '/app/api/$id'
     | '/app/aprender/$activityId'
@@ -603,6 +623,7 @@ export interface FileRouteTypes {
     | '/app/ferramentas'
     | '/app/habilidades'
     | '/app/integracoes'
+    | '/app/mcp'
     | '/app/obsidian'
     | '/app/oportunidades'
     | '/app/perfil'
@@ -614,6 +635,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/api/ia/chave'
     | '/api/integracoes/executar'
+    | '/api/mcp/conectar'
     | '/api/ponte/codigo'
     | '/app/api/$id'
     | '/app/aprender/$activityId'
@@ -660,6 +682,7 @@ export interface FileRouteTypes {
     | '/app/ferramentas'
     | '/app/habilidades'
     | '/app/integracoes'
+    | '/app/mcp'
     | '/app/obsidian'
     | '/app/oportunidades'
     | '/app/perfil'
@@ -671,6 +694,7 @@ export interface FileRouteTypes {
     | '/app/'
     | '/api/ia/chave'
     | '/api/integracoes/executar'
+    | '/api/mcp/conectar'
     | '/api/ponte/codigo'
     | '/app/api/$id'
     | '/app/aprender/$activityId'
@@ -714,6 +738,7 @@ export interface RootRouteChildren {
   ApiStripeWebhookRoute: typeof ApiStripeWebhookRoute
   ApiIaChaveRoute: typeof ApiIaChaveRoute
   ApiIntegracoesExecutarRoute: typeof ApiIntegracoesExecutarRoute
+  ApiMcpConectarRoute: typeof ApiMcpConectarRoute
   ApiIntegracoesOauthCallbackRoute: typeof ApiIntegracoesOauthCallbackRoute
   ApiIntegracoesOauthIniciarRoute: typeof ApiIntegracoesOauthIniciarRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
@@ -932,6 +957,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppIntegracoesRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/mcp': {
+      id: '/app/mcp'
+      path: '/mcp'
+      fullPath: '/app/mcp'
+      preLoaderRoute: typeof AppMcpRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/obsidian': {
       id: '/app/obsidian'
       path: '/obsidian'
@@ -1000,6 +1032,13 @@ declare module '@tanstack/react-router' {
       path: '/api/integracoes/executar'
       fullPath: '/api/integracoes/executar'
       preLoaderRoute: typeof ApiIntegracoesExecutarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/mcp/conectar': {
+      id: '/api/mcp/conectar'
+      path: '/api/mcp/conectar'
+      fullPath: '/api/mcp/conectar'
+      preLoaderRoute: typeof ApiMcpConectarRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/ponte/codigo': {
@@ -1117,6 +1156,7 @@ interface AppRouteChildren {
   AppFerramentasRoute: typeof AppFerramentasRoute
   AppHabilidadesRoute: typeof AppHabilidadesRoute
   AppIntegracoesRoute: typeof AppIntegracoesRoute
+  AppMcpRoute: typeof AppMcpRoute
   AppObsidianRoute: typeof AppObsidianRoute
   AppOportunidadesRoute: typeof AppOportunidadesRoute
   AppPerfilRoute: typeof AppPerfilRoute
@@ -1145,6 +1185,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppFerramentasRoute: AppFerramentasRoute,
   AppHabilidadesRoute: AppHabilidadesRoute,
   AppIntegracoesRoute: AppIntegracoesRoute,
+  AppMcpRoute: AppMcpRoute,
   AppObsidianRoute: AppObsidianRoute,
   AppOportunidadesRoute: AppOportunidadesRoute,
   AppPerfilRoute: AppPerfilRoute,
@@ -1207,6 +1248,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiStripeWebhookRoute: ApiStripeWebhookRoute,
   ApiIaChaveRoute: ApiIaChaveRoute,
   ApiIntegracoesExecutarRoute: ApiIntegracoesExecutarRoute,
+  ApiMcpConectarRoute: ApiMcpConectarRoute,
   ApiIntegracoesOauthCallbackRoute: ApiIntegracoesOauthCallbackRoute,
   ApiIntegracoesOauthIniciarRoute: ApiIntegracoesOauthIniciarRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
