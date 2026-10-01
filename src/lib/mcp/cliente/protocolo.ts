@@ -203,3 +203,143 @@ export async function descobrir(
 
   return { ok: true, servidor, ferramentas };
 }
+
+// =============================================================================================
+// Fase 2 — chamar
+// =============================================================================================
+
+/** Teto do texto que trago de volta. O resultado vai para a tela e para o registro da ação. */
+const MAX_RESULTADO = 20_000;
+
+export type Chamada =
+  { ok: true; texto: string; ehErroDaFerramenta: boolean } | { ok: false; motivo: string };
+
+/**
+ * Extrai o texto de um `CallToolResult`.
+ *
+ * O MCP devolve `content` como lista de blocos tipados — `text`, `image`, `resource`. Só o texto
+ * vira resumo legível; os outros viram uma menção do que veio, porque dizer "recebi uma imagem" é
+ * mais honesto que fingir que não veio nada.
+ */
+function textoDoResultado(result: unknown): { texto: string; erro: boolean } {
+  const r = (result ?? {}) as { content?: unknown; isError?: unknown };
+  const erro = r.isError === true;
+
+  if (!Array.isArray(r.content)) return { texto: "O servidor respondeu sem conteúdo.", erro };
+
+  const partes: string[] = [];
+  for (const bloco of r.content) {
+    const b = (bloco ?? {}) as { type?: unknown; text?: unknown };
+    if (b.type === "text" && typeof b.text === "string") partes.push(b.text);
+    else if (typeof b.type === "string") partes.push(`[${b.type}]`);
+  }
+
+  const texto = partes.join("\n").trim();
+  return { texto: texto ? texto.slice(0, MAX_RESULTADO) : "O servidor respondeu sem texto.", erro };
+}
+
+/**
+ * Chama uma ferramenta.
+ *
+ * ## O que esta função NÃO decide
+ *
+ * Ela não sabe se a pessoa aprovou, nem se o servidor é um que ela conectou, nem se a ferramenta
+ * existe no catálogo dela. Essas três perguntas são respondidas antes, por quem chama — e a
+ * terceira importa: uma ferramenta removida do servidor não pode continuar executável só porque
+ * uma ação antiga a menciona.
+ *
+ * O que ela garante é o transporte: destino validado, desvio que troca de host não leva a
+ * credencial junto, prazo de 10s, e teto no que volta.
+ *
+ * ## `isError` não é falha de rede
+ *
+ * O MCP distingue "a chamada não aconteceu" de "a ferramenta rodou e deu errado". A segunda volta
+ * com `ok: true` e `ehErroDaFerramenta: true`: foi uma execução de verdade, consumiu a aprovação,
+ * e o texto do erro é o resultado que a pessoa precisa ler. Tratá-la como falha de rede faria o
+ * app oferecer "tentar de novo" para algo que vai falhar igual.
+ */
+export async function chamar(
+  endereco: string,
+  ferramenta: string,
+  argumentos: Record<string, unknown>,
+  token: string | null = null,
+): Promise<Chamada> {
+  const destino = validarDestino(endereco);
+  if (!destino.ok) return destino;
+
+  /*
+   * O handshake de novo, a cada chamada.
+   *
+   * Um servidor com sessão exige `initialize` antes de aceitar `tools/call`, e o Worker não
+   * guarda estado entre requisições — não há sessão para reaproveitar. É uma ida a mais na rede
+   * em troca de não inventar um cache de sessão que ficaria velho sem ninguém perceber.
+   */
+  const inicio = await seguirComGuarda(endereco, {
+    method: "POST",
+    headers: cabecalhos(token, null),
+    body: JSON.stringify({
+      jsonrpc: "2.0",
+      id: 1,
+      method: "initialize",
+      params: {
+        protocolVersion: PROTOCOLO,
+        capabilities: {},
+        clientInfo: { name: "Pathly", version: "1" },
+      },
+    }),
+  });
+  if (!inicio.ok) return inicio;
+
+  if (inicio.resposta.status === 401 || inicio.resposta.status === 403) {
+    return { ok: false, motivo: "O servidor recusou a credencial." };
+  }
+  if (!inicio.resposta.ok) {
+    return { ok: false, motivo: `O servidor respondeu ${inicio.resposta.status}.` };
+  }
+
+  const sessao = inicio.resposta.headers.get("mcp-session-id");
+
+  await seguirComGuarda(endereco, {
+    method: "POST",
+    headers: cabecalhos(token, sessao),
+    body: JSON.stringify({ jsonrpc: "2.0", method: "notifications/initialized" }),
+  }).catch(() => undefined);
+
+  // --- tools/call -----------------------------------------------------------------------------
+  const chamada = await seguirComGuarda(endereco, {
+    method: "POST",
+    headers: cabecalhos(token, sessao),
+    body: JSON.stringify({
+      jsonrpc: "2.0",
+      id: 3,
+      method: "tools/call",
+      params: { name: ferramenta, arguments: argumentos },
+    }),
+  });
+  if (!chamada.ok) return chamada;
+
+  if (chamada.resposta.status === 401 || chamada.resposta.status === 403) {
+    return { ok: false, motivo: "O servidor recusou a credencial na chamada." };
+  }
+  if (!chamada.resposta.ok) {
+    return { ok: false, motivo: `O servidor respondeu ${chamada.resposta.status} à chamada.` };
+  }
+
+  const corpo = await lerResposta(chamada.resposta, 3);
+  if (!corpo) return { ok: false, motivo: "Não entendi a resposta do servidor." };
+
+  /*
+   * `error` do JSON-RPC é o protocolo recusando — ferramenta inexistente, parâmetro faltando. É
+   * diferente de `isError`, que é a ferramenta tendo rodado e falhado.
+   */
+  if (corpo.error) {
+    const m = typeof corpo.error.message === "string" ? corpo.error.message.slice(0, 300) : "";
+    return { ok: false, motivo: m || "O servidor recusou a chamada." };
+  }
+  if (corpo.result === undefined) {
+    return { ok: false, motivo: "O servidor respondeu sem resultado." };
+  }
+
+  const { texto, erro } = textoDoResultado(corpo.result);
+  return { ok: true, texto, ehErroDaFerramenta: erro };
+}

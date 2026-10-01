@@ -1,6 +1,9 @@
 # Pathly como cliente MCP — plano
 
-**Estado: `proposto`. Nada deste documento foi implementado.**
+**Estado: fases 1 e 2 implementadas** (commits `dd0cb24`..`4f98c9f` e a fase 2 em seguida). A 3 segue proposta.
+
+> O SQL `pathly_mcp_ferramentas.sql` continua `gerado` — as tabelas nao existem no banco, entao
+> nada disto foi exercitado de ponta a ponta. Ver `supabase/ESTADO-SQL.md`.
 
 O Pathly hoje é um **servidor** MCP: `/mcp` expõe dezessete ferramentas para que o Claude ou outro
 cliente chame o Pathly (ver `MCP-GATEWAY.md`). Este plano é o inverso — o Pathly passando a
@@ -155,7 +158,10 @@ O caminho de saída não depende de reverter na ordem certa.
 
 1. **Descobrir e mostrar.** Conectar um servidor, listar ferramentas, guardar impressão digital.
    Nada executa. Aqui o risco é quase só SSRF, e ele é testável isolado.
-2. **Executar com aprovação.** Um `case` no executor, aprovação por chamada, resultado gravado.
+2. **Executar com aprovação.** ✅ Feito. `chamar()` em `protocolo.ts`, um `case` no executor, e o
+   botao "Pedir execucao" na tela — que grava acao `pendente` e nao chama nada.
+   O executor recusa tres coisas antes da rede: servidor que a pessoa nao conectou, endereco que
+   nao confere com o conectado, e ferramenta que o servidor nao oferece mais.
 3. **Levar para a conversa.** O Copilot passa a poder propor uma chamada — como proposta, que é o
    que ele já faz com mudança de plano.
 

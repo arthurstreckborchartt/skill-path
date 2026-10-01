@@ -1,5 +1,6 @@
 import type { AcaoExterna } from "./contrato";
 import { listarRepos } from "./github";
+import { chamar } from "@/lib/mcp/cliente/protocolo";
 
 /**
  * O que acontece depois da aprovação.
@@ -72,13 +73,102 @@ export type ContextoExecucao = {
    * para este módulo nunca precisar conhecer a chave de cifragem.
    */
   token: string | null;
+  /**
+   * O servidor MCP desta ação, **resolvido do banco pelo endpoint**, nunca do corpo da requisição.
+   *
+   * `null` quando a ação não é MCP, ou quando o endereço do `payload` não corresponde a nenhum
+   * servidor que a pessoa conectou — e aí o executor recusa.
+   *
+   * É a peça central da fase 2. O `payload` guarda o endereço porque a aprovação precisa dizer
+   * para onde vai, mas o endereço ali é **chave de busca**, não destino: o executor só chama o que
+   * achou na lista da própria pessoa. Sem isso, aprovar uma ação seria um jeito de apontar o
+   * servidor do Pathly para qualquer lugar.
+   */
+  mcp: {
+    endereco: string;
+    token: string | null;
+    /** Os nomes que o servidor oferecia na última descoberta. Ferramenta fora daqui é recusada. */
+    ferramentas: readonly string[];
+  } | null;
 };
+
+/**
+ * Uma chamada a servidor MCP que a pessoa conectou.
+ *
+ * ## As três perguntas antes da rede
+ *
+ * 1. **Este servidor é dela?** O endpoint resolveu `contexto.mcp` procurando o endereço do
+ *    `payload` na lista dela. Veio `null` significa que não achou — recusa.
+ * 2. **O servidor ainda oferece esta ferramenta?** Uma aprovação pode ter sido dada ontem e o
+ *    servidor ter removido a ferramenta hoje. Executar assim mesmo chamaria um nome que já não
+ *    existe, e o servidor decidiria o que fazer com ele.
+ * 3. **O endereço que vou chamar é o que ela aprovou?** O do contexto veio do banco e o do
+ *    `payload` veio da linha da ação, que é imutável depois de criada. Se divergirem, alguma das
+ *    duas mudou debaixo da aprovação — e nenhuma leitura razoável disso termina em "chame mesmo
+ *    assim".
+ *
+ * Só depois disso a rede acontece, e lá `chamar` ainda valida o destino e não entrega credencial
+ * num desvio que troque de host.
+ */
+async function executarMcp(
+  acao: AcaoExterna,
+  mcp: NonNullable<ContextoExecucao["mcp"]>,
+): Promise<ResultadoExecucao> {
+  const enderecoDaAcao = acao.payload["servidor"];
+  if (typeof enderecoDaAcao !== "string" || enderecoDaAcao !== mcp.endereco) {
+    return {
+      ok: false,
+      motivo: "O servidor desta ação não confere com o que está conectado. Peça de novo.",
+      permanente: true,
+    };
+  }
+
+  if (!mcp.ferramentas.includes(acao.acaoId)) {
+    return {
+      ok: false,
+      motivo: `O servidor não oferece mais a ferramenta "${acao.acaoId}". Reconecte para atualizar a lista.`,
+      permanente: true,
+    };
+  }
+
+  const bruto = acao.payload["argumentos"];
+  const argumentos =
+    bruto && typeof bruto === "object" && !Array.isArray(bruto)
+      ? (bruto as Record<string, unknown>)
+      : {};
+
+  const r = await chamar(mcp.endereco, acao.acaoId, argumentos, mcp.token);
+  if (!r.ok) return { ok: false, motivo: r.motivo, permanente: false };
+
+  /*
+   * A ferramenta rodou e falhou: isso é `ok`, com o erro no resumo.
+   *
+   * A aprovação foi consumida — a chamada aconteceu, e o que o servidor fez do lado dele o Pathly
+   * não desfaz. Marcar como falha ofereceria "tentar de novo" e gastaria uma segunda aprovação
+   * para repetir o mesmo erro.
+   */
+  return {
+    ok: true,
+    resumo: r.ehErroDaFerramenta ? `A ferramenta respondeu com erro: ${r.texto}` : r.texto,
+  };
+}
 
 export async function executarAcao(
   acao: AcaoExterna,
   contexto: ContextoExecucao,
 ): Promise<ResultadoExecucao> {
   if (acao.provedor === "demo") return executarDemo(acao);
+
+  if (acao.provedor === "mcp") {
+    if (!contexto.mcp) {
+      return {
+        ok: false,
+        motivo: "Você não tem este servidor MCP conectado. Conecte antes de executar.",
+        permanente: true,
+      };
+    }
+    return executarMcp(acao, contexto.mcp);
+  }
 
   if (!contexto.token) {
     return {

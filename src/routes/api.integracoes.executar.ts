@@ -150,6 +150,74 @@ async function tokenDoProvedor(
   return novo.valor.acesso;
 }
 
+/**
+ * Resolve o servidor MCP de uma ação, do banco, pela conexão da própria pessoa.
+ *
+ * ## Por que esta função existe em vez de o executor ler o `payload`
+ *
+ * O `payload` guarda o endereço porque a aprovação precisa dizer para onde vai. Mas endereço no
+ * `payload` é texto que alguém escreveu ao **criar** a ação — e criar ação é coisa que o navegador
+ * faz. Se o executor chamasse o que está lá, aprovar uma ação seria um jeito de apontar o servidor
+ * do Pathly para qualquer endereço que o Worker alcance.
+ *
+ * Então o endereço vira **chave de busca**: só vale se existir uma linha em `pathly_mcp_servidores`
+ * daquela pessoa com aquele endereço. Não existe → devolve `null` → o executor recusa.
+ *
+ * ## Por que `service_role`
+ *
+ * O mesmo motivo do token do GitHub: `token_cifrado` não é lido por `authenticated`. E a mesma
+ * precaução — o `userId` vem do token da sessão, conferido antes, nunca do corpo da requisição.
+ * Uma consulta privilegiada com id de fora seria leitura de credencial alheia a um parâmetro de
+ * distância.
+ */
+async function servidorMcpDaAcao(
+  supabaseUrl: string,
+  userId: string,
+  enderecoDoPayload: unknown,
+): Promise<{ endereco: string; token: string | null; ferramentas: string[] } | null> {
+  if (typeof enderecoDoPayload !== "string" || !enderecoDoPayload) return null;
+
+  const serviceRole = lerEnv("SUPABASE_SERVICE_ROLE_KEY");
+  if (!serviceRole) return null;
+
+  const comoServico = { apikey: serviceRole, Authorization: `Bearer ${serviceRole}` };
+  const porDono =
+    `user_id=eq.${encodeURIComponent(userId)}` +
+    `&endereco=eq.${encodeURIComponent(enderecoDoPayload)}`;
+
+  const r = await fetch(
+    `${supabaseUrl}/rest/v1/pathly_mcp_servidores?${porDono}&select=endereco,token_cifrado&limit=1`,
+    { headers: comoServico },
+  );
+  if (!r.ok) return null;
+
+  const linha = ((await r.json()) as { endereco: string; token_cifrado?: string }[])[0];
+  if (!linha) return null;
+
+  let token: string | null = null;
+  if (linha.token_cifrado) {
+    const claro = await decifrar(linha.token_cifrado);
+    /*
+     * Credencial que não decifra não vira chamada sem credencial.
+     *
+     * Um servidor que exige token responderia 401 — barulhento e inofensivo. Mas um que aceita
+     * anônimo com menos permissão executaria **outra coisa** do que a pessoa aprovou, em silêncio.
+     */
+    if (!claro.ok) return null;
+    token = claro.valor;
+  }
+
+  const lista = await fetch(
+    `${supabaseUrl}/rest/v1/pathly_mcp_ferramentas?user_id=eq.${encodeURIComponent(userId)}` +
+      `&servidor=eq.${encodeURIComponent(enderecoDoPayload)}&select=nome`,
+    { headers: comoServico },
+  );
+  if (!lista.ok) return null;
+
+  const ferramentas = ((await lista.json()) as { nome: string }[]).map((f) => f.nome);
+  return { endereco: linha.endereco, token, ferramentas };
+}
+
 export const Route = createFileRoute("/api/integracoes/executar")({
   staticData: { sitemap: false },
   server: {
@@ -260,7 +328,11 @@ export const Route = createFileRoute("/api/integracoes/executar")({
         let resultado: Awaited<ReturnType<typeof executarAcao>>;
         try {
           const credencial = await tokenDoProvedor(supabaseUrl, userId, acao.provedor);
-          resultado = await executarAcao(acao, { token: credencial });
+          const mcp =
+            acao.provedor === "mcp"
+              ? await servidorMcpDaAcao(supabaseUrl, userId, acao.payload["servidor"])
+              : null;
+          resultado = await executarAcao(acao, { token: credencial, mcp });
         } catch (e) {
           resultado = {
             ok: false,

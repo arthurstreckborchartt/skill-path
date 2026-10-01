@@ -14,12 +14,20 @@
  * diferentes, e a aprovação passaria a valer para algo que ela não viu.
  */
 
-export const PROVEDORES = ["demo", "github"] as const;
+export const PROVEDORES = ["demo", "github", "mcp"] as const;
 export type Provedor = (typeof PROVEDORES)[number];
 
 export const ROTULO_PROVEDOR: Record<Provedor, string> = {
   demo: "Provedor de demonstração",
   github: "GitHub",
+  /*
+   * Um rótulo só para todos os servidores MCP, de propósito.
+   *
+   * `provedor` diz por qual caminho a ação sai do Pathly, não com quem ela fala — e o caminho é o
+   * mesmo para qualquer servidor. Qual servidor é aparece no `destino` da ação, que é a linha que
+   * a pessoa lê antes de aprovar.
+   */
+  mcp: "Servidor MCP",
 };
 
 /**

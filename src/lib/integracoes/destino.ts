@@ -173,11 +173,37 @@ export async function seguirComGuarda(
     if (!destino.ok) return destino;
 
     const hostAnterior = destino.url.host;
-    const resposta = await fetch(destino.url, {
-      ...init,
-      redirect: "manual",
-      signal: AbortSignal.timeout(TIMEOUT_MS),
-    });
+
+    /*
+     * O `fetch` que estoura vira recusa, não exceção.
+     *
+     * Esta função devolve `{ ok: false, motivo }` para toda outra forma de não dar certo —
+     * endereço inválido, desvio sem destino, desvio demais. A falha de rede era a única que
+     * escapava por cima, e é a mais provável de todas: conectar servidor de fora é a situação em
+     * que o outro lado não responder é rotina.
+     *
+     * O efeito era um 500 com stack no lugar da frase que a tela sabe mostrar. `api/mcp/conectar`
+     * não tem `try/catch`, então quem digitasse um endereço de servidor fora do ar via o app
+     * quebrar em vez de ler "não consegui falar com o servidor".
+     */
+    let resposta: Response;
+    try {
+      resposta = await fetch(destino.url, {
+        ...init,
+        redirect: "manual",
+        signal: AbortSignal.timeout(TIMEOUT_MS),
+      });
+    } catch (e) {
+      // `AbortSignal.timeout` rejeita com `TimeoutError`. Dizer qual das duas foi muda o que a
+      // pessoa faz: esperar e tentar de novo, ou conferir o endereço.
+      const expirou = e instanceof Error && e.name === "TimeoutError";
+      return {
+        ok: false,
+        motivo: expirou
+          ? `O servidor não respondeu em ${Math.round(TIMEOUT_MS / 1000)} segundos.`
+          : "Não consegui falar com o servidor.",
+      };
+    }
 
     if (resposta.status < 300 || resposta.status > 399) {
       return { ok: true, resposta };

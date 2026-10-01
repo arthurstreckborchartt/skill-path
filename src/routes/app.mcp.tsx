@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Plug, ShieldAlert, Trash2 } from "lucide-react";
 import { Btn, Chip, PageHeader, Panel, Skeleton } from "@/components/pathly/ui";
 import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
 
 export const Route = createFileRoute("/app/mcp")({
   staticData: { sitemap: false },
@@ -21,11 +22,14 @@ export const Route = createFileRoute("/app/mcp")({
 /**
  * Servidores MCP conectados, e o que cada um oferece.
  *
- * ## Esta tela não executa nada
+ * ## Esta tela continua não executando nada
  *
- * Fase 1 de `docs/MCP-CLIENTE.md`: conectar, descobrir e mostrar. Não há botão de chamar
- * ferramenta, porque não existe `tools/call` no código ainda — chamar é a fase 2, e passa pelo
- * portão de aprovação de `pathly_acoes_externas`.
+ * Fase 1: conectar, descobrir e mostrar. Fase 2 acrescentou **pedir** — o botão grava uma ação
+ * `pendente` em `pathly_acoes_externas` e para por aí.
+ *
+ * A chamada acontece em Integrações, depois que a pessoa aprova, e lá aprovar e executar
+ * continuam sendo dois gestos. A fase 2 não abriu um caminho novo para fora do Pathly: encaixou o
+ * MCP no portão que o GitHub e o provedor de demonstração já atravessavam.
  *
  * ## A regra visual que esta tela existe para cumprir
  *
@@ -41,7 +45,161 @@ type Ferramenta = {
   descricao_do_servidor: string;
   impacto: string;
   impressao: string;
+  /** O JSON Schema da entrada, como o servidor mandou. 
+ull quando ele nao mandou nenhum. */
+  entrada: unknown;
 };
+
+/**
+ * Pedir que uma ferramenta seja chamada — e nada além de pedir.
+ *
+ * ## O que este botão faz, e o que ele não faz
+ *
+ * Ele grava uma linha em `pathly_acoes_externas` com estado `pendente`. Não chama servidor nenhum.
+ * A chamada só acontece depois que a pessoa aprova em Integrações, e mesmo lá aprovar e executar
+ * continuam sendo dois gestos — uma aprovação vale uma execução só.
+ *
+ * É o mesmo portão que o GitHub e o provedor de demonstração já atravessam. A fase 2 não construiu
+ * um caminho novo: encaixou o MCP no que existia.
+ *
+ * ## Os argumentos em JSON, e por que isso é aceitável aqui
+ *
+ * O schema de entrada de uma ferramenta MCP é JSON Schema arbitrário — o servidor escreve o que
+ * quiser. Gerar um formulário a partir dele daria um formulário errado para metade dos servidores,
+ * e um formulário errado é pior que um campo de texto honesto: ele promete que sabe o que a
+ * ferramenta aceita.
+ *
+ * Então o campo é JSON, com o schema do servidor à vista para consulta. O que o Pathly garante é
+ * que o texto digitado é JSON válido e é um objeto — o resto quem recusa é o servidor, que é quem
+ * sabe.
+ */
+function PedirChamada({
+  servidor,
+  ferramenta,
+  impacto,
+  entrada,
+}: {
+  servidor: string;
+  ferramenta: string;
+  impacto: string;
+  entrada: unknown;
+}) {
+  const [aberto, setAberto] = useState(false);
+  const [args, setArgs] = useState("{}");
+  const [ocupado, setOcupado] = useState(false);
+  const [recado, setRecado] = useState<string | null>(null);
+
+  const schema = entrada ? JSON.stringify(entrada, null, 2) : null;
+
+  async function pedir() {
+    /*
+     * `Json` e não `Record<string, unknown>`: a coluna é `jsonb`, e o tipo gerado do Supabase
+     * cobra exatamente isso. O valor é JSON por construção — saiu de `JSON.parse` —, então o tipo
+     * está descrevendo a verdade, não contornando o verificador.
+     */
+    let argumentos: { [k: string]: Json | undefined };
+    try {
+      const lido = JSON.parse(args || "{}") as Json;
+      if (!lido || typeof lido !== "object" || Array.isArray(lido)) {
+        setRecado('Os argumentos precisam ser um objeto, como {"chave": "valor"}.');
+        return;
+      }
+      argumentos = lido;
+    } catch {
+      setRecado("Isso não é JSON válido.");
+      return;
+    }
+
+    setOcupado(true);
+    setRecado(null);
+
+    const { data: s } = await supabase.auth.getSession();
+    const userId = s.session?.user.id;
+    if (!userId) {
+      setRecado("Sua sessão expirou. Entre de novo.");
+      setOcupado(false);
+      return;
+    }
+
+    const { error } = await supabase.from("pathly_acoes_externas").insert({
+      user_id: userId,
+      provedor: "mcp",
+      acao_id: ferramenta,
+      /*
+       * O resumo é nosso, não do servidor. A descrição dele aparece na tela, citada — mas a frase
+       * que a pessoa lê na hora de aprovar precisa vir de quem ela confia.
+       */
+      resumo: `Chamar a ferramenta "${ferramenta}" no servidor MCP conectado.`,
+      destino: `${new URL(servidor).host} → ${ferramenta}`,
+      impacto,
+      /* O endereço entra no payload porque a aprovação precisa dizer para onde vai. No executor
+       * ele é chave de busca na lista da pessoa, nunca destino direto. */
+      payload: { servidor, argumentos },
+      estado: "pendente",
+    });
+
+    setOcupado(false);
+    if (error) {
+      setRecado("Não consegui registrar o pedido.");
+      return;
+    }
+    setRecado("Pedido registrado. Aprove em Integrações para que ele seja chamado.");
+    setAberto(false);
+  }
+
+  if (!aberto) {
+    return (
+      <div className="mt-3">
+        <Btn variant="outline" size="sm" onClick={() => setAberto(true)}>
+          Pedir execução
+        </Btn>
+        {recado && <p className="mt-2 text-xs text-muted-foreground">{recado}</p>}
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-3 space-y-2 rounded-lg border border-border bg-surface-2 p-3">
+      <label className="block text-xs font-medium" htmlFor={`args-${servidor}-${ferramenta}`}>
+        Argumentos, em JSON
+      </label>
+      <textarea
+        id={`args-${servidor}-${ferramenta}`}
+        value={args}
+        onChange={(e) => setArgs(e.target.value)}
+        rows={3}
+        spellCheck={false}
+        className="w-full rounded-md border border-border bg-background px-2 py-1.5 font-mono text-xs outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      />
+
+      {schema && (
+        <details>
+          <summary className="tap cursor-pointer text-xs text-muted-foreground">
+            O que esta ferramenta aceita, segundo o servidor
+          </summary>
+          <pre className="mt-2 max-h-48 overflow-auto rounded-md bg-background p-2 font-mono text-[11px] whitespace-pre-wrap">
+            {schema}
+          </pre>
+        </details>
+      )}
+
+      {recado && <p className="text-xs font-medium">{recado}</p>}
+
+      <div className="flex flex-wrap gap-2">
+        <Btn size="sm" disabled={ocupado} onClick={() => void pedir()}>
+          Registrar pedido
+        </Btn>
+        <Btn variant="ghost" size="sm" onClick={() => setAberto(false)}>
+          Cancelar
+        </Btn>
+      </div>
+
+      <p className="text-xs text-muted-foreground">
+        Isto não chama nada agora. O pedido fica esperando sua aprovação em Integrações.
+      </p>
+    </div>
+  );
+}
 
 type Servidor = {
   endereco: string;
@@ -95,7 +253,7 @@ function TelaMcp() {
     const [s, f] = await Promise.all([
       tabelaNova<Servidor>("pathly_mcp_servidores").select("endereco,nome,versao,protocolo"),
       tabelaNova<Ferramenta>("pathly_mcp_ferramentas").select(
-        "servidor,nome,descricao_do_servidor,impacto,impressao",
+        "servidor,nome,descricao_do_servidor,impacto,impressao,entrada",
       ),
     ]);
 
@@ -297,6 +455,13 @@ function TelaMcp() {
                         </footer>
                       </blockquote>
                     )}
+
+                    <PedirChamada
+                      servidor={s.endereco}
+                      ferramenta={f.nome}
+                      impacto={f.impacto}
+                      entrada={f.entrada}
+                    />
                   </li>
                 ))}
               </ul>
