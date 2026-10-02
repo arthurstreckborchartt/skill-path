@@ -23,7 +23,7 @@
  * `styles.css`, com token, e duas regras para a mesma coisa e uma para divergir depois.
  */
 
-import React, { useState } from "react";
+import React, { useId, useState } from "react";
 import { cn } from "@/lib/utils";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 
@@ -58,9 +58,12 @@ export function LabelInput({
   className,
   type = "text",
   placeholder = "",
+  id,
   ...props
 }: LabelInputProps) {
   const [isVisible, setIsVisible] = useState(false);
+  const generatedId = useId();
+  const inputId = id ?? generatedId;
   const isPasswordType = type === "password";
   const inputType = isPasswordType ? (isVisible ? "text" : "password") : type;
 
@@ -74,6 +77,7 @@ export function LabelInput({
         tamanho da caixa não mudar.
       */}
       <input
+        id={inputId}
         className={cn(
           // text-base no celular: abaixo de 16px o Safari do iPhone da zoom ao focar o campo.
           "peer block h-12 w-full rounded-md border border-transparent bg-transparent px-4 text-base text-foreground outline-none transition-colors disabled:opacity-60 sm:text-sm",
@@ -141,6 +145,7 @@ export function LabelInput({
         com o campo vazio e em foco, o rótulo ficava lá embaixo, atrás do cursor.
       */}
       <label
+        htmlFor={inputId}
         className={cn(
           "pointer-events-none absolute left-2.5 px-1.5 text-muted-foreground transition-all duration-200",
           // Levantado é o estado base: em cima da borda, atravessando a linha.
