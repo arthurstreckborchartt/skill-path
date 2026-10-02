@@ -13,7 +13,7 @@
   "mcp": {
     "server": {
       "name": "pathly",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "title": "Pathly"
     },
     "tools": [
@@ -97,6 +97,550 @@
             "targetIncome",
             "experience",
             "hoursPerWeek"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "pathly_get_project",
+        "title": "Ler o projeto",
+        "description": "Devolve nome, ideia, status, fase atual e progresso do projeto. Use para saber onde o trabalho está antes de propor qualquer coisa.",
+        "annotations": {
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "properties": {
+            "project_id": {
+              "description": "Id do projeto. Quando omitido, o Pathly usa o projeto mais recente.",
+              "type": "string"
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "pathly_get_blueprint",
+        "title": "Ler o blueprint",
+        "description": "Devolve o plano do projeto: problema, público, stack, arquitetura, requisitos funcionais com critério de aceitação, e o que está fora do escopo.",
+        "annotations": {
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "properties": {
+            "project_id": {
+              "description": "Id do projeto. Quando omitido, o Pathly usa o projeto mais recente.",
+              "type": "string"
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "pathly_get_current_task",
+        "title": "Ler a etapa atual",
+        "description": "Devolve a etapa em que o projeto está: ordem, título, entrega esperada, fase e de quais etapas ela depende.",
+        "annotations": {
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "properties": {
+            "project_id": {
+              "description": "Id do projeto. Quando omitido, o Pathly usa o projeto mais recente.",
+              "type": "string"
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "pathly_get_technical_decisions",
+        "title": "Ler as decisões técnicas",
+        "description": "Devolve as decisões ativas, com o valor escolhido e o motivo. As substituídas vêm separadas, porque saber o que foi descartado costuma valer tanto quanto o que ficou.",
+        "annotations": {
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "properties": {
+            "project_id": {
+              "description": "Id do projeto. Quando omitido, o Pathly usa o projeto mais recente.",
+              "type": "string"
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "pathly_get_project_context",
+        "title": "Ler o contexto completo",
+        "description": "Devolve o Execution Brief: projeto, etapa, stack, objetivo, arquitetura, decisões, restrições, critérios de aceitação e o que já falhou. É a chamada que substitui as outras seis quando você vai trabalhar de verdade.",
+        "annotations": {
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "properties": {
+            "project_id": {
+              "description": "Id do projeto. Quando omitido, o Pathly usa o projeto mais recente.",
+              "type": "string"
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "pathly_get_errors",
+        "title": "Ler os erros conhecidos",
+        "description": "Devolve o que já falhou neste projeto, com a origem de cada afirmação — verificado pela ferramenta, colado dela, ou relatado pela pessoa. Leia antes de repetir uma tentativa.",
+        "annotations": {
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "properties": {
+            "project_id": {
+              "description": "Id do projeto. Quando omitido, o Pathly usa o projeto mais recente.",
+              "type": "string"
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "pathly_get_task_history",
+        "title": "Ler o histórico de trabalho",
+        "description": "Devolve o que foi feito nas etapas: arquivos alterados, testes executados, decisões e observações, do mais recente para o mais antigo.",
+        "annotations": {
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "properties": {
+            "project_id": {
+              "description": "Id do projeto. Quando omitido, o Pathly usa o projeto mais recente.",
+              "type": "string"
+            },
+            "limit": {
+              "description": "Quantos registros. Padrão 20.",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "pathly_update_task",
+        "title": "Atualizar uma etapa",
+        "description": "Marca uma etapa como fazendo, concluída ou pulada. Não toca no seu código — escreve no registro do projeto dentro do Pathly.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "properties": {
+            "project_id": {
+              "description": "Id do projeto. Quando omitido, o Pathly usa o projeto mais recente.",
+              "type": "string"
+            },
+            "order": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991,
+              "description": "A ordem da etapa, como aparece na trilha."
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "pendente",
+                "fazendo",
+                "concluida",
+                "pulada"
+              ],
+              "description": "O novo estado da etapa."
+            }
+          },
+          "required": [
+            "order",
+            "status"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "pathly_report_error",
+        "title": "Registrar um erro",
+        "description": "Registra algo que falhou. O que for registrado aqui volta no contexto da próxima tentativa, para a mesma tentativa não ser repetida.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "properties": {
+            "project_id": {
+              "description": "Id do projeto. Quando omitido, o Pathly usa o projeto mais recente.",
+              "type": "string"
+            },
+            "message": {
+              "type": "string",
+              "minLength": 3,
+              "description": "O que falhou. Inclua a mensagem de erro, se houver."
+            },
+            "step": {
+              "description": "A etapa em que aconteceu.",
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            }
+          },
+          "required": [
+            "message"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "pathly_add_decision",
+        "title": "Registrar uma decisão técnica",
+        "description": "Registra uma decisão com o valor escolhido e o motivo. A decisão anterior sobre o mesmo assunto vira histórico, em vez de sumir.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "properties": {
+            "project_id": {
+              "description": "Id do projeto. Quando omitido, o Pathly usa o projeto mais recente.",
+              "type": "string"
+            },
+            "key": {
+              "type": "string",
+              "minLength": 2,
+              "description": "O assunto da decisão, ex. 'auth'. Decidir de novo o mesmo assunto aposenta a anterior."
+            },
+            "title": {
+              "type": "string",
+              "minLength": 2,
+              "description": "O nome da decisão, ex. 'Autenticação'."
+            },
+            "value": {
+              "type": "string",
+              "minLength": 2,
+              "description": "O que foi escolhido."
+            },
+            "reason": {
+              "type": "string",
+              "minLength": 3,
+              "description": "Por que essa escolha, e não a alternativa."
+            }
+          },
+          "required": [
+            "key",
+            "title",
+            "value",
+            "reason"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "pathly_report_implementation",
+        "title": "Registrar o que foi implementado",
+        "description": "Registra o resultado de um trabalho: o que mudou, quais arquivos, quais testes rodaram e o que deu errado.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "properties": {
+            "project_id": {
+              "description": "Id do projeto. Quando omitido, o Pathly usa o projeto mais recente.",
+              "type": "string"
+            },
+            "summary": {
+              "type": "string",
+              "minLength": 3,
+              "description": "O que foi implementado."
+            },
+            "files": {
+              "description": "Os caminhos alterados.",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "tests": {
+              "description": "O comando de teste e o resultado.",
+              "type": "string"
+            },
+            "step": {
+              "description": "A etapa correspondente.",
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            }
+          },
+          "required": [
+            "summary"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "pathly_update_blueprint",
+        "title": "Propor mudança no plano",
+        "description": "Propõe uma alteração no blueprint. É proposta, não aplicação: o bloco entra como sugestão e a pessoa decide.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "properties": {
+            "project_id": {
+              "description": "Id do projeto. Quando omitido, o Pathly usa o projeto mais recente.",
+              "type": "string"
+            },
+            "block": {
+              "type": "string",
+              "enum": [
+                "fundacao",
+                "produto",
+                "tecnico",
+                "execucao",
+                "operacao"
+              ],
+              "description": "Qual bloco do plano a proposta afeta."
+            },
+            "proposal": {
+              "type": "string",
+              "minLength": 10,
+              "description": "A mudança proposta, e por quê."
+            }
+          },
+          "required": [
+            "block",
+            "proposal"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "pathly_request_file_change",
+        "title": "Solicitar alteração de arquivo",
+        "description": "Cria um pedido para alterar um arquivo do projeto. NÃO altera nada: devolve APPROVAL_REQUIRED e o id do pedido. A alteração só acontece depois de a pessoa aprovar.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "properties": {
+            "project_id": {
+              "description": "Id do projeto. Quando omitido, o Pathly usa o projeto mais recente.",
+              "type": "string"
+            },
+            "path": {
+              "type": "string",
+              "minLength": 1,
+              "description": "O caminho do arquivo."
+            },
+            "change": {
+              "type": "string",
+              "minLength": 1,
+              "description": "O que mudar, e por quê."
+            }
+          },
+          "required": [
+            "path",
+            "change"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "pathly_request_command",
+        "title": "Solicitar execução de comando",
+        "description": "Cria um pedido para executar um comando. NÃO executa nada: devolve APPROVAL_REQUIRED e o id do pedido.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "properties": {
+            "project_id": {
+              "description": "Id do projeto. Quando omitido, o Pathly usa o projeto mais recente.",
+              "type": "string"
+            },
+            "command": {
+              "type": "string",
+              "minLength": 1,
+              "description": "O comando exato a executar."
+            },
+            "why": {
+              "type": "string",
+              "minLength": 3,
+              "description": "Por que ele precisa rodar."
+            }
+          },
+          "required": [
+            "command",
+            "why"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "pathly_request_commit",
+        "title": "Solicitar um commit",
+        "description": "Cria um pedido de commit. NÃO commita nada: devolve APPROVAL_REQUIRED e o id do pedido. Uma aprovação de commit nunca vale para o push.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "properties": {
+            "project_id": {
+              "description": "Id do projeto. Quando omitido, o Pathly usa o projeto mais recente.",
+              "type": "string"
+            },
+            "message": {
+              "type": "string",
+              "minLength": 3,
+              "description": "A mensagem do commit."
+            },
+            "files": {
+              "description": "Os arquivos a incluir.",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "message"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "pathly_request_push",
+        "title": "Solicitar um push",
+        "description": "Cria um pedido de push. NÃO empurra nada: devolve APPROVAL_REQUIRED. Push exige autenticação recente da pessoa, além da aprovação.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "properties": {
+            "project_id": {
+              "description": "Id do projeto. Quando omitido, o Pathly usa o projeto mais recente.",
+              "type": "string"
+            },
+            "branch": {
+              "type": "string",
+              "minLength": 1,
+              "description": "A branch de destino."
+            }
+          },
+          "required": [
+            "branch"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "pathly_request_deploy",
+        "title": "Solicitar um deploy",
+        "description": "Cria um pedido de deploy. NÃO publica nada: devolve APPROVAL_REQUIRED. Deploy alcança quem está usando o produto naquele momento, e o Pathly não reverte deploy de ninguém.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "properties": {
+            "project_id": {
+              "description": "Id do projeto. Quando omitido, o Pathly usa o projeto mais recente.",
+              "type": "string"
+            },
+            "environment": {
+              "type": "string",
+              "minLength": 1,
+              "description": "O ambiente, ex. 'produção'."
+            }
+          },
+          "required": [
+            "environment"
           ]
         },
         "outputSchema": null

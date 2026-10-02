@@ -8,10 +8,12 @@ import {
   Monitor,
   Moon,
   Palette,
+  Server,
   Plug,
   Shield,
   Sliders,
   Sun,
+  UserRound,
 } from "lucide-react";
 import { useTheme, type ThemeChoice } from "@/lib/theme";
 import { Btn, PageHeader, Panel, Reveal } from "@/components/pathly/ui";
@@ -181,10 +183,30 @@ function SettingsPage() {
 
       <Reveal delay={140}>
         <Section icon={Shield} title="Conta e privacidade">
-          <div className="flex flex-wrap gap-3 pt-4">
-            <Btn variant="ghost" size="sm" onClick={handleSignOut}>
-              <LogOut className="size-4" /> Sair da conta
-            </Btn>
+          <div className="divide-y divide-border">
+            <Link
+              to="/app/perfil"
+              className="tap flex min-h-14 items-center justify-between gap-3 py-1 text-sm"
+            >
+              <span className="flex items-center gap-3">
+                <UserRound className="size-4 text-muted-foreground" /> Perfil e plano
+              </span>
+              <ChevronRight className="size-4 text-muted-foreground" />
+            </Link>
+            <Link
+              to="/app/mcp"
+              className="tap flex min-h-14 items-center justify-between gap-3 py-1 text-sm"
+            >
+              <span className="flex items-center gap-3">
+                <Server className="size-4 text-muted-foreground" /> Servidores MCP
+              </span>
+              <ChevronRight className="size-4 text-muted-foreground" />
+            </Link>
+            <div className="pt-4">
+              <Btn variant="ghost" size="sm" onClick={handleSignOut}>
+                <LogOut className="size-4" /> Sair da conta
+              </Btn>
+            </div>
           </div>
         </Section>
       </Reveal>

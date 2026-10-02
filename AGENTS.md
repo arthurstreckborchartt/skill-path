@@ -10,3 +10,5 @@
 > the editor, so keep the branch in a working state.
 
 <!-- LOVABLE:END -->
+
+- Legacy learning routes must mount their progress and learning providers conditionally in the app shell, so saved links remain functional without loading educational state in the SaaS workspace.

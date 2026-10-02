@@ -8,6 +8,8 @@ import { AvatarConta } from "./avatar-conta";
 import { cn } from "@/lib/utils";
 import { useProjetos } from "@/lib/blueprint/usar-projetos";
 import { useContagens } from "@/lib/blueprint/usar-contagem";
+import { LearningSystemProvider } from "@/lib/learning-context";
+import { RouteProgressProvider } from "@/lib/route-progress-context";
 import { PARTES, estadoDasPartes } from "./partes";
 
 /**
@@ -200,7 +202,23 @@ function Coluna({ aoNavegar }: { aoNavegar?: () => void }) {
 }
 
 export function AppShell() {
-  return <AppShellInner />;
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const paginaEducacionalAntiga =
+    pathname === "/app/rota" ||
+    pathname === "/app/habilidades" ||
+    pathname === "/app/projetos" ||
+    pathname === "/app/revisar" ||
+    pathname.startsWith("/app/aprender/");
+
+  if (!paginaEducacionalAntiga) return <AppShellInner />;
+
+  return (
+    <RouteProgressProvider>
+      <LearningSystemProvider>
+        <AppShellInner />
+      </LearningSystemProvider>
+    </RouteProgressProvider>
+  );
 }
 
 function AppShellInner() {
