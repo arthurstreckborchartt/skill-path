@@ -48,8 +48,8 @@
 
 ## Correções de monitoramento — outubro de 2026
 
-- [ ] Impedir falhas ao abrir páginas educacionais antigas por links salvos.
-- [ ] Restaurar acessos visíveis para Perfil e servidores MCP.
-- [ ] Reassociar os rótulos aos campos de login e cadastro.
-- [ ] Validar as três correções no preview.
+- [x] Impedir falhas ao abrir páginas educacionais antigas por links salvos.
+- [x] Restaurar acessos visíveis para Perfil e servidores MCP.
+- [x] Reassociar os rótulos aos campos de login e cadastro.
+- [x] Validar as três correções no preview.
 
