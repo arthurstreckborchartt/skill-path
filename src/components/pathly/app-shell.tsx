@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, Outlet, useRouterState } from "@tanstack/react-router";
-import { FolderKanban, Menu, MessagesSquare, Plus, Settings, X } from "lucide-react";
+import { ChevronRight, FolderKanban, Menu, MessagesSquare, Plus, X } from "lucide-react";
 import { Logo } from "./ui";
 import { Copilot } from "./copilot";
 import { FundoAnimado } from "./fundo-animado";
@@ -22,8 +22,10 @@ import { PARTES, estadoDasPartes } from "./partes";
  * aquilo?" acontecia o tempo todo.
  *
  * Agora a lista da esquerda é a lista de projetos, como a lista de conversas de um chat. "Criar"
- * virou o botão no topo dela; Integrações e Perfil desceram para Ajustes, onde já moravam de
- * verdade. Restou uma coluna e um centro.
+ * virou o botão no topo dela, e Integrações desceu para Configurações, onde já morava de verdade.
+ * Restou uma coluna e um centro.
+ *
+ * No pé fica Perfil, com o avatar da conta — e Configurações a um clique de lá.
  *
  * ## A busca falsa saiu
  *
@@ -189,13 +191,24 @@ function Coluna({ aoNavegar }: { aoNavegar?: () => void }) {
         )}
       </div>
 
+      {/*
+        "Perfil", e o destino acompanha o rótulo.
+
+        A linha mostra o avatar da pessoa, então "Perfil" é o que ela lê ali. Trocar só a palavra
+        e continuar abrindo Configurações faria o rótulo mentir — e o ícone de engrenagem, que
+        prometia ajustes, sai junto pelo mesmo motivo.
+
+        Configurações não fica órfã: a tela de Perfil tem o atalho para ela, e Configurações tem
+        "Perfil e plano" de volta. Antes era um clique e agora são dois, para quem vai mexer em
+        integrações e aparência — que não é o caminho de todo dia.
+      */}
       <Link
-        to="/app/configuracoes"
+        to="/app/perfil"
         className="tap mt-1 flex items-center gap-3 rounded-md px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground"
       >
         <AvatarConta size={20} />
-        <span className="truncate">Ajustes</span>
-        <Settings className="ml-auto size-4 shrink-0" />
+        <span className="truncate">Perfil</span>
+        <ChevronRight className="ml-auto size-4 shrink-0" />
       </Link>
     </div>
   );
@@ -251,7 +264,20 @@ function AppShellInner() {
       shader usa `z-index: -1`, e sem um contexto de empilhamento próprio aqui esse -1 sobe até a
       raiz da página e some atrás do fundo do <body>.
     */
-    <div className="relative isolate min-h-screen">
+    /*
+      A casca é uma coluna da altura da tela, e quem rola é o <main> — não a página.
+
+      Antes a raiz era `min-h-screen` e cada tela adivinhava quanto espaço sobrava. A conversa
+      chutava `calc(100svh - 8rem)`, e o chute errava: medido em 1440×900, sobravam 815px úteis e
+      ela pedia 764 — 51px de vazio embaixo, que é exatamente o `pb-12` do <main> contado duas
+      vezes. Como `html` tem `font-size: 17px`, cada `rem` vale 17 e não 16, então a conta de
+      cabeça erra ainda mais fácil.
+
+      Com a coluna, ninguém mais calcula: `flex-1` dá ao <main> o que sobrou depois da barra do
+      celular, e `h-full` lá dentro vale a altura certa em qualquer tela. É o mesmo arranjo do
+      ChatGPT e do Claude — a janela não rola, a conversa rola por dentro.
+    */
+    <div className="relative isolate flex h-svh flex-col">
       <FundoAnimado />
 
       <aside className="fixed top-0 left-0 z-30 hidden h-screen w-64 flex-col border-r border-sidebar-border bg-sidebar lg:flex">
@@ -331,9 +357,14 @@ function AppShellInner() {
           coisa que merece espaço. No desktop a folga volta, porque lá sobra e a linha de texto
           precisa de limite.
         */
-        className="animate-[fade-up_0.35s_cubic-bezier(0.16,1,0.3,1)_backwards] px-3 pt-3 pb-[calc(2rem+env(safe-area-inset-bottom))] sm:px-6 sm:pt-5 lg:ml-64 lg:px-8 lg:pt-8 lg:pb-12"
+        className="sem-barra min-h-0 flex-1 animate-[fade-up_0.35s_cubic-bezier(0.16,1,0.3,1)_backwards] overflow-y-auto px-3 pt-3 pb-[calc(2rem+env(safe-area-inset-bottom))] sm:px-6 sm:pt-5 lg:ml-64 lg:px-8 lg:pt-8 lg:pb-12"
       >
-        <div className="mx-auto w-full max-w-7xl">
+        {/*
+          `h-full` para que as telas que querem ocupar a altura toda — a conversa — tenham uma
+          altura definida para medir. Quem é mais alto que isso transborda e rola no <main>, que é
+          o comportamento de antes.
+        */}
+        <div className="mx-auto h-full w-full max-w-7xl">
           <Outlet />
         </div>
       </main>

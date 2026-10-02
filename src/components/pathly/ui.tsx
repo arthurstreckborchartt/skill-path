@@ -8,10 +8,19 @@ export function Logo({ className, compact }: { className?: string; compact?: boo
     // coarse:min-h-11 — a logo costuma ser link de volta para o início; em tela de toque
     // precisa dos 44px mesmo sendo visualmente menor.
     <span className={cn("flex items-center gap-2.5 coarse:min-h-11", className)}>
-      <span className="relative grid size-8 shrink-0 place-items-center text-foreground">
+      {/*
+        O mesmo quadrado claro de cantos arredondados que a marca já usa na tela inicial do app
+        (`app.index.tsx`): fundo `--foreground`, traço `--background`.
+
+        Aqui ela estava solta, só com `text-foreground` — um traço branco sobre o fundo escuro, sem
+        caixa. Duas versões da mesma marca em duas telas do mesmo app, e a da sidebar era a que
+        aparecia o tempo todo.
+
+        Os tokens, e não branco e preto fixos: no tema escuro dá quadrado branco com traço escuro,
+        que é o pedido, e no claro ele inverte em vez de sumir contra a página.
+      */}
+      <span className="relative grid size-8 shrink-0 place-items-center rounded-lg border border-border bg-foreground text-background">
         <svg viewBox="0 0 24 24" className="size-4" fill="none" aria-hidden="true">
-          {/* A marca fica sobre o gradiente de ação nos dois temas, então segue o token que
-              já é o "texto sobre a cor primária" — sem cor fixa. */}
           <path
             d="M5 19c0-5 4-5 6-7s1-6-1-7"
             stroke="currentColor"

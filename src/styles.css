@@ -801,6 +801,66 @@
   }
 }
 
+/*
+ * Esconde a barra de rolagem sem tirar a rolagem.
+ *
+ * O `html` já faz isso desde sempre. Quando a rolagem da página passou para o `<main>`, a barra
+ * voltou a aparecer — grossa e clara, bem no meio da tela — porque a regra do `html` não alcança
+ * um filho. Isto repete a mesma escolha onde ela passou a valer, em vez de mudá-la num lugar só e
+ * deixar o app com dois comportamentos.
+ */
+@utility sem-barra {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/*
+ * A barra de rolagem da conversa — a única que sobrou visível no app.
+ *
+ * ## Por que não escondê-la também
+ *
+ * A conversa é o único lugar onde rolar é esperado, e esconder a barra ali tira a única pista de
+ * que existe histórico acima. Nas outras superfícies a barra some porque elas cabem na tela; aqui
+ * ela informa.
+ *
+ * O que incomodava era a barra padrão do sistema: larga, clara e com setas nas pontas, desenhada
+ * para uma janela inteira e não para uma coluna de texto. Esta tem 6px, não tem fundo, não tem
+ * setas, e usa o mesmo cinza das bordas do app.
+ *
+ * `transparent` no repouso e visível ao passar o mouse: parada ela não compete com o texto, e no
+ * instante em que a pessoa vai rolar, ela está lá.
+ */
+@utility barra-discreta {
+  /*
+   * As duas propriedades padrão, e não `::-webkit-scrollbar`.
+   *
+   * Quem rola dentro da conversa é um `<div>` interno do `StickToBottom`, sem className que eu
+   * possa alcançar. Pseudo-elemento não herda, então o caminho é a herança — mas ela só serve
+   * para metade: **`scrollbar-color` é herdada e `scrollbar-width` não é.** Medido: a cor chegou
+   * ao filho e a largura ficou em `auto`, reservando 30px de calha para uma barra invisível.
+   *
+   * Daí o `& > *`: a largura é posta de novo nos filhos diretos, que é onde o elemento de rolagem
+   * está quando esta classe é usada num invólucro. Quando ela é usada direto no que rola — a
+   * coluna lateral — a declaração de cima já resolve, e a de baixo não atrapalha.
+   */
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  transition: scrollbar-color 0.25s ease;
+
+  & > * {
+    scrollbar-width: thin;
+  }
+
+  &:hover,
+  &:focus-within {
+    scrollbar-color: color-mix(in oklab, var(--foreground) 28%, transparent) transparent;
+  }
+}
+
 @utility text-gradient {
   color: var(--foreground);
 }

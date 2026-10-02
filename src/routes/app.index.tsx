@@ -97,12 +97,19 @@ function TelaInicial() {
     void navigate({ to: "/app/projeto/$id", params: { id: r.id } });
   }
 
-  const recentes = projetos.estado === "pronta" ? projetos.projetos.slice(0, 6) : [];
+  /*
+   * Três, e não seis.
+   *
+   * A lista deixou de ficar abaixo da dobra e passou a dividir a tela com a pergunta. Seis cartões
+   * somam ~400px e espremeriam justamente o que a tela existe para fazer. Três respondem "qual eu
+   * continuo?" — e quem quer os outros tem a coluna da esquerda, que lista todos, e o "ver todos".
+   */
+  const recentes = projetos.estado === "pronta" ? projetos.projetos.slice(0, 3) : [];
   // Uma consulta para todos os recentes, em vez de uma por cartao.
   const contagens = useContagens(recentes);
 
   return (
-    <div className="mx-auto w-full max-w-2xl">
+    <div className="mx-auto flex h-full w-full max-w-2xl flex-col">
       {/*
         A primeira dobra: a pergunta no meio, o campo embaixo.
 
@@ -123,19 +130,17 @@ function TelaInicial() {
         fica no fim de uma coluna flex, que chega ao mesmo lugar sem brigar com a animação.
       */}
       {/*
-        A altura da dobra é a tela menos a casca, e a conta é medida, não estimada.
+        Não há mais dobra: a tela inteira cabe na tela.
 
-        No celular: 69px de barra (12 de topo + 44 de alvo + 12 de base + 1 de borda) + 12 do
-        `pt-3` do `<main>` + 32 do `pb-2rem` = **113px**. Sem isto sobra uma rolagem de 9px numa
-        tela que deveria encaixar exata — o suficiente para a página repicar ao toque.
+        Aqui havia duas alturas calculadas à mão — `100svh - 113px` no celular, somando a barra, o
+        `pt-3` e o `pb-2rem` com duas `env()`, e `100svh - 5rem` no desktop. A conta era correta e
+        continuava sendo a coisa errada a fazer: ela reservava a tela inteira para a pergunta, e
+        jogava os projetos recentes para baixo da dobra, onde ninguém os via sem rolar.
 
-        As duas `env()` entram porque a barra reserva a área segura de cima e o `<main>` a de
-        baixo. No emulador elas valem zero e some a diferença; num aparelho com entalhe valem
-        dezenas de pixels, e sem elas a conta erraria justamente onde o defeito apareceria.
-
-        No desktop não há barra: `pt-8` + `pb-12` = 5rem.
+        Agora a casca entrega a altura e esta coluna a divide: a pergunta e o campo ficam no meio
+        do que sobra, e os recentes encostam embaixo. Nada a calcular, e nada fora da tela.
       */}
-      <div className="flex min-h-[calc(100svh-113px-env(safe-area-inset-top)-env(safe-area-inset-bottom))] flex-col lg:min-h-[calc(100svh-5rem)] lg:justify-center">
+      <div className="flex min-h-0 flex-1 flex-col justify-center">
         <section className="flex flex-1 flex-col justify-center px-1 text-center lg:flex-none">
           <span className="mx-auto grid size-11 place-items-center rounded-xl border border-border bg-foreground text-background">
             <PathlyMark className="size-5" />
@@ -192,7 +197,7 @@ function TelaInicial() {
         seção vazia dizendo "nenhum projeto" — ela tem só a pergunta, que é a resposta certa.
       */}
       {projetos.estado === "carregando" && (
-        <div className="mt-12 space-y-2">
+        <div className="mt-8 shrink-0 space-y-2">
           {[0, 1].map((i) => (
             <Skeleton key={i} className="h-16 rounded-lg" />
           ))}
@@ -200,7 +205,7 @@ function TelaInicial() {
       )}
 
       {recentes.length > 0 && (
-        <section className="mt-12">
+        <section className="mt-8 shrink-0 pb-1">
           <div className="flex items-baseline justify-between gap-3">
             <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
               Continuar

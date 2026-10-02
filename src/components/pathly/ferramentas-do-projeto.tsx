@@ -166,7 +166,9 @@ export function FerramentasDoProjeto({ projetoId }: { projetoId: string }) {
             <code className="font-mono text-xs">supabase/pathly_hub_ferramentas.sql</code>.
           </p>
         ) : (
-          <ul className="mt-3 grid gap-2 sm:grid-cols-2">
+          /* Duas colunas quando o painel ocupa a largura toda (celular e tablet); uma só a partir
+             de `lg`, onde ele passa a morar na coluna lateral de 18rem. */
+          <ul className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-1">
             {PAPEIS.map((papel) => {
               const Icone = ICONE_DO_PAPEL[papel];
               const escolhido = prefs?.[papel]

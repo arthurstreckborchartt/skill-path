@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
+import { ShieldCheck } from "lucide-react";
+import { Chip } from "@/components/pathly/ui";
 import { ProjectChat } from "@/components/pathly/project-chat";
 import { ContextoDaConversa } from "@/components/pathly/contexto-da-conversa";
-import { cn } from "@/lib/utils";
 import { FerramentasDoProjeto } from "@/components/pathly/ferramentas-do-projeto";
 import { PainelDaParte } from "@/components/pathly/partes-do-projeto";
 import { lerParte, type SlugDeParte } from "@/components/pathly/partes";
@@ -107,21 +108,52 @@ function ProjectPage() {
    * aparece — em vez de encolher no lugar. Deslizar mantém a coluna de texto na mesma largura, e
    * é a linha do texto que a leitura acompanha; encolher reformataria tudo a cada assunto novo.
    */
+  /*
+   * As ferramentas vão para a coluna da direita, e não abaixo da conversa.
+   *
+   * Empilhadas elas nunca apareciam: o `ProjectChat` tem `min-h-[calc(100svh-8rem)]`, então o que
+   * vem depois dele começa fora da tela por construção. Quem não soubesse que a seção existe não
+   * teria motivo para rolar até ela — e rolar devolvia a conversa para fora de vista.
+   *
+   * A coluna rola por dentro (`overflow-y-auto` com teto de altura) em vez de esticar a página.
+   * Sem isso, uma lateral alta traria o mesmo problema de volta pelo outro lado.
+   *
+   * No celular não há lateral, e aí elas voltam para baixo da conversa — empilhar é a única opção
+   * em 375px, e meia conversa com meio painel não serviria nenhum dos dois.
+   */
   return (
-    <div
-      className={cn(
-        "mx-auto flex w-full flex-col gap-5",
-        contexto
-          ? "max-w-5xl lg:grid lg:grid-cols-[minmax(0,1fr)_16rem] lg:items-start lg:gap-6"
-          : "max-w-3xl",
-      )}
-    >
-      <div className="min-w-0 space-y-5">
+    /*
+      `lg:h-full` para a conversa poder encostar embaixo, e `max-w-6xl` em vez de `5xl`.
+
+      Com 5xl a grade travava em 1088px: a coluna da conversa ficava com 757 e a linha de texto com
+      727, enquanto sobravam 1100px disponíveis numa janela de 1440. O chat ficava estreito e o
+      resto da tela, vazio. Em 6xl a grade usa o espaço até o teto do <main>, a conversa chega aos
+      ~768px de linha — a largura de leitura confortável — e a lateral fica onde está.
+    */
+    <div className="mx-auto flex h-full w-full max-w-6xl flex-col gap-5 lg:grid lg:grid-cols-[minmax(0,1fr)_18rem] lg:grid-rows-[minmax(0,1fr)] lg:gap-6">
+      <div className="h-full min-w-0 shrink-0 lg:min-h-0">
         <ProjectChat projetoId={id} aoMudarAssunto={setAssunto} />
-        <FerramentasDoProjeto projetoId={id} />
       </div>
 
-      {contexto && <div className="lg:sticky lg:top-8">{contexto}</div>}
+      {/* `lg:h-full` e rolagem por dentro, no lugar de `sticky` com um `max-h` calculado à mão:
+          a coluna agora tem a altura da grade, que tem a altura do <main>. Sem número nenhum. */}
+      <div className="barra-discreta flex flex-col gap-5 lg:h-full lg:min-h-0 lg:overflow-y-auto">
+        {/*
+          O aviso que morava no cabeçalho do chat.
+
+          Ele saiu de lá junto com o cabeçalho, e não podia sair do app: é a frase que explica por
+          que nada acontece sozinho. Aqui ele fica ao lado das ferramentas que ele governa, que é
+          onde a afirmação tem contexto — no topo do chat ela era uma etiqueta solta.
+        */}
+        <Chip tone="muted" className="self-start">
+          <ShieldCheck className="size-3" /> Ações exigem aprovação
+        </Chip>
+
+        {/* As ferramentas primeiro: estão sempre presentes, e eram elas que ninguém via. O
+            contexto da conversa aparece e some conforme o assunto, então vem depois. */}
+        <FerramentasDoProjeto projetoId={id} />
+        {contexto}
+      </div>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Check, ChevronUp, FileCode, ShieldCheck } from "lucide-react";
+import { Check, ChevronUp, FileCode } from "lucide-react";
 import { CartaoChamada } from "./cartao-chamada";
 import { BotaoEnviar } from "./botao-enviar";
 import {
@@ -175,32 +175,92 @@ export function ProjectChat({
     void perguntar(limpa, comModo ?? modo);
   }
 
-  return (
-    <section className="flex min-h-[calc(100svh-9rem)] flex-col overflow-hidden rounded-lg border border-border bg-surface shadow-[var(--shadow-soft)] lg:min-h-[calc(100svh-8rem)]">
-      <header className="flex items-center justify-between gap-4 border-b border-border px-4 py-3 sm:px-6">
-        <div className="flex min-w-0 items-center gap-3">
-          <span className="grid size-9 shrink-0 place-items-center rounded-md border border-border bg-foreground text-background">
-            <PathlyMark className="size-4" />
-          </span>
-          <div className="min-w-0">
-            <h1 className="truncate text-sm font-semibold">{estado.nomeProjeto || "Projeto"}</h1>
-            <p className="truncate text-xs text-muted-foreground">
-              Planejamento e execução do seu produto
-            </p>
-          </div>
-        </div>
-        <Chip tone="muted">
-          <ShieldCheck className="size-3" /> Ações exigem aprovação
-        </Chip>
-      </header>
+  /*
+   * Sem mensagem nenhuma, a conversa ainda não é uma conversa — é um convite.
+   *
+   * Este booleano é o que troca o chat entre os dois arranjos, e por isso ele é calculado uma vez
+   * e lido em três lugares. "Carregando" não conta como vazio: a tela ainda não sabe se há
+   * histórico, e centralizar para depois saltar para o rodapé seria pior que esperar.
+   */
+  const vazio = !estado.carregando && estado.mensagens.length === 0;
 
-      <div className="min-h-0 flex-1">
+  /*
+   * A conversa É o ambiente, e não um cartão dentro dele.
+   *
+   * Saíram a borda, o fundo, a sombra e o cabeçalho com o nome do projeto. O que havia era uma
+   * caixa desenhada por cima da tela inicial — duas molduras concêntricas, a da janela e a do
+   * chat — e era isso que fazia abrir um projeto parecer entrar em outro app.
+   *
+   * O nome do projeto não se perdeu: ele está na lista da esquerda, marcado como ativo, e na
+   * barra de cima no celular. Estava escrito em três lugares; agora em dois.
+   *
+   * ## Por que `justify-center` resolve o estado vazio sem mover nada
+   *
+   * Vazio, a área da conversa deixa de ser `flex-1` e passa a medir o próprio conteúdo. Com a
+   * seção centralizando, o convite e o compositor viram um bloco só no meio da tela — igual à
+   * inicial. Com mensagens, a área volta a `flex-1`, empurra o compositor para baixo e as
+   * mensagens correm por cima dele. O mesmo JSX nos dois casos: nada troca de lugar na árvore,
+   * então o campo não perde o foco nem o texto digitado na primeira mensagem.
+   */
+  return (
+    <section
+      className={cn(
+        /*
+         * `h-full`, e não um `calc` sobre `100svh`.
+         *
+         * O que havia era `min-h-[calc(100svh-9rem)]`, e eram dois erros num número só. Mínimo não
+         * segura nada: a conversa esticava a seção e empurrava o compositor para fora da tela —
+         * medido antes, numa janela de 900px, a seção tinha 1460px e o campo de escrever começava
+         * em 1315. E o `9rem` era um palpite sobre o espaçamento da casca que errava por 51px.
+         *
+         * Agora a casca é uma coluna da altura da tela e o <main> entrega a altura real. `h-full`
+         * é ela, sem conta — em qualquer tela, com ou sem barra do celular.
+         */
+        "flex h-full flex-col",
+        vazio && "justify-center",
+      )}
+    >
+      {/*
+        `flex flex-col` aqui, e não só `flex-1`.
+
+        O `<Conversation>` se declara `flex-1`, e `flex-1` só vale dentro de um container flex. Com
+        um bloco por pai ele ignorava a altura disponível e crescia até o tamanho do histórico —
+        medido: 1197px de conteúdo dentro de 568px de espaço, transbordando para fora da seção.
+        Era isso que fazia a página inteira rolar em vez da conversa.
+      */}
+      <div className={cn(vazio ? "shrink-0" : "flex min-h-0 flex-1 flex-col")}>
         {estado.carregando ? (
           <div className="p-6">
             <Shimmer>Carregando o contexto do projeto…</Shimmer>
           </div>
+        ) : vazio ? (
+          /*
+           * O convite fica fora do `<Conversation>` de propósito: aquele componente é um container
+           * de rolagem que se estica para ocupar o pai, e esticar é exatamente o que não pode
+           * acontecer quando o bloco precisa medir o próprio tamanho para ser centralizado.
+           */
+          <div className="mx-auto w-full max-w-3xl px-4 pb-6 text-center sm:px-6">
+            <span className="mx-auto grid size-12 place-items-center rounded-xl border border-border bg-foreground text-background">
+              <PathlyMark className="size-5" />
+            </span>
+            <WordsStagger
+              className="mt-4 justify-center font-display text-3xl font-semibold"
+              stagger={0.07}
+            >
+              Vamos construir isto
+            </WordsStagger>
+            <WordsStagger
+              className="mx-auto mt-2 max-w-lg justify-center text-sm leading-relaxed text-muted-foreground"
+              delay={0.35}
+              stagger={0.018}
+              speed={0.4}
+            >
+              Conte o que precisa existir, o que já decidiu ou onde travou. O Pathly organiza o
+              plano e pede sua confirmação antes de qualquer mudança.
+            </WordsStagger>
+          </div>
         ) : (
-          <Conversation>
+          <Conversation className="barra-discreta">
             <ConversationContent className="mx-auto w-full max-w-3xl gap-6 px-4 py-8 sm:px-6">
               {estado.anteriorA && (
                 <Btn
@@ -211,34 +271,6 @@ export function ProjectChat({
                 >
                   <ChevronUp className="size-3.5" /> Mensagens anteriores
                 </Btn>
-              )}
-
-              {estado.mensagens.length === 0 && (
-                <div className="py-10 text-center">
-                  <span className="mx-auto grid size-12 place-items-center rounded-md border border-border bg-surface-2">
-                    <PathlyMark className="size-5" />
-                  </span>
-                  {/*
-                    O texto se forma palavra a palavra. Aparece uma vez por projeto, na tela vazia
-                    — não no histórico: o efeito é boas-vindas, e boas-vindas que se repetem a cada
-                    rolagem viram tique.
-                  */}
-                  <WordsStagger
-                    className="mt-4 justify-center font-display text-2xl font-semibold"
-                    stagger={0.07}
-                  >
-                    Vamos construir isto
-                  </WordsStagger>
-                  <WordsStagger
-                    className="mx-auto mt-2 max-w-lg justify-center text-sm leading-relaxed text-muted-foreground"
-                    delay={0.35}
-                    stagger={0.018}
-                    speed={0.4}
-                  >
-                    Conte o que precisa existir, o que já decidiu ou onde travou. O Pathly organiza
-                    o plano e pede sua confirmação antes de qualquer mudança.
-                  </WordsStagger>
-                </div>
               )}
 
               {estado.propostas.map((proposta) => (
@@ -273,7 +305,13 @@ export function ProjectChat({
         )}
       </div>
 
-      <footer className="border-t border-border bg-background/70 p-3 sm:p-4">
+      {/*
+        Vazio, o rodapé não é rodapé: ele faz parte do bloco centralizado, e uma linha por cima
+        dele cortaria o convite do campo que o atende. Com mensagens, a borda e o fundo voltam —
+        agora eles separam de algo, e o fundo impede que o texto que rola passe por baixo do
+        compositor.
+      */}
+      <footer className={cn("p-3 sm:p-4", !vazio && "border-t border-border bg-background/70")}>
         {/*
           O `rounded-lg` saiu: quem manda no arredondamento agora é `--composer-radius`, no CSS,
           para o anel e o campo nunca discordarem do raio.
