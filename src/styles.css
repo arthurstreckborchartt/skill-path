@@ -15,12 +15,110 @@
   --font-display: "Instrument Sans", ui-sans-serif, system-ui, sans-serif;
   --font-sans: "Instrument Sans", ui-sans-serif, system-ui, sans-serif;
 
-  --radius-sm: calc(var(--radius) - 6px);
-  --radius-md: calc(var(--radius) - 3px);
+  /*
+   * ============================================================================================
+   * A ESCALA DE ESPAÇAMENTO
+   * ============================================================================================
+   *
+   * `4px`, e não o `0.25rem` que o Tailwind assume.
+   *
+   * ## O problema, medido
+   *
+   * Todo utilitário de espaço do Tailwind é `calc(var(--spacing) * N)`. Com o padrão em `0.25rem`
+   * e `html { font-size: 17px }` — escolha deliberada, para o corpo de texto sair de 14 para 15 —
+   * cada passo passava a valer **4,25px**. A escala do app inteiro era:
+   *
+   *     4,25 · 8,5 · 12,75 · 17 · 21,25 · 25,5 · 34 · 51
+   *
+   * Nenhum valor redondo, e nenhuma relação simples entre eles que o olho reconheça. Medido na
+   * tela inicial: 21,25px entre a marca e o título, 29,75 entre o título e o campo, 6,375 entre
+   * cartões. Eram valores de uma escala coerente em `rem`, mas o resultado em pixels não tinha
+   * ritmo nenhum — e ritmo é o que faz uma tela parecer projetada.
+   *
+   * ## Por que em px, e por que isto não afeta o texto
+   *
+   * Espaço e tipografia respondem a perguntas diferentes. Tipografia em `rem` acompanha quem
+   * aumenta a fonte do navegador, e deve mesmo. Espaço entre blocos é geometria: 16px é 16px, e
+   * amarrá-lo ao tamanho da fonte foi o que produziu a escala quebrada.
+   *
+   * Fixando a base em 4px, a escala vira a que se usa em qualquer sistema de design sério:
+   *
+   *     4 · 8 · 12 · 16 · 20 · 24 · 32 · 40 · 48 · 64
+   *
+   * O `font-size: 17px` do `html` continua intacto, então nenhum texto muda de tamanho.
+   */
+  --spacing: 4px;
+
+  /*
+   * ============================================================================================
+   * O RAIO
+   * ============================================================================================
+   *
+   * Pelo mesmo motivo: `0.5rem` valia 8,5px, e os degraus saíam em 2,5 · 5,5 · 8,5 · 14,5 · 22,5.
+   * Agora a progressão é 4 · 6 · 8 · 12 · 16 · 24 — cada degrau legível em relação ao anterior.
+   */
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 6px);
-  --radius-2xl: calc(var(--radius) + 14px);
-  --radius-3xl: calc(var(--radius) + 24px);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 16px);
+
+  /*
+   * ============================================================================================
+   * A ESCALA TIPOGRÁFICA
+   * ============================================================================================
+   *
+   * Os tamanhos em `rem` davam 12,75 · 14,875 · 17 · 19,125 · 21,25 · 25,5 · 31,875 · 38,25 · 51.
+   * Aqui eles ficam redondos e os dois últimos descem: um título de 51px numa coluna de 714px
+   * ocupava quase um décimo da altura útil da tela para dizer cinco palavras.
+   *
+   * A altura de linha acompanha o tamanho — apertada nos títulos, onde o olho salta de palavra em
+   * palavra, e folgada no corpo, onde ele percorre a linha inteira.
+   */
+  --text-xs: 13px;
+  --text-xs--line-height: 18px;
+  --text-sm: 15px;
+  --text-sm--line-height: 22px;
+  --text-base: 17px;
+  --text-base--line-height: 26px;
+  --text-lg: 19px;
+  --text-lg--line-height: 28px;
+  --text-xl: 21px;
+  --text-xl--line-height: 30px;
+  --text-2xl: 25px;
+  --text-2xl--line-height: 32px;
+  --text-3xl: 30px;
+  --text-3xl--line-height: 38px;
+  --text-4xl: 36px;
+  --text-4xl--line-height: 42px;
+  --text-5xl: 44px;
+  --text-5xl--line-height: 50px;
+
+  /*
+   * ============================================================================================
+   * AS LARGURAS DE CONTAINER
+   * ============================================================================================
+   *
+   * Último lugar onde a raiz de 17px vazava: `max-w-2xl` dava 714px e `max-w-3xl`, 816. Números
+   * que ninguém escolheu — e a linha de leitura, que é a medida mais importante de uma interface
+   * de conversa, estava entre duas larguras conhecidas sem ser nenhuma delas.
+   *
+   * Estes são os valores canônicos da escala (os mesmos que sairiam com a raiz em 16px), e agora
+   * a linha de texto da conversa é exatamente 768px — a largura que ChatGPT e Claude usam, onde a
+   * linha tem entre 70 e 90 caracteres e o olho não se perde ao voltar para a esquerda.
+   */
+  --container-xs: 320px;
+  --container-sm: 384px;
+  --container-md: 448px;
+  --container-lg: 512px;
+  --container-xl: 576px;
+  --container-2xl: 672px;
+  --container-3xl: 768px;
+  --container-4xl: 896px;
+  --container-5xl: 1024px;
+  --container-6xl: 1152px;
+  --container-7xl: 1280px;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -134,7 +232,8 @@
  */
 :root {
   color-scheme: light;
-  --radius: 0.5rem;
+  /* 8px. Era `0.5rem`, que com a raiz em 17px valia 8,5 e arrastava toda a progressao. */
+  --radius: 8px;
   --background: oklch(0.982 0 0);
   --foreground: oklch(0.145 0 0);
   --surface: oklch(1 0 0);
@@ -370,6 +469,12 @@
      */
     .botao-enviar-girando {
       animation-duration: 1s !important;
+      animation-iteration-count: infinite !important;
+    }
+
+    /* O anel de espera, pelo mesmo motivo: parado, ele diz "travou" em vez de "espere". */
+    .pensando-anel {
+      animation-duration: 0.8s !important;
       animation-iteration-count: infinite !important;
     }
 
@@ -671,6 +776,42 @@
 }
 
 /*
+ * O anel de espera. Ver `components/pathly/pensando.tsx`.
+ *
+ * Um cometa: o gradiente cônico vai de transparente às cores do compositor e acaba na cor mais
+ * forte, então a ponta brilha e a cauda some. A máscara radial recorta o miolo e sobra um anel de
+ * 2px — a mesma espessura visual da moldura do campo.
+ *
+ * Gira com `transform`, e não com o ângulo do gradiente como a moldura faz: aqui o anel inteiro
+ * roda junto, e `transform` é composição pura — não repinta nada a cada quadro.
+ */
+.pensando-anel {
+  display: inline-block;
+  flex: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  background: conic-gradient(
+    in oklab,
+    transparent 0deg,
+    var(--composer-8) 80deg,
+    var(--composer-6) 160deg,
+    var(--composer-4) 240deg,
+    var(--composer-1) 330deg,
+    transparent 360deg
+  );
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 2px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 2px));
+  animation: pensando-giro 0.8s linear infinite;
+}
+
+@keyframes pensando-giro {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/*
  * Nenhuma regra de `prefers-reduced-motion` aqui, de propósito.
  *
  * Já houve duas, e as duas apagavam o efeito: primeiro `display: none` nos dois arcos, depois um
@@ -834,6 +975,21 @@
  * `transparent` no repouso e visível ao passar o mouse: parada ela não compete com o texto, e no
  * instante em que a pessoa vai rolar, ela está lá.
  */
+/*
+ * O campo que mede o próprio conteúdo.
+ *
+ * O `<textarea>` nasce com uma altura em linhas e não muda — por isso ele estava preso em 102px,
+ * alto demais vazio e apertado quando a pessoa escrevia três linhas. `field-sizing: content` faz o
+ * navegador medir o texto a cada tecla, e `min-h`/`max-h` na marcação dão os limites: compacto em
+ * repouso, crescendo com o que se escreve, e rolando por dentro quando passa do teto.
+ *
+ * Onde não houver suporte, o campo fica na altura mínima e rola por dentro — que é o que ele já
+ * fazia. Degradação para o comportamento antigo, não para um pior.
+ */
+@utility campo-elastico {
+  field-sizing: content;
+}
+
 @utility barra-discreta {
   /*
    * As duas propriedades padrão, e não `::-webkit-scrollbar`.

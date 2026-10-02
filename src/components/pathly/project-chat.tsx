@@ -15,7 +15,7 @@ import {
   PromptInputTextarea,
   PromptInputTools,
 } from "@/components/ai-elements/prompt-input";
-import { Shimmer } from "@/components/ai-elements/shimmer";
+import { Pensando } from "@/components/pathly/pensando";
 import { BlocoCopiavel } from "@/components/pathly/banco-vistas";
 import { Btn, Chip } from "@/components/pathly/ui";
 import { useDigitando } from "@/components/pathly/usar-digitando";
@@ -159,7 +159,16 @@ export function ProjectChat({
     if (estado.respondendo || enviando.current) return;
 
     enviando.current = true;
-    void perguntar(pending, "guiar")
+    /*
+     * Sem modo forçado.
+     *
+     * Aqui ia `"guiar"`, e o servidor repassa o modo ao modelo como "ela pediu explicitamente o
+     * modo guiar" — o que era falso: a pessoa só escreveu a ideia dela na tela inicial. Era isso
+     * que transformava toda primeira mensagem num checklist de três etapas numeradas, e era isso
+     * que vencia a regra do prompt que diz para só guiar quando pedirem. Sem modo, o modelo
+     * classifica a mensagem como qualquer outra.
+     */
+    void perguntar(pending)
       .then((enviou) => {
         if (enviou) window.sessionStorage.removeItem(key);
       })
@@ -176,13 +185,31 @@ export function ProjectChat({
   }
 
   /*
+   * Uma mensagem a caminho: a ideia que a pessoa acabou de escrever na tela inicial.
+   *
+   * Lida uma vez, na montagem — a página remonta por projeto, então não há troca de projeto para
+   * acompanhar. No servidor não há `sessionStorage` e o valor é `false`, mas isso não muda o HTML:
+   * na primeira renderização a conversa está carregando, e carregando nunca é vazio.
+   */
+  const [chegandoMensagem] = useState(
+    () =>
+      typeof window !== "undefined" &&
+      window.sessionStorage.getItem(`pathly.project.prompt.${projetoId}`) !== null,
+  );
+
+  /*
    * Sem mensagem nenhuma, a conversa ainda não é uma conversa — é um convite.
    *
    * Este booleano é o que troca o chat entre os dois arranjos, e por isso ele é calculado uma vez
    * e lido em três lugares. "Carregando" não conta como vazio: a tela ainda não sabe se há
    * histórico, e centralizar para depois saltar para o rodapé seria pior que esperar.
+   *
+   * E uma mensagem chegando também não. Entre o fim do carregamento e o envio automático existe
+   * um quadro com zero mensagens — e sem esta condição ele centralizava o compositor por um
+   * instante, entre o rodapé do carregamento e o rodapé da conversa. Baixo, centro, baixo: o quique
+   * que fazia a chegada ao projeto parecer outra tela.
    */
-  const vazio = !estado.carregando && estado.mensagens.length === 0;
+  const vazio = !estado.carregando && estado.mensagens.length === 0 && !chegandoMensagem;
 
   /*
    * A conversa É o ambiente, e não um cartão dentro dele.
@@ -231,7 +258,9 @@ export function ProjectChat({
       <div className={cn(vazio ? "shrink-0" : "flex min-h-0 flex-1 flex-col")}>
         {estado.carregando ? (
           <div className="p-6">
-            <Shimmer>Carregando o contexto do projeto…</Shimmer>
+            <Pensando>
+              {chegandoMensagem ? "Abrindo seu projeto…" : "Carregando a conversa…"}
+            </Pensando>
           </div>
         ) : vazio ? (
           /*
@@ -291,9 +320,7 @@ export function ProjectChat({
                 />
               ))}
 
-              {estado.respondendo && (
-                <Shimmer className="text-sm">Organizando o próximo passo…</Shimmer>
-              )}
+              {estado.respondendo && <Pensando>Pensando…</Pensando>}
               {estado.erro && (
                 <p role="alert" className="text-sm text-destructive">
                   {estado.erro}
@@ -306,12 +333,15 @@ export function ProjectChat({
       </div>
 
       {/*
-        Vazio, o rodapé não é rodapé: ele faz parte do bloco centralizado, e uma linha por cima
-        dele cortaria o convite do campo que o atende. Com mensagens, a borda e o fundo voltam —
-        agora eles separam de algo, e o fundo impede que o texto que rola passe por baixo do
-        compositor.
+        Sem linha, sem fundo, em nenhum dos dois estados.
+
+        Havia uma `border-t` e um `bg-background/70` aqui quando existiam mensagens, e o motivo
+        escrito era impedir que o texto rolasse por baixo do compositor. O motivo estava errado: a
+        área da conversa e este rodapé são irmãos numa coluna flex, então a caixa de rolagem termina
+        exatamente onde o rodapé começa. Nada nunca passou por baixo — a linha separava de nada, e
+        era ela que cortava o campo do ambiente em vez de integrá-lo.
       */}
-      <footer className={cn("p-3 sm:p-4", !vazio && "border-t border-border bg-background/70")}>
+      <footer className="p-3 sm:p-4">
         {/*
           O `rounded-lg` saiu: quem manda no arredondamento agora é `--composer-radius`, no CSS,
           para o anel e o campo nunca discordarem do raio.
@@ -339,7 +369,7 @@ export function ProjectChat({
                   ? `Pergunte sobre ${PARTES.find((p) => p.slug === parteAberta)?.rotulo.toLowerCase() ?? "este projeto"}…`
                   : "Pergunte qualquer coisa sobre seu projeto…"
               }
-              className="min-h-24"
+              className="campo-elastico barra-discreta max-h-56 min-h-14"
             />
             <PromptInputFooter>
               <PromptInputTools>

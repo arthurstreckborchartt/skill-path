@@ -258,6 +258,13 @@ function AppShellInner() {
   // abrir, e a pessoa teria que fechá-la para ver o que pediu.
   useEffect(() => setGaveta(false), [pathname]);
 
+  /*
+   * A tela inicial e a de um projeto são a MESMA superfície de conversa — a primeira é a segunda
+   * sem mensagens. Ver o comentário na `key` do <main>.
+   */
+  const superficie =
+    pathname === "/app" || pathname.startsWith("/app/projeto/") ? "conversa" : pathname;
+
   return (
     /*
       `isolate` continua sendo o que mantém o gradiente do fundo entre o <body> e o conteúdo: o
@@ -343,7 +350,21 @@ function AppShellInner() {
       )}
 
       <main
-        key={pathname}
+        /*
+          A chave é a SUPERFÍCIE, não a rota.
+
+          Com `key={pathname}`, toda navegação remontava o `<main>` e repetia a animação de
+          entrada. Entre a tela inicial e um projeto isso era o problema inteiro: mandar a primeira
+          mensagem criava o projeto, trocava a rota, e a tela toda piscava e reaparecia — lido como
+          "fui para outro lugar" quando o certo é "este lugar se adaptou".
+
+          Agrupando `/app` e `/app/projeto/<id>` sob a mesma chave, não há remontagem nem
+          reanimação: o compositor desce para o rodapé e as mensagens aparecem em cima, que é o
+          movimento que a troca deveria mostrar desde o começo. Entre dois projetos vale o mesmo.
+
+          As outras rotas continuam com a animação, onde ela ainda significa "outra tela".
+        */
+        key={superficie}
         /*
           `backwards` e não `both`: com `both` o transform da animação fica aplicado para sempre, e
           um transform aqui faz o <main> virar o containing block de todo `position: fixed` que

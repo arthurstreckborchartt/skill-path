@@ -6,6 +6,7 @@ import {
   PromptInputTextarea,
 } from "@/components/ai-elements/prompt-input";
 import { BotaoEnviar } from "@/components/pathly/botao-enviar";
+import { Pensando } from "@/components/pathly/pensando";
 import { PathlyMark } from "@/components/pathly/project-chat";
 import { ProgressBar, Skeleton } from "@/components/pathly/ui";
 import { useDigitando } from "@/components/pathly/usar-digitando";
@@ -109,7 +110,7 @@ function TelaInicial() {
   const contagens = useContagens(recentes);
 
   return (
-    <div className="mx-auto flex h-full w-full max-w-2xl flex-col">
+    <div className="mx-auto flex h-full w-full max-w-2xl flex-col justify-center">
       {/*
         A primeira dobra: a pergunta no meio, o campo embaixo.
 
@@ -140,8 +141,8 @@ function TelaInicial() {
         Agora a casca entrega a altura e esta coluna a divide: a pergunta e o campo ficam no meio
         do que sobra, e os recentes encostam embaixo. Nada a calcular, e nada fora da tela.
       */}
-      <div className="flex min-h-0 flex-1 flex-col justify-center">
-        <section className="flex flex-1 flex-col justify-center px-1 text-center lg:flex-none">
+      <div className="flex min-h-0 flex-col">
+        <section className="flex flex-col text-center">
           <span className="mx-auto grid size-11 place-items-center rounded-xl border border-border bg-foreground text-background">
             <PathlyMark className="size-5" />
           </span>
@@ -152,14 +153,14 @@ function TelaInicial() {
             quem chega já sabe o que quer construir, e a lista ocupava três linhas para responder
             uma pergunta que ninguém fez. O campo abaixo já mostra um exemplo no placeholder.
           */}
-          <h1 className="mt-5 font-display text-4xl font-bold text-balance sm:text-5xl">
+          <h1 className="mt-4 font-display text-3xl font-bold text-balance sm:text-4xl">
             O que vamos construir?
           </h1>
         </section>
 
         <div
           ref={moldura}
-          className="chat-composer-frame mt-7 text-left shadow-[var(--shadow-lift)]"
+          className="chat-composer-frame mt-6 text-left"
           data-processing={ocupado ? "true" : undefined}
         >
           <PromptInput onSubmit={({ text }) => void criar(text)}>
@@ -173,7 +174,7 @@ function TelaInicial() {
               placeholder="Um app para donos de food truck controlarem estoque e vendas do dia…"
               /* Mais baixo no celular: ali cada linha do campo é uma linha a menos de tela para o
                  resto, e o campo cresce sozinho conforme a pessoa escreve. */
-              className="min-h-20 text-base sm:min-h-24"
+              className="campo-elastico barra-discreta max-h-64 min-h-14 text-base"
               disabled={ocupado}
             />
             <PromptInputFooter className="justify-end">
@@ -185,6 +186,14 @@ function TelaInicial() {
           </PromptInput>
         </div>
 
+        {/*
+          A espera da criação, no mesmo lugar onde um erro apareceria.
+
+          Criar o projeto leva alguns segundos — uma escrita no banco antes de a conversa abrir — e
+          até aqui o único sinal era o botão de enviar girando no canto do campo, a 16px. Quem
+          olhava para o texto que acabou de escrever não via nada acontecer.
+        */}
+        {ocupado && <Pensando className="mt-4 justify-center">Criando seu projeto…</Pensando>}
         {erro && (
           <p role="alert" className="mt-3 text-center text-sm font-medium">
             {erro}
@@ -197,7 +206,7 @@ function TelaInicial() {
         seção vazia dizendo "nenhum projeto" — ela tem só a pergunta, que é a resposta certa.
       */}
       {projetos.estado === "carregando" && (
-        <div className="mt-8 shrink-0 space-y-2">
+        <div className="mt-10 shrink-0 space-y-2">
           {[0, 1].map((i) => (
             <Skeleton key={i} className="h-16 rounded-lg" />
           ))}
@@ -205,7 +214,7 @@ function TelaInicial() {
       )}
 
       {recentes.length > 0 && (
-        <section className="mt-8 shrink-0 pb-1">
+        <section className="mt-10 shrink-0">
           <div className="flex items-baseline justify-between gap-3">
             <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
               Continuar
@@ -219,7 +228,7 @@ function TelaInicial() {
               </Link>
             )}
           </div>
-          <div className="mt-3 space-y-1.5">
+          <div className="mt-3 space-y-2">
             {recentes.map((p) => (
               <CartaoDeProjeto key={p.id} projeto={p} contagem={contagens?.get(p.id) ?? null} />
             ))}

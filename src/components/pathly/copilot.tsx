@@ -14,7 +14,7 @@ import {
   PromptInputTextarea,
   PromptInputTools,
 } from "@/components/ai-elements/prompt-input";
-import { Shimmer } from "@/components/ai-elements/shimmer";
+import { Pensando } from "@/components/pathly/pensando";
 import { BlocoCopiavel } from "./banco-vistas";
 import { CartaoChamada } from "./cartao-chamada";
 import { BotaoEnviar } from "./botao-enviar";
@@ -200,7 +200,7 @@ function Painel({
             />
           ) : estado.carregando ? (
             <div className="p-4 text-sm">
-              <Shimmer>Carregando o contexto…</Shimmer>
+              <Pensando>Carregando a conversa…</Pensando>
             </div>
           ) : (
             <Conversation>
@@ -239,9 +239,7 @@ function Painel({
                   <Mensagem key={m.id} mensagem={m} />
                 ))}
 
-                {estado.respondendo && (
-                  <Shimmer className="text-sm">Pensando sobre o seu projeto…</Shimmer>
-                )}
+                {estado.respondendo && <Pensando>Pensando…</Pensando>}
 
                 {estado.erro && <p className="mt-4 text-sm text-destructive">{estado.erro}</p>}
               </ConversationContent>
@@ -260,7 +258,7 @@ function Painel({
               onChange={(ev) => setTexto(ev.target.value)}
               maxLength={2000}
               placeholder="Pergunte sobre o seu projeto…"
-              className="min-h-20"
+              className="campo-elastico barra-discreta max-h-40 min-h-14"
             />
             <PromptInputFooter>
               <PromptInputTools>

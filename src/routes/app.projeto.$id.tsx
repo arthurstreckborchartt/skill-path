@@ -63,8 +63,23 @@ export const Route = createFileRoute("/app/projeto/$id")({
  * você parou. É o estado que a pessoa vê na maior parte do tempo, e é o mais limpo que ele
  * consegue ser.
  */
+/*
+ * Um projeto, uma montagem.
+ *
+ * O `<main>` da casca deixou de remontar a cada rota — a tela inicial e os projetos são a mesma
+ * superfície, e remontar era o que fazia a primeira mensagem parecer uma troca de tela. O efeito
+ * colateral é que trocar do projeto A para o B passaria a reaproveitar a instância: o rascunho no
+ * campo, o modo escolhido e o assunto da conversa de A apareceriam em B.
+ *
+ * A `key={id}` devolve a remontagem exatamente onde ela é correta — entre projetos —, e o estado
+ * mora todo no componente de dentro, abaixo da chave. Ficar no de fora seria ficar acima dela.
+ */
 function ProjectPage() {
   const { id } = Route.useParams();
+  return <PaginaDoProjeto key={id} id={id} />;
+}
+
+function PaginaDoProjeto({ id }: { id: string }) {
   const { parte } = Route.useSearch();
   const { estado } = useProjeto(id);
   const projeto = estado.estado === "pronto" ? estado.projeto : null;
